@@ -1,30 +1,36 @@
-Agency Jekyll theme
-====================
+# Flexible-Jekyll is a simple and clean theme for Jekyll
 
-Agency theme based on [Agency bootstrap theme ](https://startbootstrap.com/template-overviews/agency/)
+![](https://github.com/artemsheludko/flexible-jekyll/blob/master/assets/img/promo-img.jpg?raw=true)
 
-# How to use
+## Demo
 
-###Portfolio 
+Check the theme in action [Demo](https://artemsheludko.github.io/flexible-jekyll/)
 
-Portfolio projects are in '/_posts'
+The main page would look like this:
 
-Images are in '/img/portfolio'
+![Main page preview](https://github.com/artemsheludko/flexible-jekyll/blob/master/assets/img/home-page.jpg?raw=true)
 
-###About
+The post page would look like this:
 
-Images are in '/img/about/'
+![Post page preview](https://github.com/artemsheludko/flexible-jekyll/blob/master/assets/img/post-example.jpg?raw=true)
 
-###Team
+## Features
 
-Team members and info are in '_config.yml'
+- [Google Fonts](https://fonts.google.com/)
+- [Font Awesome](http://fontawesome.io/)
+- [Disqus](https://disqus.com/)
+- [Analytics](https://analytics.google.com/analytics/web/)
+- Support Emoji
 
-Images are in '/img/team/'
+## Installation:
 
+Fork the ``master`` branch and follow the [Jekyll Installation Documentation](https://jekyllrb.com/docs/installation/).
 
-# Demo
+## License
 
-View this jekyll theme in action [here](https://y7kim.github.io/agency-jekyll-theme)
+GNU General Public License v3.0
 
-=========
-For more details, read [documentation](http://jekyllrb.com/)
+## Donate
+
+<p>If you like the themes that I create you can become my sponsor on <a href="https://www.patreon.com/artemsheludko" target="_blank">Patreon</a>.
+<p align="center"><b>Thank you for your support ❤️</b></p>
