@@ -1,5 +1,5 @@
 url: https://razugo.github.io
-baseurl: /razugo.github.io
+baseurl: /
 
 title: Hello, world! I'm Russell Wakugawa
 description: > # this means to ignore newlines until "baseurl:"
@@ -8,7 +8,7 @@ description: > # this means to ignore newlines until "baseurl:"
   Google search results) and in your feed.xml site description.
 permalink: ':title/'
 url: https://razugo.github.io
-baseurl: /razugo.github.io
+baseurl: /
 site-twitter: #if your site has a twitter account, enter it here
 
 # Author Settings
