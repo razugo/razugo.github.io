@@ -1,0 +1,27 @@
+.about{ 
+    height: 100%;
+    max-width: var(--wide-width);
+    padding: 80px;
+    margin: auto;
+}
+
+.section_wide {
+    margin:auto;
+}
+
+.section_narrow {
+    margin-left: var(--narrow-margin);
+    margin-right: var(--narrow-margin);
+}
+
+.about .pic_wrapper {
+    max-height: 100%;
+    max-width: 100%;
+    margin: auto;
+}
+
+.about img {
+    opacity: var(--base-opacity);
+    max-height: 100%;
+    max-width: 100%;
+}

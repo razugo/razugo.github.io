@@ -1,0 +1,23 @@
+.home {
+    background-color: white;
+}
+
+.title_image {
+    display: block;
+    position: absolute;
+    height: auto;
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    margin: 80px;
+    background-color: green;
+
+    overflow: hidden;
+}
+
+.fill_image {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
