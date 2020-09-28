@@ -1,6 +1,8 @@
 .about {
     margin: 0 0 10px;
     text-align: center;
+    width: 210px;
+    overflow: hidden;
 }
   
 .about .cover_author_image {
@@ -27,6 +29,7 @@
     margin: 0 0 10px;
     position: relative;
     padding-bottom: 15px;
+    word-wrap: break-word;
 
     letter-spacing: 1px;
     font-size: 18px;

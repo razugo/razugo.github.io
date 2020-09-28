@@ -29,6 +29,8 @@ Some cool effects to try:
     https://jekyllthemes.io/theme/flexible-jekyll
 8. Image effects
     https://1stwebdesigner.com/css-image-effects/
+9. Markdown
+    https://stackoverflow.com/questions/42928530/how-do-i-load-a-markdown-file-into-a-react-component
 
 Notes:
 In the beginning there was nothing... 

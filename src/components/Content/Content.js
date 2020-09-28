@@ -1,9 +1,9 @@
 import React from 'react';
 import classes from './Content.module.css';
 
-import About from '../About/About';
-import Home from '../Home/Home';
-import NewHome from '../NewHome/Home';
+import About from './About/About';
+import Home from './Home/Home';
+// import NewHome from '../NewHome/Home';
 import { Route, Switch, withRouter } from 'react-router-dom';
 import { TransitionGroup, CSSTransition } from "react-transition-group";
 
@@ -27,7 +27,7 @@ function content(props) {
                                 <About></About>
                             </Route>
                             <Route path="/">
-                                <NewHome></NewHome>
+                                <Home></Home>
                             </Route>
                         </Switch>
                     </div>

@@ -9,12 +9,12 @@ const footer = (props) => {
                 <h3 className={ classes.contact_title }>Contact me</h3>
                     <ul>
                         <li className="github">
-                            <a href="https://github.com/razugo" target="_blank">
+                            <a href="https://github.com/razugo" target="_blank" rel="noopener noreferrer">
                                 <i className="fa fa-github"></i>
                             </a>
                         </li>
                         <li className="linkedin">
-                            <a href="https://www.linkedin.com/in/russell-wakugawa-43799b117/" target="_blank">
+                            <a href="https://www.linkedin.com/in/russell-wakugawa-43799b117/" target="_blank" rel="noopener noreferrer">
                                 <i className="fa fa-linkedin"></i>
                             </a>
                         </li>

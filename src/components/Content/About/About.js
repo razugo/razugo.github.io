@@ -1,6 +1,6 @@
 import React from 'react';
 import classes from './About.module.css';
-import landscapeGoober from '../../assets/img/landscape_goober.jpg';
+import landscapeGoober from '../../../assets/img/landscape_goober.jpg';
 
 const about = (props) => {
 

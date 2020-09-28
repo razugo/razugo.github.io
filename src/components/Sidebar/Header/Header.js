@@ -1,6 +1,6 @@
 import React from 'react';
 import classes from './Header.module.css';
-import Russell from '../../assets/img/russell.jpg';
+import Russell from '../../../assets/img/russell.jpg';
 import { Link } from 'react-router-dom';
 
 const header = (props) => {
@@ -19,7 +19,7 @@ const header = (props) => {
                 
                 {/*  Name */}
                 <div className={ classes.author_name }>
-                    Russell Wakugawa
+                    Russell Wakugawaasdfasdf
                 </div>
 
                 {/*  Short Intro */}
