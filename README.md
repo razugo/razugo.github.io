@@ -34,6 +34,7 @@ Some cool effects to try:
 
 Notes:
 In the beginning there was nothing... 
+- use `npm run deploy` to deploy
 
 Elevator Pitch:
 

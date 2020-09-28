@@ -19,13 +19,12 @@ const header = (props) => {
                 
                 {/*  Name */}
                 <div className={ classes.author_name }>
-                    "I don't know what I don't know" -me starting a new project
+                    The Casual Tryhard
                 </div>
 
                 {/*  Short Intro */}
                 <div className={ classes.intro }>
-                    <p>Software Engineer</p>
-                    <p>Casual Tryhard</p>
+                    <p>"I don't know what I don't know"</p>
                 </div>
             </div>
         </header>
