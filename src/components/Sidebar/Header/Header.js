@@ -19,7 +19,7 @@ const header = (props) => {
                 
                 {/*  Name */}
                 <div className={ classes.author_name }>
-                    Russell Wakugawaasdfasdf
+                    "I don't know what I don't know" -me starting a new project
                 </div>
 
                 {/*  Short Intro */}
