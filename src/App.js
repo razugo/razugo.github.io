@@ -1,29 +1,35 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router } from "react-router-dom";
 
-import './index.css';
-import './assets/font-awesome/css/font-awesome.css';
-import './assets/font-awesome/css/font-awesome.min.css';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-import Sidebar from './components/Sidebar/Sidebar';
-import ToggleButton from './components/ToggleButton/ToggleButton';
-import Content from './components/Content/Content';
-
+import Header from './Components/Header/Header'
+import Footer from './Components/Footer/Footer'
+import Home from './Components/Content/Home/Home'
+import About from './Components/Content/About';
+import Resume from './Components/Content/Resume';
+import Contact from './Components/Content/Contact';
 
 function App() {
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   function buttonClick() {
     setOpen(!open);
   }
 
   return (
-    <Router>
-      <Sidebar open={ open }/>
-      <ToggleButton onClick={ buttonClick } open={ open }></ToggleButton>
-      <Content open={ open }/>
-    </Router>
+    <body class="side-header" data-spy="scroll" data-target=".navbar" data-offset="1">
+      <div id="main-wrapper">
+        <Header onClick={ buttonClick } open={ open }></Header>
+        <Home></Home>
+        <About></About>
+        <Resume></Resume>
+        <Contact></Contact>
+        <Footer></Footer>
+        
+      </div>
+    </body>
   );
 }
 

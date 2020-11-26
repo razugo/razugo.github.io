@@ -1,43 +1,14 @@
-.home {
-    display: block;
-    background-color: white;
-}
-
-.title_image {
-    display: block;
+.parallaxCover {
+    background-color: black;
     position: absolute;
-    height: 600px;
-    bottom: 0;
-    top: 0;
-    left: 0;
-    right: 0;
-    /* margin: 80px; */
-    background-color: green;
-
-    overflow: hidden;
-}
-
-.fill_image {
-    position: absolute;
+    top: 0px;
+    left: 0px;
     height: 100%;
     width: 100%;
-    object-fit: cover;
+    opacity: 0.5;
 }
 
-.title {
-    position: absolute;
-    display: block;
-    margin: 0 auto;
+.background {
+    height: 100vh;
     width: 100%;
-    margin-top: 100px;
-
-    color:rgb(255, 255, 255);
-    font-family:Oxygen, sans-serif;
-    font-size:32px;
-    font-weight:700;
-    letter-spacing:3.2px;
-    line-height:32px;
-    text-align:center;
-    text-size-adjust:100%;
-    text-transform:uppercase;
 }
