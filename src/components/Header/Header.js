@@ -23,7 +23,7 @@ const header = (props) => {
                 <div class="container-fluid position-relative h-100 flex-lg-column pl-3 px-lg-3 pt-lg-3 pb-lg-2"> 
                     
                     {/* <!-- Logo -->  */}
-                    <a href="http://demo.harnishdesign.net/html/simone/index.html" class="mb-lg-auto mt-lg-4">
+                    <a href="/" class="mb-lg-auto mt-lg-4">
                         <span class="dark-2 rounded-pill p-2 mb-lg-1 d-none d-lg-inline-block">
                             <img class="img-fluid rounded-pill d-block" src={ profile } title="Russell" alt=""/>
                         </span>
