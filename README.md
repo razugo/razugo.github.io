@@ -16,3 +16,6 @@ https://rsuitejs.com/components/sidenav/
 
 # react bootstrap
 https://react-bootstrap.github.io/components/navbar/
+
+# Deploy
+```npm run deploy```
