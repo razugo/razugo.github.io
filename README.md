@@ -7,6 +7,7 @@ Font
 Accent Color
 Upload Resume
 
+
 # Tiny Slider
 https://www.npmjs.com/package/tiny-slider-react
 https://tiny-slider-react-tests.netlify.app/

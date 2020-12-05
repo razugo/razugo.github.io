@@ -8,6 +8,7 @@ import Footer from './Components/Footer/Footer'
 import Home from './Components/Content/Home/Home'
 import About from './Components/Content/About';
 import Resume from './Components/Content/Resume';
+import Portfolio from './Components/Content/Portfolio/Portfolio';
 import Contact from './Components/Content/Contact';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Home></Home>
         <About></About>
         <Resume></Resume>
+        <Portfolio></Portfolio>
         <Contact></Contact>
         <Footer></Footer>
         
