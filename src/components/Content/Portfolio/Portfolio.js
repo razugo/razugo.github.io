@@ -2,7 +2,12 @@ import React from 'react';
 
 import moduleClasses from './Portfolio.module.css';
 
-const portfolio = (props) => {
+import Tile from './Tile/Tile';
+
+function portfolio() {
+
+
+
     return (
         <section id="portfolio" class="section">
             <div class="container px-lg-5">
@@ -17,6 +22,7 @@ const portfolio = (props) => {
 
                 <div class="row">
                     <div class="col-sm-6 col-md-4">
+                        <Tile src="https://static.toiimg.com/photo/72975551.cms" >Hello</Tile>
                         <img className={ moduleClasses.tile } src="https://static.toiimg.com/photo/72975551.cms"/>
                         <img className={ moduleClasses.tile } src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg"/>
                     </div>
