@@ -2,10 +2,10 @@ import React from 'react';
 import { Parallax, Background } from 'react-parallax';
 import ReactTypingEffect from 'react-typing-effect';
 
-import classes from './Home.css';
-import moduleClasses from './Home.module.css';
+import classes from '../css/Home.css';
+import moduleClasses from '../css/Home.module.css';
 
-import bridge from '../../../assets/bridge.jpg';
+import bridge from '../../assets/bridge.jpg';
 
 const home = (props) => {
     return (
@@ -26,7 +26,7 @@ const home = (props) => {
                                 <h2 class="text-16 font-weight-600 text-white mb-2 mb-md-3">
                                     <span class="typed"> I'm&nbsp;
                                         <ReactTypingEffect
-                                        text={ ["an Engineer", "a Gamer", "Russell Wakugawa", "hungry."] }
+                                        text={ ["an Engineer", "a Gamer", "Russell", "hungry."] }
                                         typingDelay={ 0 }
                                         speed={ 100 }
                                         eraseSpeed={ 50 }

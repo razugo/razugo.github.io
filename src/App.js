@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import Header from './Components/Header/Header'
-import Footer from './Components/Footer/Footer'
-import Home from './Components/Content/Home/Home'
-import About from './Components/Content/About';
-import Resume from './Components/Content/Resume';
-import Portfolio from './Components/Content/Portfolio/Portfolio';
-import Contact from './Components/Content/Contact';
+import Header from    './Components/js/Header'
+import Footer from    './Components/js/Footer'
+import Home from      './Components/js/Home'
+import About from     './Components/js/About';
+import Resume from    './Components/js/Resume';
+import Portfolio from './Components/js/Portfolio';
+import Contact from   './Components/js/Contact';
 
 function App() {
 
@@ -27,9 +27,7 @@ function App() {
         <About></About>
         <Resume></Resume>
         <Portfolio></Portfolio>
-        <Contact></Contact>
         <Footer></Footer>
-        
       </div>
     </body>
   );

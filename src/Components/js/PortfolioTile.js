@@ -1,8 +1,8 @@
 import React from 'react';
 
-import moduleClasses from "./Tile.module.css";
+import moduleClasses from "../css/Tile.module.css";
 
-function tile(props) {
+function portfoliotile(props) {
     
     var imageSource = props.src;
 
@@ -16,4 +16,4 @@ function tile(props) {
     )
 }
 
-export default tile;
+export default portfoliotile;

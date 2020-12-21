@@ -1,6 +1,6 @@
 import React from 'react';
-import classes from './Header.css';
-import moduleclasses from './Header.module.css';
+import classes from '../css/Header.css';
+import moduleclasses from '../css/Header.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faDribbble, faTwitter, faFacebook } from '@fortawesome/free-brands-svg-icons'
 
