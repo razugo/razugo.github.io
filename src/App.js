@@ -9,7 +9,7 @@ import Home from      './Components/js/Home'
 import About from     './Components/js/About';
 import Resume from    './Components/js/Resume';
 import Portfolio from './Components/js/Portfolio';
-import Contact from   './Components/js/Contact';
+import Masonry from   './Components/js/MasonryPortfolio';
 
 function App() {
 
@@ -27,6 +27,7 @@ function App() {
         <About></About>
         <Resume></Resume>
         <Portfolio></Portfolio>
+        <Masonry></Masonry>
         <Footer></Footer>
       </div>
     </body>
