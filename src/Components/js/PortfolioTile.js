@@ -1,6 +1,6 @@
 import React from 'react';
 
-import moduleClasses from "../css/Tile.module.css";
+import moduleClasses from "../css/PortfolioTile.module.css";
 
 function portfoliotile(props) {
     
@@ -9,8 +9,11 @@ function portfoliotile(props) {
     return (
         <div className={ moduleClasses.tile }>
             <img className={ moduleClasses.tileImage } src={ imageSource }/>
-            <div className={ "overlay" }>
-                { props.children }
+            <div className={ moduleClasses.overlayContainer }>
+                <div className={ moduleClasses.overlay }>
+                    <h5 class="text-white font-weight-400">Project Title</h5>
+                    <span class="text-light">Category</span>
+                </div>
             </div>
         </div>
     )

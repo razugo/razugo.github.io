@@ -20,23 +20,16 @@ function portfolio() {
 
                 <div class="row">
                     <div class="col-sm-6 col-md-4">
-                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" >Hello</PortfolioTile>
-                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" ></PortfolioTile>
-                        <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" ></PortfolioTile>
+                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
+                        <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
                     </div>
                     <div class="col-sm-6 col-md-4">
-                        <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" ></PortfolioTile>
-                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" ></PortfolioTile>
+                        <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
+                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
                     </div>
                     <div class="col-sm-6 col-md-4">
-                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" ></PortfolioTile>
-                        <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" ></PortfolioTile>
-                        <ResumeTile 
-                            time='Spring 2019'
-                            position='Robotics Software Engineering Intern'
-                            company='Beyond Limits AI'
-                            description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                        ></ResumeTile>
+                        <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
+                        <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
                     </div>
                 </div>
 
