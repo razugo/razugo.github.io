@@ -44,7 +44,7 @@ const resume = (props) => {
                         position='Software Developer'
                         company='Hulu'
                         description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    ></ResumeTile>
+                    />
                 </div>
                 <div class="col-md-6">
                     <ResumeTile 
@@ -52,7 +52,7 @@ const resume = (props) => {
                         position='Robotics Software Engineering Intern'
                         company='Beyond Limits AI'
                         description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    ></ResumeTile>
+                    />
                 </div>
                 <div class="col-md-6">
                     <ResumeTile 
@@ -60,7 +60,7 @@ const resume = (props) => {
                         position='Software Development Intern'
                         company='Hulu'
                         description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    ></ResumeTile>
+                    />
                 </div>
                 <div class="col-md-6">
                     <ResumeTile 
@@ -68,7 +68,7 @@ const resume = (props) => {
                         position='Software Engineering Intern'
                         company='Veritas Technologies'
                         description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    ></ResumeTile>
+                    />
                 </div>
             </div>
 
