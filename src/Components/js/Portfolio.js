@@ -19,10 +19,10 @@ function portfolio() {
 
                 <div class="row">
                     <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
-                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
-                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
                     <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
                     <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
+                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
+                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
                     <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
                 </div>
 
