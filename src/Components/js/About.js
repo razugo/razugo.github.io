@@ -19,8 +19,8 @@ const about = (props) => {
                         <p>I'm Russell, a new grad Software Engineer who studied Computer Engineering and Computer Science at the University of 
                             Southern California. By trade I am a backend engineer, currently working at Hulu in Los Angeles, California. I 
                             love building and exploring new things. This website is just one of the projects I have picked up along the way. 
-                            I don't know too much about web design or UI design, but I hope to learn as I go.</p>
-                        <p>Feel free to explore the site and connect with me over LinkedIn or email. Thanks for stopping by.</p>
+                            I don't know too much about web or UI design, but I hope to learn as I go.</p>
+                        <p>Feel free to explore the site and connect with me over LinkedIn. Thanks for stopping by.</p>
                     </div>
                     <div class="col-lg-4 mt-5 mt-lg-0">
                         <div class="pl-4">

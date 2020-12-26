@@ -12,64 +12,48 @@ const resume = (props) => {
                 </p>
             </div>
 
-
-
             <h2 class="text-6 font-weight-600 mb-4">My Education</h2>
             <div class="row">
-                <div class="col-md-6">
                     <ResumeTile 
                         time='Spring 2019 - Fall 2017'
                         position='Computer Engineering and Computer Science'
                         company='University of Southern California'
                         description='Magna Cum Laude, Makers'
-                    ></ResumeTile>
-                </div>
-                <div class="col-md-6">
+                    />
                     <ResumeTile 
                         time='Spring 2017 - Fall 2015'
                         position='Computer Engineering'
                         company='California Polytechnic State University San Luis Obispo'
                         description='Roborodentia, Tau Beta Pi, University Housing'
-                    ></ResumeTile>
-                </div>
+                    />
             </div>
-
-
 
             <h2 class="text-6 font-weight-600 mb-4">My Experience</h2>
             <div class="row">
-                <div class="col-md-6">
-                    <ResumeTile 
-                        time='Present - Fall 2019'
-                        position='Software Developer'
-                        company='Hulu'
-                        description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    />
-                </div>
-                <div class="col-md-6">
-                    <ResumeTile 
-                        time='Spring 2019'
-                        position='Robotics Software Engineering Intern'
-                        company='Beyond Limits AI'
-                        description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    />
-                </div>
-                <div class="col-md-6">
-                    <ResumeTile 
-                        time='Summer 2018'
-                        position='Software Development Intern'
-                        company='Hulu'
-                        description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    />
-                </div>
-                <div class="col-md-6">
-                    <ResumeTile 
-                        time='Summer 2017'
-                        position='Software Engineering Intern'
-                        company='Veritas Technologies'
-                        description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
-                    />
-                </div>
+                <ResumeTile 
+                    time='Present - Fall 2019'
+                    position='Software Developer'
+                    company='Hulu'
+                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                />
+                <ResumeTile 
+                    time='Spring 2019'
+                    position='Robotics Software Engineering Intern'
+                    company='Beyond Limits AI'
+                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                />
+                <ResumeTile 
+                    time='Summer 2018'
+                    position='Software Development Intern'
+                    company='Hulu'
+                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                />
+                <ResumeTile 
+                    time='Summer 2017'
+                    position='Software Engineering Intern'
+                    company='Veritas Technologies'
+                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                />
             </div>
 
             <div class="text-center mt-5">
