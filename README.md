@@ -25,3 +25,4 @@ https://react-bootstrap.github.io/components/navbar/
 # Things to look at 
 https://mdbootstrap.com/docs/react/layout/masonry/
 https://stackoverflow.com/questions/47801606/list-folder-contents-with-reactjs
+https://medium.com/@shawnstern/importing-multiple-markdown-files-into-a-react-component-with-webpack-7548559fce6f
