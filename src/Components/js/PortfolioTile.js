@@ -15,8 +15,8 @@ function portfoliotile(props) {
                 
                 <div className={ moduleClasses.overlayContainer }>
                     <div className={ moduleClasses.overlay }>
-                        <h5 class="text-white font-weight-400">Project Title</h5>
-                        <span class="text-light">Category</span>
+                        <h5 class="text-white font-weight-400"> { props.title } </h5>
+                        <span class="text-light">{ props.technology }</span>
                     </div>
                 </div>
             </div>

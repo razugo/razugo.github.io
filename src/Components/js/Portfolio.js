@@ -3,7 +3,12 @@ import React from 'react';
 import moduleClasses from '../css/Portfolio.module.css';
 
 import PortfolioTile from './PortfolioTile';
-import ResumeTile from './ResumeTile';
+
+import outdraftedImage from '../../assets/outdrafted.jpg';
+import ledcubeImage from '../../assets/ledcube_closeup.jpg';
+import speakersImage from '../../assets/speakers.jpg';
+import raytracingGif from '../../assets/raytracing.gif';
+import bigbuckbunnyGif from '../../assets/bigbuckbunny.gif';
 
 function portfolio() {
     return (
@@ -18,12 +23,11 @@ function portfolio() {
                 </div>
 
                 <div class="row">
-                    <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
-                    <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
-                    <PortfolioTile src="https://static.toiimg.com/photo/72975551.cms" />
-                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
-                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
-                    <PortfolioTile src="https://i.pinimg.com/originals/ca/76/0b/ca760b70976b52578da88e06973af542.jpg" />
+                    <PortfolioTile title="Outdrafted" technology="Machine Learning (Keras)" src={ outdraftedImage } />
+                    <PortfolioTile title="Video Streaming" technology="Video Manifest Generation (Python)" src={ bigbuckbunnyGif } />
+                    <PortfolioTile title="DIY Speakers" technology="Hardware (OP Amp)" src={ speakersImage } />
+                    <PortfolioTile title="LED Cube" technology="Hardware (Multiplexing)" src={ ledcubeImage } />
+                    <PortfolioTile title="Ray Tracing" technology="Distributed Computing (Cuda)" src={ raytracingGif } />
                 </div>
 
             </div>
