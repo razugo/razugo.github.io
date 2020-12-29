@@ -10,6 +10,10 @@
     --dark-white: #818181;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 .sectionUnderline {
     width: 80px;
     margin-left: auto;
