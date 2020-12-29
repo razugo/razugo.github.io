@@ -1,7 +1,13 @@
 :root {
     --key-color: #fa8072;
+    --key-color-dark: #db7165;
+
     --light-black: #212529;
     --dark-black: #111418;
+    
+    --white: #fff;
     --light-white: #cbc7c3;
     --dark-white: #818181;
 }
+
+

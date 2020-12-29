@@ -58,7 +58,7 @@
     line-height: 32px;
     font-size: 20px;
     text-align: center;
-    color: #fff;
+    color: var(--white);
   }
   .scroll-down-arrow .animated {
     position: relative;

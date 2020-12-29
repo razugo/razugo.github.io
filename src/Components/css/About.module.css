@@ -1,0 +1,52 @@
+.contactList {
+    padding: 0;
+}
+
+.contactList > li {
+    list-style-type: none;
+    border-bottom: 1px solid #eaeaea;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.contactList > li > a {
+    color: var(--key-color);
+    text-decoration: none;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+.contactList > li > a:hover{
+    color: var(--key-color-dark);
+    text-decoration: none;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+  
+.resumeButton {
+    cursor: pointer;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.15);
+    background-color: var(--key-color);
+    padding: 0.8rem 2.6rem;
+    font-weight: 500;
+    -webkit-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+    border-radius: 50rem !important;
+    color: #fff;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 1rem;
+    line-height: 1.5;
+    text-decoration: none;
+    
+}
+
+.resumeButton:hover {
+    color: #fff;
+    text-decoration: none;
+    background-color: var(--key-color-dark);
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+}

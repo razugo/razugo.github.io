@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import Header from    './Components/js/Header'
+import Sidebar from    './Components/js/Sidebar'
 import Footer from    './Components/js/Footer'
 import Home from      './Components/js/Home'
 import About from     './Components/js/About';
@@ -21,12 +21,12 @@ function App() {
   return (
     <body class="side-header" data-spy="scroll" data-target=".navbar" data-offset="1">
       <div id="main-wrapper">
-        <Header onClick={ buttonClick } open={ open }></Header>
-        <Home></Home>
-        <About></About>
-        <Resume></Resume>
-        <Portfolio></Portfolio>
-        <Footer></Footer>
+        <Sidebar onClick={ buttonClick } open={ open }/>
+        <Home/>
+        <About/>
+        <Resume/>
+        <Portfolio/>
+        <Footer/>
       </div>
     </body>
   );

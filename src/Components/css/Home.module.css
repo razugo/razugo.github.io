@@ -1,5 +1,5 @@
 .parallaxCover {
-    background-color: black;
+    background-color: var(--dark-black);
     position: absolute;
     top: 0px;
     left: 0px;

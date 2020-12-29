@@ -1,6 +1,6 @@
 import React from 'react';
-import classes from '../css/Header.css';
-import moduleclasses from '../css/Header.module.css';
+import classes from '../css/Sidebar.css';
+import moduleclasses from '../css/Sidebar.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faDribbble, faTwitter, faFacebook } from '@fortawesome/free-brands-svg-icons'
 
@@ -39,7 +39,6 @@ const header = (props) => {
                             <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#home">Home</a></li>
                             <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#about">About Me</a></li>
                             <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#resume">Resume</a></li>
-                            <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#contact">Contact</a></li>
                         </ul>
                     </div>
 

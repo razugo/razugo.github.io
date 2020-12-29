@@ -1,6 +1,6 @@
 .tile {
     position: relative;
-    background-color: grey;
+    background-color: var(--dark-black);
     width: 100%;
     border-radius: .25rem;
     overflow: hidden;

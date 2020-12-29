@@ -1,5 +1,7 @@
 import React from 'react';
 
+import moduleclasses from '../css/About.module.css';
+
 const about = (props) => {
     return (
         <section id="about" class="section">
@@ -15,7 +17,7 @@ const about = (props) => {
 
                 <div class="row">
                     <div class="col-lg-8 text-center text-lg-left">
-                        <h2 class="text-7 font-weight-600 mb-3">I'm <span class="text-primary">Russell Wakugawa,</span> a Software Engineer</h2>
+                        <h2 class="text-7 font-weight-600 mb-3">I'm <span class="text-key">Russell Wakugawa,</span> a Software Engineer</h2>
                         <p>I'm Russell, a new grad Software Engineer who studied Computer Engineering and Computer Science at the University of 
                             Southern California. By trade I am a backend engineer, currently working at Hulu in Los Angeles, California. I 
                             love building and exploring new things. This website is just one of the projects I have picked up along the way. 
@@ -24,12 +26,12 @@ const about = (props) => {
                     </div>
                     <div class="col-lg-4 mt-5 mt-lg-0">
                         <div class="pl-4">
-                            <ul class="list-style-2">
-                            <li class=""><span class="font-weight-600 mr-2">Name:</span>Russell Wakugawa</li>
-                            <li class=""><span class="font-weight-600 mr-2">Email:</span><a href="rwakugawa@gmail.com">rwakugawa@gmail.com</a></li>
-                            <li class="border-0"><span class="font-weight-600 mr-2">From:</span>Los Angeles, California</li>
+                            <ul className={ moduleclasses.contactList}>
+                                <li class=""><span class="font-weight-600 mr-2">Name:</span>Russell Wakugawa</li>
+                                <li class=""><span class="font-weight-600 mr-2">Email:</span><a href="rwakugawa@gmail.com">rwakugawa@gmail.com</a></li>
+                                <li class="border-0"><span class="font-weight-600 mr-2">From:</span>Los Angeles, California</li>
                             </ul>
-                            <a href="https://drive.google.com/file/d/1hkc1P1MRbtcwCHQTRDmvvEFn-mUzYJLR/view?usp=sharing" class="btn btn-primary rounded-pill smooth-scroll">Download CV</a> 
+                            <a href="https://drive.google.com/file/d/1hkc1P1MRbtcwCHQTRDmvvEFn-mUzYJLR/view?usp=sharing" className={ moduleclasses.resumeButton }>Download CV</a> 
                         </div>
                     </div>
                 </div>
