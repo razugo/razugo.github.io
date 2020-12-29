@@ -26,3 +26,9 @@ https://react-bootstrap.github.io/components/navbar/
 https://mdbootstrap.com/docs/react/layout/masonry/
 https://stackoverflow.com/questions/47801606/list-folder-contents-with-reactjs
 https://medium.com/@shawnstern/importing-multiple-markdown-files-into-a-react-component-with-webpack-7548559fce6f
+
+# TODO
+1. standardize colors (key colors, whites, blacks)
+2. fix colors on sections (alternate white grey, fix underline color)
+2. fix hover on picture
+3. fix tab logo and name
