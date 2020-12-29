@@ -8,6 +8,7 @@
 }
 
 .tileImageContainer {
+    padding: 3px;
     background-color: var(--key-color);
     display: flex;
     position: absolute;
@@ -18,7 +19,6 @@
 }
 
 .tileImage {
-    padding: 5px;
     align-self: center;
     transition-duration: 0.5s;
     border-radius: .25rem;

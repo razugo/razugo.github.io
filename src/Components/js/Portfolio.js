@@ -18,7 +18,8 @@ function portfolio() {
                 <div class="position-relative d-flex text-center mb-5">
                     <h2 class="text-24 text-light opacity-4 text-uppercase font-weight-600 w-100 mb-0">Portfolio</h2>
                     <p class="text-9 text-dark font-weight-600 position-absolute w-100 align-self-center line-height-4 mb-0">
-                    My Work<span class="heading-separator-line border-bottom border-3 border-primary position-abolute d-block mx-auto"></span>
+                        My Work
+                        <span class="sectionUnderline"/>
                     </p>
                 </div>
 

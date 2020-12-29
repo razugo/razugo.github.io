@@ -2,12 +2,6 @@
 
 https://stackoverflow.com/questions/59759557/highlight-current-page-in-bootstrap-with-react
 
-
-Font
-Accent Color
-Upload Resume
-
-
 # Tiny Slider
 https://www.npmjs.com/package/tiny-slider-react
 https://tiny-slider-react-tests.netlify.app/
@@ -30,5 +24,6 @@ https://medium.com/@shawnstern/importing-multiple-markdown-files-into-a-react-co
 # TODO
 1. standardize colors (key colors, whites, blacks)
 2. fix colors on sections (alternate white grey, fix underline color)
-2. fix hover on picture
-3. fix tab logo and name
+3. fix hover on picture
+4. fix tab logo and name
+5. choose and use a font

@@ -8,7 +8,7 @@ const resume = (props) => {
             <div class="position-relative d-flex text-center mb-5">
                 <h2 class="text-24 text-light opacity-4 text-uppercase font-weight-600 w-100 mb-0">Summary</h2>
                 <p class="text-9 text-dark font-weight-600 position-absolute w-100 align-self-center line-height-4 mb-0">
-                Resume<span class="heading-separator-line border-bottom border-3 border-primary position-abolute d-block mx-auto"></span>
+                    Resume<span class="sectionUnderline"/>
                 </p>
             </div>
 
