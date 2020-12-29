@@ -1,0 +1,25 @@
+.resumeTime {
+    background-color: var(--key-color);
+    font-weight: 400;
+    font-size: 0.875rem;
+    color: #fff;
+    display: inline-block;
+    padding: .25em .4em;
+    line-height: 1;
+    border-radius: .25rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+}
+
+.resumeCompany {
+    color: var(--key-color);
+    font-size: 1rem;
+    font-weight: 400;
+    text-align: left;
+    box-sizing: border-box;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    line-height: 1.8;
+    
+}
