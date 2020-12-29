@@ -7,6 +7,7 @@ Font
 Accent Color
 Upload Resume
 
+
 # Tiny Slider
 https://www.npmjs.com/package/tiny-slider-react
 https://tiny-slider-react-tests.netlify.app/
@@ -19,3 +20,9 @@ https://react-bootstrap.github.io/components/navbar/
 
 # Deploy
 ```npm run deploy```
+
+
+# Things to look at 
+https://mdbootstrap.com/docs/react/layout/masonry/
+https://stackoverflow.com/questions/47801606/list-folder-contents-with-reactjs
+https://medium.com/@shawnstern/importing-multiple-markdown-files-into-a-react-component-with-webpack-7548559fce6f

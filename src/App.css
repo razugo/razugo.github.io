@@ -32,7 +32,8 @@
 }
 
 .dark {
-  background-color: #111418 !important;
+  /* background-color: #111418 !important; */
+  background-color: var(--dark-black) !important;
 }
 
 .dark-1 {
@@ -40,7 +41,12 @@
 }
 
 .dark-2 {
-  background-color: #343a40 !important;
+  /* background-color: #343a40 !important; */
+  background-color: var(--light-black) !important;
+}
+
+.text-key {
+  color: var(--key-color) !important;
 }
 
 /* Text Size */

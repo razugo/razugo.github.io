@@ -1,0 +1,80 @@
+/*=== 5.6 Hero Background ===*/
+.hero-wrap {
+    position: relative;
+    overflow: hidden;
+}
+.hero-wrap .hero-mask, .hero-wrap .hero-bg, .hero-wrap .hero-bg-slideshow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+.hero-wrap .hero-mask {
+    z-index: 1;
+}
+.hero-wrap .hero-content {
+    position: relative;
+    z-index: 2;
+}
+.hero-wrap .hero-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+}
+.hero-wrap .hero-bg-slideshow {
+    z-index: 0;
+}
+.hero-wrap .hero-bg {
+    z-index: 0;
+    background-attachment: fixed;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    transition: background-image 300ms ease-in 200ms;
+}
+.hero-wrap .hero-bg.hero-bg-scroll {
+    background-attachment: scroll;
+}
+.hero-wrap .hero-bg-slideshow .hero-bg {
+    background-attachment: inherit;
+}
+.hero-wrap .hero-bg-slideshow.owl-carousel .owl-stage-outer, .hero-wrap .hero-bg-slideshow.owl-carousel .owl-stage, .hero-wrap .hero-bg-slideshow.owl-carousel .owl-item {
+    height: 100%;
+}
+
+/*== Scroll Down Arrow ==*/
+.scroll-down-arrow {
+    position: absolute;
+    z-index: 3;
+    bottom: 20px;
+    left: 50%;
+    margin-left: -16px;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    font-size: 20px;
+    text-align: center;
+    color: var(--white);
+  }
+  .scroll-down-arrow .animated {
+    position: relative;
+    animation: fadeInDown 1.5s infinite;
+    -webkit-animation: fadeInDown 1.5s infinite;
+    -moz-animation: fadeInDown 1.5s infinite;
+    -o-animation: fadeInDown 1.5s infinite;
+  }
+  
+  @keyframes fadeInDown {
+    0% {
+      top: -25px;
+      opacity: 0;
+    }
+    100% {
+      top: 10px;
+      opacity: 1;
+    }
+  }

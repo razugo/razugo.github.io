@@ -1,6 +1,7 @@
 _site/
 node_modules/
 build/
+.vscode/
 
 debug.log
 .DS_Store

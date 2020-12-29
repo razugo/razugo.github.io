@@ -1,0 +1,57 @@
+.tile {
+    position: relative;
+    background-color: var(--dark-black);
+    width: 100%;
+    border-radius: .25rem;
+    overflow: hidden;
+    padding-bottom: 80%;
+}
+
+.tileImageContainer {
+    background-color: var(--key-color);
+    display: flex;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.tileImage {
+    padding: 5px;
+    align-self: center;
+    transition-duration: 0.5s;
+    border-radius: .25rem;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.overlayContainer {
+    display: flex;
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.overlay {
+    text-align: center;
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.tile:hover > .tileImageContainer {
+    transition-duration: 0.3s;
+    transform: scale(1.01);
+    filter: blur(1px);
+    opacity: 0.5;
+}
+
+.tile:hover > .overlayContainer {
+    transition-duration: 0.3s;
+    opacity: 1;
+}

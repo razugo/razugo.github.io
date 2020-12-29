@@ -1,0 +1,43 @@
+.navbar-collapse .navbar-nav {
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    position: absolute;
+    top: 99%;
+    right: 0;
+    left: 0;
+    background: #fff;
+    margin-top: 0px;
+    z-index: 1000;
+    max-height: 0px;
+    transition: max-height 0.35s ease;
+    overflow: hidden;
+  }
+  .expanded {
+    max-height: 65vh;
+  }
+  .navbar-collapse .navbar-nav {
+    overflow: hidden;
+    overflow-y: auto;
+    max-height: 65vh;
+    padding: 15px;
+  }
+  ul.navbar-nav li {
+    display: block;
+    border-bottom: 1px solid #eee;
+    margin: 0;
+    padding: 0;
+  }
+  ul.navbar-nav li:last-child {
+    border: none;
+  }
+  .navbar-text-light .navbar-collapse {
+    background: rgba(0, 0, 0, 0.95);
+  }
+  .navbar-text-light .navbar-collapse ul.navbar-nav li {
+    border-color: rgba(250, 250, 250, 0.15);
+  }
+}

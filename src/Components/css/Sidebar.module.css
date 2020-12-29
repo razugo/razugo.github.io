@@ -1,0 +1,185 @@
+#header {
+    text-align: center;
+    border: none;
+}
+
+.primaryMenu {
+    display: flex;
+    text-align: center;
+    position: fixed;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    z-index: 2;
+}
+
+@media (max-width: 991.98px) {
+    .primaryMenu {
+        position: fixed;
+        width: 100%;
+        height: auto !important;
+        overflow: visible;
+        padding: 0rem 1rem;
+    }
+}
+
+
+@media (max-width: 991.98px) {
+    .navbarExpand .navbar-collapse {
+      position: absolute;
+      right: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    .navbarExpand .navbar-collapse .navbar-nav {
+      overflow: hidden;
+      overflow-y: auto;
+      max-height: 65vh;
+      padding: 15px;
+    }
+    .navbarExpand ul.navbar-nav li {
+      display: block;
+      border-bottom: 1px solid #eee;
+      margin: 0;
+      padding: 0;
+    }
+    .navbarExpand ul.navbar-nav li:last-child {
+      border: none;
+    }
+}
+
+
+
+/* ------------------------- Nav Links ------------------------- */
+.navLink {
+    color: var(--white)
+}
+.navLink:hover {
+    color: var(--key-color);
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+
+
+
+/* ------------------------- Social Icons ------------------------- */
+.socialIcons {
+    margin: 0;
+    padding: 0;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    list-style: none;
+}
+.socialIcons li {
+    margin: 0px 6px 4px;
+    padding: 0;
+    overflow: visible;
+}
+.socialIcons li a {
+    display: block;
+    height: 26px;
+    line-height: 26px;
+    width: 26px;
+    font-size: 18px;
+    text-align: center;
+    color: var(--light-black);
+    text-decoration: none;
+    -webkit-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+  
+.socialIconsTwitter a:hover {
+    color: #00ACEE;
+}
+.socialIconsFacebook a:hover {
+    color: #3B5998;
+}
+.socialIconsLinkedin a:hover {
+    color: #0E76A8;
+}
+.socialIconsDribbble a:hover {
+    color: #ea4c89;
+}
+li:hover.socialIconsGithub a {
+    color: #333333;
+}
+  
+
+/* ------------------------- Hamburger Menu ------------------------- */
+.navbarToggler {
+    width: 25px;
+    height: 30px;
+    padding: 10px;
+    margin: 18px 15px;
+    position: relative;
+    border: none;
+
+    transition: 0.5s ease-in-out;
+    cursor: pointer;
+    display: block;
+
+    padding: .25rem .75rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    background-color: transparent;
+    outline: none !important
+}
+.navbarToggler span {
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100%;
+    background: var(--white);
+    border-radius: 2px;
+    opacity: 1;
+    left: 0;
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+    -webkit-transition: 0.25s ease-in-out;
+    transition: 0.25s ease-in-out;
+}
+.navbarToggler span:nth-child(1) {
+    top: 7px;
+    -webkit-transform-origin: left center;
+    -moz-transform-origin: left center;
+    -o-transform-origin: left center;
+    transform-origin: left center;
+}
+.navbarToggler span:nth-child(2) {
+    top: 14px;
+    -webkit-transform-origin: left center;
+    -moz-transform-origin: left center;
+    -o-transform-origin: left center;
+    transform-origin: left center;
+}
+.navbarToggler span:nth-child(3) {
+    top: 21px;
+    -webkit-transform-origin: left center;
+    -moz-transform-origin: left center;
+    -o-transform-origin: left center;
+    transform-origin: left center;
+}
+.navbarToggler.show span:nth-child(1) {
+    top: 3px;
+    left: 3px;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.navbarToggler.show span:nth-child(2) {
+    width: 0%;
+    opacity: 0;
+}
+.navbarToggler.show span:nth-child(3) {
+    top: 21px;
+    left: 3px;
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+@media (min-width: 992px) {
+    .navbarToggler {
+        display: none;
+    }
+}
