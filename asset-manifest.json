@@ -1,19 +1,19 @@
 {
   "files": {
-    "main.css": "/static/css/main.28e127ca.chunk.css",
-    "main.js": "/static/js/main.30fe0c6f.chunk.js",
-    "main.js.map": "/static/js/main.30fe0c6f.chunk.js.map",
-    "runtime-main.js": "/static/js/runtime-main.41fd9e57.js",
-    "runtime-main.js.map": "/static/js/runtime-main.41fd9e57.js.map",
+    "main.css": "/static/css/main.1f56f82e.chunk.css",
+    "main.js": "/static/js/main.40fd7d35.chunk.js",
+    "main.js.map": "/static/js/main.40fd7d35.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.979acdd4.js",
+    "runtime-main.js.map": "/static/js/runtime-main.979acdd4.js.map",
     "static/css/2.1a02f21c.chunk.css": "/static/css/2.1a02f21c.chunk.css",
-    "static/js/2.0610565e.chunk.js": "/static/js/2.0610565e.chunk.js",
-    "static/js/2.0610565e.chunk.js.map": "/static/js/2.0610565e.chunk.js.map",
-    "static/js/3.3fb2dc3d.chunk.js": "/static/js/3.3fb2dc3d.chunk.js",
-    "static/js/3.3fb2dc3d.chunk.js.map": "/static/js/3.3fb2dc3d.chunk.js.map",
+    "static/js/2.5be17ae7.chunk.js": "/static/js/2.5be17ae7.chunk.js",
+    "static/js/2.5be17ae7.chunk.js.map": "/static/js/2.5be17ae7.chunk.js.map",
+    "static/js/3.8814580f.chunk.js": "/static/js/3.8814580f.chunk.js",
+    "static/js/3.8814580f.chunk.js.map": "/static/js/3.8814580f.chunk.js.map",
     "index.html": "/index.html",
     "static/css/2.1a02f21c.chunk.css.map": "/static/css/2.1a02f21c.chunk.css.map",
-    "static/css/main.28e127ca.chunk.css.map": "/static/css/main.28e127ca.chunk.css.map",
-    "static/js/2.0610565e.chunk.js.LICENSE.txt": "/static/js/2.0610565e.chunk.js.LICENSE.txt",
+    "static/css/main.1f56f82e.chunk.css.map": "/static/css/main.1f56f82e.chunk.css.map",
+    "static/js/2.5be17ae7.chunk.js.LICENSE.txt": "/static/js/2.5be17ae7.chunk.js.LICENSE.txt",
     "static/media/bigbuckbunny.9abb27bc.gif": "/static/media/bigbuckbunny.9abb27bc.gif",
     "static/media/bridge.d66cde59.jpg": "/static/media/bridge.d66cde59.jpg",
     "static/media/ledcube_closeup.eeb908bb.jpg": "/static/media/ledcube_closeup.eeb908bb.jpg",
@@ -23,10 +23,10 @@
     "static/media/speakers.73794f51.jpg": "/static/media/speakers.73794f51.jpg"
   },
   "entrypoints": [
-    "static/js/runtime-main.41fd9e57.js",
+    "static/js/runtime-main.979acdd4.js",
     "static/css/2.1a02f21c.chunk.css",
-    "static/js/2.0610565e.chunk.js",
-    "static/css/main.28e127ca.chunk.css",
-    "static/js/main.30fe0c6f.chunk.js"
+    "static/js/2.5be17ae7.chunk.js",
+    "static/css/main.1f56f82e.chunk.css",
+    "static/js/main.40fd7d35.chunk.js"
   ]
 }
