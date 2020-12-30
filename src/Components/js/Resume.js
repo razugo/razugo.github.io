@@ -58,8 +58,9 @@ const resume = (props) => {
 
             <div class="text-center mt-5">
                 <a href="https://drive.google.com/file/d/1hkc1P1MRbtcwCHQTRDmvvEFn-mUzYJLR/view?usp=sharing"
-                    class="btn btn-outline-secondary rounded-pill shadow-none">Download CV <span class="ml-1"><i
-                    class="fas fa-download"></i></span></a>
+                    class="btn btn-outline-secondary rounded-pill shadow-none">Download CV 
+                    <span class="ml-1"><i class="fas fa-download"></i></span>
+                </a>
             </div>
       </section>
     );

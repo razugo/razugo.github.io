@@ -1,5 +1,8 @@
-/* ------------------------- Nav Links ------------------------- */
 .navLink {
-    color: #007bff;
+    color: var(--key-color)
+}
+
+.navLink:hover {
+    color: var(--key-color-dark)
 }
 

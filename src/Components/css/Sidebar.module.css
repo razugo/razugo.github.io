@@ -3,6 +3,10 @@
     border: none;
 }
 
+.profileImg {
+    max-width: 160px;
+}
+
 .primaryMenu {
     display: flex;
     text-align: center;
@@ -82,9 +86,9 @@
     height: 26px;
     line-height: 26px;
     width: 26px;
-    font-size: 18px;
+    font-size: 14px;
     text-align: center;
-    color: var(--light-black);
+    color: var(--light-white);
     text-decoration: none;
     -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;

@@ -25,7 +25,7 @@ const header = (props) => {
                     {/* <!-- Logo -->  */}
                     <a href="/" class="mb-lg-auto mt-lg-4">
                         <span class="dark-2 rounded-pill p-2 mb-lg-1 d-none d-lg-inline-block">
-                            <img class="img-fluid rounded-pill d-block" src={ profile } title="Russell" alt=""/>
+                            <img className={ moduleclasses.profileImg + " img-fluid rounded-pill d-block" } src={ profile } title="Russell" alt=""/>
                         </span>
                         <h1 class="text-5 text-white text-center mb-0 d-lg-block">Russell Wakugawa</h1>
                     </a> 
