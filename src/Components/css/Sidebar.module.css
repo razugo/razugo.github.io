@@ -52,6 +52,22 @@
     }
 }
 
+@media (max-width: 450px) {
+    .noneMobile {
+        display: none;
+    }
+}
+
+.displayMobile {
+    display: none;
+}
+
+@media (max-width: 450px) {
+    .displayMobile {
+        display: inline;
+    }
+}
+
 
 
 /* ------------------------- Nav Links ------------------------- */
