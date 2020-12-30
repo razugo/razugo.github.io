@@ -10,11 +10,8 @@
     --dark-white: #818181;
 }
 
-html {
-    scroll-behavior: smooth;
-}
-
 html, body {
+    scroll-behavior: smooth;
     font-family: "Poppins", sans-serif !important;
 }
 
@@ -23,8 +20,8 @@ a {
 }
 
 section {
-    padding-left: 20px !important;
-    padding-right: 20px !important;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
 }
 
 .sectionUnderline {
