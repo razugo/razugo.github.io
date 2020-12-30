@@ -22,6 +22,11 @@ a {
     text-decoration: none !important;
 }
 
+section {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+}
+
 .sectionUnderline {
     width: 80px;
     margin-left: auto;
