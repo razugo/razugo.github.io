@@ -14,6 +14,10 @@ html {
     scroll-behavior: smooth;
 }
 
+a {
+    text-decoration: none !important;
+}
+
 .sectionUnderline {
     width: 80px;
     margin-left: auto;

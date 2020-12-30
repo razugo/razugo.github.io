@@ -19,7 +19,6 @@
 
 .contactList > li > a {
     color: var(--key-color);
-    text-decoration: none;
     -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;
 }
