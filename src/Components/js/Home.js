@@ -38,7 +38,7 @@ const home = (props) => {
                             </div>
                         </div>
                     </div>
-                    <a href="l#about" class="scroll-down-arrow text-white smooth-scroll"><span class="animated"><i class="fa fa-chevron-down"></i></span></a> 
+                    <a href="#about" class="scroll-down-arrow text-white smooth-scroll"><span class="animated"><i class="fa fa-chevron-down"></i></span></a> 
                 </div>
             </div>
 
