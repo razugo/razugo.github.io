@@ -7,7 +7,7 @@ function portfoliotile(props) {
     var imageSource = props.src;
 
     return (
-        <div className={ "col-6 col-lg-4 mb-4 " }>
+        <div className={ "col-md-6 col-lg-4 mb-4 " }>
             <div className={ moduleClasses.tile }>
                 <div className={ moduleClasses.tileImageContainer }>
                     <img className={ moduleClasses.tileImage } src={ imageSource }/>

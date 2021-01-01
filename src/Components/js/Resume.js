@@ -34,25 +34,25 @@ const resume = (props) => {
                     time='Present - Fall 2019'
                     position='Software Developer'
                     company='Hulu'
-                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                    description='Building and maintaining scalable, fault tolerant systems for Hulu playback, focusing on DRM security and metadata aggregation for content, advertisements, and cdns'
                 />
                 <ResumeTile 
                     time='Spring 2019'
                     position='Robotics Software Engineering Intern'
                     company='Beyond Limits AI'
-                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                    description='Helped kickstart autonomous robotics project for surveying and automated reporting'
                 />
                 <ResumeTile 
                     time='Summer 2018'
                     position='Software Development Intern'
                     company='Hulu'
-                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                    description='Integrated new tracking logic to messaging pipeline for internal ad tracking and scheduling'
                 />
                 <ResumeTile 
                     time='Summer 2017'
                     position='Software Engineering Intern'
                     company='Veritas Technologies'
-                    description='Lisque persius interesset his et, in quot quidam persequeris vim, ad mea essent possim iriure.'
+                    description="Implemented new feature for cross origin deduplication for Netbackup, Veritas's backup software"
                 />
             </div>
 

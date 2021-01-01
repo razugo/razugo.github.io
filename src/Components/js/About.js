@@ -19,7 +19,7 @@ const about = (props) => {
                 <div class="row">
                     <div class="col-lg-8 text-center text-lg-left">
                         <h2 class="text-7 font-weight-600 mb-3">I'm <span class="text-key">Russell Wakugawa,</span> a Software Engineer</h2>
-                        <p>I'm Russell, a new grad Software Engineer who studied Computer Engineering and Computer Science at the University of 
+                        <p>I'm Russell, a Software Engineer who studied Computer Engineering and Computer Science at the University of 
                             Southern California. By trade I am a backend engineer, currently working at Hulu in Los Angeles, California. I 
                             love building and exploring new things. This website is just one of the projects I have picked up along the way. 
                             I don't know too much about web or UI design, but I hope to learn as I go.</p>
