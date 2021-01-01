@@ -40,6 +40,7 @@ const header = (props) => {
                             <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#about">About Me</a></li>
                             <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#resume">Resume</a></li>
                             <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="#portfolio">My Work</a></li>
+                            {/* <li class="nav-item"><a className={ [moduleclasses.navLink, "nav-link"].join(' ') } href="/gallery">Gallery</a></li> */}
                         </ul>
                     </div>
 

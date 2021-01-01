@@ -52,7 +52,7 @@ const resume = (props) => {
                     time='Summer 2017'
                     position='Software Engineering Intern'
                     company='Veritas Technologies'
-                    description="Implemented new feature for cross origin deduplication for Netbackup, Veritas's backup software"
+                    description="Implemented new feature for cross origin deduplication for Netbackup, Veritas's enterprise backup software"
                 />
             </div>
 
