@@ -27,3 +27,7 @@ https://medium.com/@shawnstern/importing-multiple-markdown-files-into-a-react-co
 3. fix hover on picture
 4. fix tab logo and name
 5. choose and use a font
+
+image gallery
+https://www.w3schools.com/w3css/w3css_slideshow.asp
+https://www.geeksforgeeks.org/how-to-change-image-dynamically-when-user-scrolls-using-javascript/
