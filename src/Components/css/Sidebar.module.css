@@ -110,20 +110,17 @@
     transition: all 0.2s ease;
 }
   
-.socialIconsTwitter a:hover {
-    color: #00ACEE;
-}
-.socialIconsFacebook a:hover {
-    color: #3B5998;
-}
 .socialIconsLinkedin a:hover {
     color: #0E76A8;
 }
-.socialIconsDribbble a:hover {
-    color: #ea4c89;
+.socialIconsGithub a:hover {
+    color: #333;
 }
-li:hover.socialIconsGithub a {
-    color: #333333;
+.socialIconsInstagram a:hover {
+    color: #8a3ab9;
+}
+.socialIconsEmail a:hover {
+    color: #de5246;
 }
   
 

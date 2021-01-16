@@ -12,6 +12,9 @@ import Resume from    './Components/js/Resume';
 import Portfolio from './Components/js/Portfolio';
 
 import Gallery from   './Components/js/Gallery';
+import Blog from       './Components/js/Blog';
+import BlogPost from   './Components/js/BlogPost';
+import BlogTile from   './Components/js/BlogTile';
 
 function App() {
 
@@ -39,6 +42,9 @@ function App() {
                         </Route>
                         <Route path="/gallery">
                             <Gallery/>
+                        </Route>
+                        <Route path="/blog">
+                                <Blog/>
                         </Route>
                     </Switch>
                 </Router>
