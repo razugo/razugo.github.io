@@ -11,7 +11,7 @@ So a couple weeks ago I participated in Liquid Hacks a hackathan hosted by the e
 
 [Devpost](https://liquidhacks.devpost.com/)
 
-For our project we decided to build Outdrafted, a machine learning based application that gives a probability of one team composition winning against another. We were inspired to make this becuase of the shear amount of league that I and my teammate play (lmao). This tool would be a fun way to cross gaming with technology. 
+For our project we decided to build Outdrafted, a machine learning based application that gives a probability of one team composition winning against another. We were inspired to make this because of the shear amount of league that I and my teammate play (lmao). Machine learning has always been a topic that I knew was cool but was never super invested in. However, this tool was a really good way of introducing myself to this technology.
 
 # Machine Learning
 
