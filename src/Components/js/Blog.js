@@ -7,8 +7,8 @@ import BlogPost from './BlogPost';
 import BlogTile from './BlogTile';
 
 const posts = [
-    require('../../markdown/example1.md'),
-    require('../../markdown/example2.md')
+    // require('../../markdown/example1.md'),
+    // require('../../markdown/example2.md')
 ];
 
 class blog extends React.Component {

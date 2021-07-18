@@ -12,26 +12,16 @@ const resume = (props) => {
                 </p>
             </div>
 
-            <h2 class="text-6 font-weight-600 mb-4">My Education</h2>
-            <div class="row">
-                    <ResumeTile 
-                        time='Spring 2019 - Fall 2017'
-                        position='Computer Engineering and Computer Science'
-                        company='University of Southern California'
-                        description='Magna Cum Laude, Makers'
-                    />
-                    <ResumeTile 
-                        time='Spring 2017 - Fall 2015'
-                        position='Computer Engineering'
-                        company='California Polytechnic State University San Luis Obispo'
-                        description='Roborodentia, Tau Beta Pi, University Housing'
-                    />
-            </div>
-
             <h2 class="text-6 font-weight-600 mb-4">My Experience</h2>
             <div class="row">
                 <ResumeTile 
-                    time='Present - Fall 2019'
+                    time='Present - Spring 2021'
+                    position='Software Development Engineer II'
+                    company='Amazon'
+                    description='Building out a new Greenfield project focusing on ecomerce and AWS. Stay tuned!'
+                />
+                <ResumeTile 
+                    time='Spring 2021 - Fall 2019'
                     position='Software Developer'
                     company='Hulu'
                     description='Building and maintaining scalable, fault tolerant systems for Hulu playback, focusing on DRM security and metadata aggregation for content, advertisements, and cdns'
@@ -56,11 +46,20 @@ const resume = (props) => {
                 />
             </div>
 
-            <div class="text-center mt-5">
-                <a href="https://drive.google.com/file/d/1hkc1P1MRbtcwCHQTRDmvvEFn-mUzYJLR/view?usp=sharing"
-                    class="btn btn-outline-secondary rounded-pill shadow-none">Download CV 
-                    <span class="ml-1"><i class="fas fa-download"></i></span>
-                </a>
+            <h2 class="text-6 font-weight-600 mb-4">My Education</h2>
+            <div class="row">
+                    <ResumeTile 
+                        time='Spring 2019 - Fall 2017'
+                        position='Computer Engineering and Computer Science'
+                        company='University of Southern California'
+                        description='Magna Cum Laude, Makers'
+                    />
+                    <ResumeTile 
+                        time='Spring 2017 - Fall 2015'
+                        position='Computer Engineering'
+                        company='California Polytechnic State University San Luis Obispo'
+                        description='Roborodentia, Tau Beta Pi, University Housing'
+                    />
             </div>
       </section>
     );

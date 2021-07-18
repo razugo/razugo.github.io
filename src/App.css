@@ -21,6 +21,15 @@
     max-width: 1170px !important;
   }
 }
+
+.text-light {
+  color: var(--dark-white) !important
+}
+
+.text-dark {
+  color: var(--light-black) !important
+}
+
 /*== Fullscreen Height ==*/
 .fullscreen {
   min-height: 100vh !important;
