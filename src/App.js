@@ -40,12 +40,12 @@ function App() {
                             <Portfolio/>
                             <Footer/>
                         </Route>
-                        {/* <Route path="/gallery">
+                        <Route path="/gallery">
                             <Gallery/>
                         </Route>
                         <Route path="/blog">
                                 <Blog/>
-                        </Route> */}
+                        </Route>
                     </Switch>
                 </Router>
 
