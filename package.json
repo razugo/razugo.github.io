@@ -15,7 +15,7 @@
     "front-matter": "^4.0.2",
     "list-react-files": "^0.2.0",
     "mdbreact": "^5.0.1",
-    "node-sass": "^4.14.1",
+    "node-sass": "^9.0.0",
     "react": "^17.0.1",
     "react-bootstrap": "^1.4.0",
     "react-dom": "^17.0.1",
