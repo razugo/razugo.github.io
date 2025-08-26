@@ -15,3 +15,9 @@ Do not delete any files in ./specs including this file
 3. Undo reset buttons
     - make the Undo and Reset buttons go to the right
     - The header should be total, to the left. and undo and reset to the right
+4. Fix scaling issue
+    - Use ./specs/scaling_bug.png for reference
+    - On mobile, when scrolling, the page seems to shrink, leading to a smaller chart and more cramped text
+    - fix this bug so scrolling doesnt change any of the formatting
+    - keep margin at the top of the header
+    - make sure the entire grid is visible at all sizes

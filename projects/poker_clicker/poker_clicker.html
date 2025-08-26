@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Poker Starting-Hand Clicker</title>
   <style>
     :root { --cell: 54px; --gap: 6px; --radius: 8px; }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 16px; background: #f7f7f7; color: #111; display: flex; justify-content: center; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 16px; background: #f7f7f7; color: #111; display: flex; justify-content: center; -webkit-text-size-adjust: none; text-size-adjust: none; }
 
-    .app-container { width: 100%; }
+    .app-container { width: 100%; min-width: 0; overflow-x: hidden; }
 
     #topbar { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; background: linear-gradient(#f7f7f7, rgba(247,247,247,0.85)); backdrop-filter: saturate(180%) blur(6px); z-index: 10; }
     #topbar-buttons { display: flex; gap: 12px; }
@@ -18,7 +18,7 @@
     button { padding: 10px 14px; border: 1px solid #bbb; border-radius: 12px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     button:active { transform: translateY(1px); }
 
-    #grid { margin-top: auto; width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap)}
+    #grid { margin-top: auto; width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); min-width: 0; justify-content: center; }
 
     .cell { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px solid #696969; border-radius: var(--radius); background: #fff; user-select: none; cursor: pointer; transition: background-color 80ms linear, color 80ms linear, transform 40ms ease; font-size: clamp(9px, calc(var(--cell) * 0.33), 16px); padding: 0; line-height: 1.05; min-width: var(--cell); min-height: var(--cell); white-space: nowrap; overflow: hidden; }
     .cell.pair { font-weight: 600; }
