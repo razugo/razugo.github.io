@@ -4,4 +4,4 @@ title: Projects
 permalink: /projects/
 ---
 
-This is the projects page.
+*   **Poker Clicker** - Track your preflop hands. [Available here]({{ '/projects/poker_clicker/poker_clicker.html' | relative_url }}).
