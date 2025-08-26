@@ -474,9 +474,8 @@
       const chosenGap = vw <= 420 ? 2 : (vw <= 820 ? 4 : 6);
       root.style.setProperty('--gap', chosenGap + 'px');
 
-      // Measure actual grid width to avoid overflow and host banners
-      const rect = grid.getBoundingClientRect();
-      const gridWidth = rect.width || (vw - 32);
+      // Use viewport width for calculations to allow proper scaling up/down
+      const gridWidth = vw - 32; // Account for body margin (16px * 2)
 
       const MAX_CELL = 56; // desktop/tablet cap similar to first iteration
       const MIN_CELL = 18; // smaller minimum to prevent wrapping
@@ -489,15 +488,27 @@
       const radius = Math.max(3, Math.round(cell * 0.18));
       root.style.setProperty('--radius', radius + 'px');
 
-      appContainer.style.maxWidth = `${13 * cell + 12 * chosenGap}px`;
+      // Remove any previous maxWidth constraint to allow scaling up
+      appContainer.style.maxWidth = 'none';
+      // Set a reasonable maxWidth for very large screens
+      if (vw > 1200) {
+        appContainer.style.maxWidth = `${13 * MAX_CELL + 12 * chosenGap}px`;
+      }
     }
 
     resetBtn.addEventListener('click', resetAll);
     undoBtn.addEventListener('click', undo);
     toggleBtn.addEventListener('click', toggleCounts);
     toggleStrengthBtn.addEventListener('click', toggleStrength);
-    window.addEventListener('resize', fitGridToViewport, { passive: true });
-    window.addEventListener('orientationchange', fitGridToViewport);
+    // Use throttled resize for better performance
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(fitGridToViewport, 100);
+    }, { passive: true });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(fitGridToViewport, 200); // Delay for orientation change
+    });
 
     grid.addEventListener('mousedown', handleInteractionStart);
     grid.addEventListener('mousemove', handleInteractionMove);
