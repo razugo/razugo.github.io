@@ -17,9 +17,10 @@
 
     #grid { width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); overflow-x: hidden; }
 
-    .cell { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px solid #d7d7d7; border-radius: var(--radius); background: #fff; user-select: none; cursor: pointer; transition: background-color 80ms linear, color 80ms linear, transform 40ms ease; font-size: clamp(9px, calc(var(--cell) * 0.33), 16px); padding: 0; line-height: 1.05; min-width: var(--cell); min-height: var(--cell); white-space: nowrap; overflow: hidden; }
+    .cell { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px solid #696969; border-radius: var(--radius); background: #fff; user-select: none; cursor: pointer; transition: background-color 80ms linear, color 80ms linear, transform 40ms ease; font-size: clamp(9px, calc(var(--cell) * 0.33), 16px); padding: 0; line-height: 1.05; min-width: var(--cell); min-height: var(--cell); white-space: nowrap; overflow: hidden; }
     .cell.pair { font-weight: 600; }
     .cell:active { transform: scale(0.98); }
+    .cell.active { transform: scale(1.25); z-index: 1; }
 
     .note { margin-top: 10px; font-size: 12px; color: #666; }
 
@@ -47,6 +48,8 @@
     let total = 0;
     const history = [];
     let showCounts = false;
+    let activeCell = null;
+    let isMouseDown = false;
 
     // ---- Elements ----
     const grid = document.getElementById('grid');
@@ -74,7 +77,6 @@
           cell.type = 'button';
           cell.className = 'cell' + (i === j ? ' pair' : '');
           cell.dataset.key = key;
-          cell.addEventListener('click', () => increment(key));
           grid.appendChild(cell);
         }
       }
@@ -179,6 +181,48 @@
       updateColors();
     }
 
+    function handleInteractionStart(e) {
+      if (e.target.classList.contains('cell')) {
+        isMouseDown = true;
+        if (activeCell) {
+          activeCell.classList.remove('active');
+        }
+        activeCell = e.target;
+        activeCell.classList.add('active');
+        e.preventDefault();
+      }
+    }
+
+    function handleInteractionMove(e) {
+      if (isMouseDown) {
+        let target;
+        if (e.touches) {
+          target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+        } else {
+          target = e.target;
+        }
+
+        if (target && target.classList.contains('cell') && target !== activeCell) {
+          if (activeCell) {
+            activeCell.classList.remove('active');
+          }
+          activeCell = target;
+          activeCell.classList.add('active');
+        }
+        e.preventDefault();
+      }
+    }
+
+    function handleInteractionEnd(e) {
+      if (isMouseDown && activeCell) {
+        const key = activeCell.dataset.key;
+        increment(key);
+        activeCell.classList.remove('active');
+        activeCell = null;
+      }
+      isMouseDown = false;
+    }
+
     // ---- Responsive sizing ----
     function fitGridToViewport() {
       const root = document.documentElement;
@@ -208,6 +252,14 @@
     toggleBtn.addEventListener('click', toggleCounts);
     window.addEventListener('resize', fitGridToViewport, { passive: true });
     window.addEventListener('orientationchange', fitGridToViewport);
+
+    grid.addEventListener('mousedown', handleInteractionStart);
+    grid.addEventListener('mousemove', handleInteractionMove);
+    document.addEventListener('mouseup', handleInteractionEnd); // Listen on document to catch mouseup outside grid
+
+    grid.addEventListener('touchstart', handleInteractionStart, { passive: false });
+    grid.addEventListener('touchmove', handleInteractionMove, { passive: false });
+    grid.addEventListener('touchend', handleInteractionEnd);
 
     // Initialize
     loadState();
