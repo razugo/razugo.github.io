@@ -27,3 +27,6 @@ I want to add some features to ./projects/poker_clicker/poker_clicker.html
     - I want a user experience similar to the mac os dock where when hovering over an option it increases in size
     - Instead I want the cell to increase in size when i click but do not release
     - Then when moving my finger (still down clicked) the cell selection also changes, changing which cell has the increase in size
+    - For mobile i want to the cell to move up and expand more so I can see it over my finger. Do not do this for desktop.
+    - When selecting cells in the top row, make it so the cell goes over the header. currently when selected, the cell gets cut off by the header
+    - Make the cell border darker #696969
