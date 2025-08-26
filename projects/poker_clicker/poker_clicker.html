@@ -139,14 +139,30 @@
       const values = Object.values(counts);
       const max = Math.max(1, ...values);
       for (const cell of cells) {
-        const c = counts[cell.dataset.key] || 0;
-        const ratio = c / max; // 0..1
-        const r = 255;
-        const g = Math.round(255 * (1 - ratio));
-        const b = Math.round(255 * (1 - ratio));
-        cell.style.backgroundColor = `rgb(${r},${g},${b})`; // white -> red
-        const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
-        cell.style.color = luminance < 140 ? '#fff' : '#111';
+        const key = cell.dataset.key;
+        const c = counts[key] || 0;
+
+        let baseColor;
+        if (key.endsWith('s')) { // Suited
+          baseColor = '#D8D8D8';
+        } else if (key.length === 2) { // Pair
+          baseColor = '#A9A9A9';
+        } else { // Off-suit
+          baseColor = '#FFFFFF';
+        }
+
+        if (c > 0) {
+          const ratio = c / max; // 0..1
+          const r = 255;
+          const g = Math.round(255 * (1 - ratio));
+          const b = Math.round(255 * (1 - ratio));
+          cell.style.backgroundColor = `rgb(${r},${g},${b})`; // white -> red
+          const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
+          cell.style.color = luminance < 140 ? '#fff' : '#111';
+        } else {
+          cell.style.backgroundColor = baseColor;
+          cell.style.color = '#111';
+        }
       }
     }
 
