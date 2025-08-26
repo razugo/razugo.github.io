@@ -8,14 +8,16 @@
     :root { --cell: 54px; --gap: 6px; --radius: 8px; }
     * { box-sizing: border-box; }
     html, body { height: 100%; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 16px; background: #f7f7f7; color: #111; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 16px; background: #f7f7f7; color: #111; display: flex; justify-content: center; }
 
-    #topbar { position: sticky; top: 0; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; background: linear-gradient(#f7f7f7, rgba(247,247,247,0.85)); backdrop-filter: saturate(180%) blur(6px); }
+    .app-container { width: 100%; }
+
+    #topbar { position: sticky; top: 0; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; background: linear-gradient(#f7f7f7, rgba(247,247,247,0.85)); backdrop-filter: saturate(180%) blur(6px); z-index: 10; }
     #total { font-weight: 700; font-size: clamp(16px, 3.7vw, 20px); padding: 8px 12px; background: #fff; border: 1px solid #ddd; border-radius: 10px; }
     button { padding: 10px 14px; border: 1px solid #bbb; border-radius: 12px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     button:active { transform: translateY(1px); }
 
-    #grid { width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap)}
+    #grid { margin-top: auto; width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap)}
 
     .cell { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px solid #696969; border-radius: var(--radius); background: #fff; user-select: none; cursor: pointer; transition: background-color 80ms linear, color 80ms linear, transform 40ms ease; font-size: clamp(9px, calc(var(--cell) * 0.33), 16px); padding: 0; line-height: 1.05; min-width: var(--cell); min-height: var(--cell); white-space: nowrap; overflow: hidden; }
     .cell.pair { font-weight: 600; }
@@ -32,28 +34,141 @@
 
     /* Desktop-ish defaults */
     @media (min-width: 900px) { body { margin: 24px; } }
+
+    .results {
+        margin-top: 30px;
+        padding: 25px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+    }
+
+    .luck-category {
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        font-size: 24px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .low-roll {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+    }
+
+    .expected {
+        background: linear-gradient(135deg, #54a0ff, #2e86de);
+        color: white;
+    }
+
+    .high-roll {
+        background: linear-gradient(135deg, #5f27cd, #341f97);
+        color: white;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 12px;
+        text-transform: uppercase;
+        margin-top: 5px;
+    }
+
+    .explanation {
+        background: #e8f4fd;
+        border: 1px solid #bee5eb;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .explanation h3 {
+        color: #0c5460;
+        margin-top: 0;
+    }
   </style>
 </head>
 <body>
+<div class="app-container">
   <div id="topbar">
     <div id="total">Total: 0</div>
     <button id="toggleCounts">Toggle Counts</button>
+    <button id="toggleStrength">Toggle Strength</button>
     <button id="undo">Undo</button>
     <button id="reset">Reset</button>
   </div>
 
   <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
-  <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase.</div>
+  <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase. <br> Strength is the hand's percentile rank (lower is better). For example, a hand with strength 20 is in the top 20% of hands. <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Original post</a></div>
+  <div id="analysis-results"></div>
+</div>
 
   <script>
     // ---- Config ----
     const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2']; // descending
+    const handStrengths = {
+      // Pocket Pairs
+      'AA': 0, 'KK': 1, 'QQ': 1, 'JJ': 2, 'TT': 4,'99': 7, '88': 9, '77': 12, '66': 16, '55': 20, '44': 23, '33': 23, '22': 24,
+
+      // Suited
+      'AKs': 2,  'AQs': 2,  'AJs': 3,  'ATs': 5,  'A9s': 8,  'A8s': 10, 'A7s': 13, 'A6s': 14, 'A5s': 12, 'A4s': 14, 'A3s': 14, 'A2s': 17, 
+      'KQs': 3,  'KJs': 3,  'KTs': 6,  'K9s': 10, 'K8s': 16, 'K7s': 19, 'K6s': 24, 'K5s': 25, 'K4s': 25, 'K3s': 26, 'K2s': 26, 
+      'QJs': 5,  'QTs': 6,  'Q9s': 10, 'Q8s': 19, 'Q7s': 26, 'Q6s': 28, 'Q5s': 29, 'Q4s': 29, 'Q3s': 30, 'Q2s': 31, 
+      'JTs': 6,  'J9s': 11, 'J8s': 17, 'J7s': 27, 'J6s': 33, 'J5s': 35, 'J4s': 37, 'J3s': 37, 'J2s': 38, 
+      'T9s': 10, 'T8s': 16, 'T7s': 25, 'T6s': 31, 'T5s': 40, 'T4s': 40, 'T3s': 41, 'T2s': 41,
+      '98s': 17, '97s': 24, '96s': 29, '95s': 38, '94s': 47, '93s': 47, '92s': 49, 
+      '87s': 21, '86s': 27, '85s': 33, '84s': 40, '83s': 53, '82s': 54, 
+      '76s': 25, '75s': 28, '74s': 37, '73s': 45, '72s': 56, 
+      '65s': 27, '64s': 29, '63s': 38, '62s': 49, 
+      '54s': 28, '53s': 32, '52s': 39,
+      '43s': 36, '42s': 41, 
+      '32s': 46,
+
+      // Offsuit
+      'AKo': 5,  'AQo': 8,  'AJo': 12, 'ATo': 18, 'A9o': 32, 'A8o': 39, 'A7o': 45, 'A6o': 51, 'A5o': 44, 'A4o': 46, 'A3o': 49, 'A2o': 54, 
+      'KQo': 9,  'KJo': 14, 'KTo': 20, 'K9o': 35, 'K8o': 50, 'K7o': 57, 'K6o': 60, 'K5o': 63, 'K4o': 67, 'K3o': 67, 'K2o': 69, 
+      'QJo': 15, 'QTo': 22, 'Q9o': 36, 'Q8o': 53, 'Q7o': 66, 'Q6o': 71, 'Q5o': 75, 'Q4o': 76, 'Q3o': 77, 'Q2o': 79, 
+      'JTo': 21, 'J9o': 34, 'J8o': 48, 'J7o': 64, 'J6o': 80, 'J5o': 82, 'J4o': 82, 'J3o': 86, 'J2o': 87, 
+      'T9o': 31, 'T8o': 43, 'T7o': 59, 'T6o': 74, 'T5o': 89, 'T4o': 90, 'T3o': 92, 'T2o': 94, 
+      '98o': 42, '97o': 55, '96o': 68, '95o': 83, '94o': 95, '93o': 96, '92o': 97, 
+      '87o': 52, '86o': 61, '85o': 73, '84o': 88, '83o': 98, '82o': 99, 
+      '76o': 57, '75o': 65, '74o': 78, '73o': 93, '72o': 100, 
+      '65o': 58, '64o': 70, '63o': 81, '62o': 95,
+      '54o': 62, '53o': 72, '52o': 84, 
+      '43o': 76, '42o': 86, 
+      '32o': 91
+    };
+    let expectedMean = 0;
+    let expectedStdDev = 0;
 
     // ---- State ----
     let counts = {}; // key -> integer
     let total = 0;
     const history = [];
     let showCounts = false;
+    let showStrength = false;
     let activeCell = null;
     let isMouseDown = false;
 
@@ -63,6 +178,44 @@
     const resetBtn = document.getElementById('reset');
     const undoBtn = document.getElementById('undo');
     const toggleBtn = document.getElementById('toggleCounts');
+    const toggleStrengthBtn = document.getElementById('toggleStrength');
+    const analysisResultsEl = document.getElementById('analysis-results');
+    const appContainer = document.querySelector('.app-container');
+
+    function calculateExpectedValues() {
+        let weightedSum = 0;
+        let totalCombinations = 0;
+        for (const hand in handStrengths) {
+            const strength = handStrengths[hand];
+            let combinations;
+            if (hand.length === 2) { // Pair
+                combinations = 6;
+            } else if (hand.endsWith('s')) { // Suited
+                combinations = 4;
+            } else { // Off-suit
+                combinations = 12;
+            }
+            weightedSum += strength * combinations;
+            totalCombinations += combinations;
+        }
+        expectedMean = weightedSum / totalCombinations;
+
+        let weightedVarianceSum = 0;
+        for (const hand in handStrengths) {
+            const strength = handStrengths[hand];
+            let combinations;
+            if (hand.length === 2) { // Pair
+                combinations = 6;
+            } else if (hand.endsWith('s')) { // Suited
+                combinations = 4;
+            } else { // Off-suit
+                combinations = 12;
+            }
+            weightedVarianceSum += combinations * Math.pow(strength - expectedMean, 2);
+        }
+        const expectedVariance = weightedVarianceSum / totalCombinations;
+        expectedStdDev = Math.sqrt(expectedVariance);
+    }
 
     // Compose the canonical key for a grid position
     function keyFor(i, j) {
@@ -96,6 +249,7 @@
       total += 1;
       render();
       saveState();
+      analyzeLuck();
     }
 
     function undo() {
@@ -107,6 +261,7 @@
       }
       render();
       saveState();
+      analyzeLuck();
     }
 
     function resetAll() {
@@ -115,16 +270,25 @@
       history.length = 0;
       render();
       saveState();
+      analyzeLuck();
     }
 
     function toggleCounts() {
       showCounts = !showCounts;
+      if (showCounts) showStrength = false;
+      render();
+      saveState();
+    }
+
+    function toggleStrength() {
+      showStrength = !showStrength;
+      if (showStrength) showCounts = false;
       render();
       saveState();
     }
 
     function saveState() {
-      const state = { counts, total, history, showCounts };
+      const state = { counts, total, history, showCounts, showStrength };
       localStorage.setItem('pokerClickerState', JSON.stringify(state));
     }
 
@@ -135,6 +299,7 @@
         counts = state.counts || {};
         total = state.total || 0;
         showCounts = state.showCounts || false;
+        showStrength = state.showStrength || false;
         if (state.history) {
             history.push(...state.history);
         }
@@ -180,6 +345,8 @@
         const key = cell.dataset.key;
         if (showCounts) {
           cell.textContent = counts[key] || 0;
+        } else if (showStrength) {
+          cell.textContent = handStrengths[key];
         } else {
           cell.textContent = key;
         }
@@ -229,6 +396,60 @@
       isMouseDown = false;
     }
 
+    function analyzeLuck() {
+        if (history.length === 0) {
+            analysisResultsEl.innerHTML = '';
+            return;
+        }
+
+        const strengths = history.map(hand => handStrengths[hand]);
+        const mean = strengths.reduce((a, b) => a + b, 0) / strengths.length;
+        const zScore = (mean - expectedMean) / (expectedStdDev / Math.sqrt(strengths.length));
+
+        let category, categoryClass, interpretation;
+        if (zScore < -1.5) {
+            category = "Low Roll 😩";
+            categoryClass = "low-roll";
+            interpretation = "You're experiencing significantly worse than expected luck with your dealt hands.";
+        } else if (zScore > 1.5) {
+            category = "High Roll 🚀";
+            categoryClass = "high-roll";
+            interpretation = "You're getting significantly better than expected hands!";
+        } else {
+            category = "Expected 📊";
+            categoryClass = "expected";
+            interpretation = "Your dealt hands are within normal expected variance.";
+        }
+
+        analysisResultsEl.innerHTML = `
+            <div class="results">
+                <div class="luck-category ${categoryClass}">${category}</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${mean.toFixed(1)}</div>
+                        <div class="stat-label">Average Strength</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${zScore.toFixed(2)}</div>
+                        <div class="stat-label">Z-Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${(expectedStdDev * Math.sqrt(strengths.length)).toFixed(1)}</div>
+                        <div class="stat-label">Std Deviation</div>
+                    </div>
+                </div>
+                
+                <div class="explanation">
+                    <h3>📈 Statistical Analysis</h3>
+                    <p><strong>Interpretation:</strong> ${interpretation}</p>
+                    <p><strong>Z-Score Explained:</strong> ${Math.abs(zScore).toFixed(2)} standard deviations ${zScore >= 0 ? 'above' : 'below'} expected. Values beyond ±1.5 are considered significantly different from normal.</p>
+                    <p><strong>Your Average:</strong> ${mean.toFixed(1)} vs Expected: ${expectedMean.toFixed(1)} (scale: 0-100)</p>
+                </div>
+            </div>
+        `;
+    }
+
     // ---- Responsive sizing ----
     function fitGridToViewport() {
       const root = document.documentElement;
@@ -251,11 +472,14 @@
       // Adapt border radius so small cells don't look like circles
       const radius = Math.max(3, Math.round(cell * 0.18));
       root.style.setProperty('--radius', radius + 'px');
+
+      appContainer.style.maxWidth = `${13 * cell + 12 * chosenGap}px`;
     }
 
     resetBtn.addEventListener('click', resetAll);
     undoBtn.addEventListener('click', undo);
     toggleBtn.addEventListener('click', toggleCounts);
+    toggleStrengthBtn.addEventListener('click', toggleStrength);
     window.addEventListener('resize', fitGridToViewport, { passive: true });
     window.addEventListener('orientationchange', fitGridToViewport);
 
@@ -268,8 +492,10 @@
     grid.addEventListener('touchend', handleInteractionEnd);
 
     // Initialize
+    calculateExpectedValues();
     loadState();
     buildGrid();
+    analyzeLuck();
   </script>
 </body>
 </html>

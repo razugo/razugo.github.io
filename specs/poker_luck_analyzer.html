@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Hand Luck Analyzer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .format-help {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .format-help strong {
+            color: #495057;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .luck-category {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .low-roll {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+        
+        .expected {
+            background: linear-gradient(135deg, #54a0ff, #2e86de);
+            color: white;
+        }
+        
+        .high-roll {
+            background: linear-gradient(135deg, #5f27cd, #341f97);
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .hand-breakdown {
+            margin-top: 20px;
+        }
+        
+        .hand-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .hand-item {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .explanation {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .explanation h3 {
+            color: #0c5460;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Poker Hand Luck Analyzer</h1>
+        <p class="subtitle">Analyze your dealt hands to see if you're low rolling, hitting expected values, or high rolling</p>
+        
+        <div class="input-section">
+            <label for="hands">Enter Your Dealt Hands:</label>
+            <textarea id="hands" placeholder="Paste your hands here..."></textarea>
+            <div class="format-help">
+                <strong>Supported Formats:</strong><br>
+                • <strong>Standard:</strong> AhKs, QdJc, 7h2s (suits: h=hearts, d=diamonds, c=clubs, s=spades)<br>
+                • <strong>Alternative:</strong> AK, QJ, 72 (suited hands will be detected automatically)<br>
+                • <strong>Multiple hands:</strong> Separate with commas, spaces, or new lines<br>
+                • <strong>Example:</strong> AhKs, QdJc, 72o, AKs, JJ, 93s
+            </div>
+        </div>
+        
+        <button onclick="analyzeHands()">Analyze My Luck 🎯</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Hand strength rankings (higher = better)
+        const handStrengths = {
+            // Pocket pairs
+            'AA': 169, 'KK': 168, 'QQ': 167, 'JJ': 166, 'TT': 165,
+            '99': 164, '88': 163, '77': 162, '66': 161, '55': 160,
+            '44': 159, '33': 158, '22': 157,
+            
+            // Suited connectors and premium suited
+            'AKs': 156, 'AQs': 155, 'AJs': 154, 'ATs': 153, 'A9s': 152,
+            'A8s': 151, 'A7s': 150, 'A6s': 149, 'A5s': 148, 'A4s': 147,
+            'A3s': 146, 'A2s': 145, 'KQs': 144, 'KJs': 143, 'KTs': 142,
+            'K9s': 141, 'K8s': 140, 'K7s': 139, 'K6s': 138, 'K5s': 137,
+            'K4s': 136, 'K3s': 135, 'K2s': 134, 'QJs': 133, 'QTs': 132,
+            'Q9s': 131, 'Q8s': 130, 'Q7s': 129, 'Q6s': 128, 'Q5s': 127,
+            'Q4s': 126, 'Q3s': 125, 'Q2s': 124, 'JTs': 123, 'J9s': 122,
+            'J8s': 121, 'J7s': 120, 'J6s': 119, 'J5s': 118, 'J4s': 117,
+            'J3s': 116, 'J2s': 115, 'T9s': 114, 'T8s': 113, 'T7s': 112,
+            'T6s': 111, 'T5s': 110, 'T4s': 109, 'T3s': 108, 'T2s': 107,
+            '98s': 106, '97s': 105, '96s': 104, '95s': 103, '94s': 102,
+            '93s': 101, '92s': 100, '87s': 99, '86s': 98, '85s': 97,
+            '84s': 96, '83s': 95, '82s': 94, '76s': 93, '75s': 92,
+            '74s': 91, '73s': 90, '72s': 89, '65s': 88, '64s': 87,
+            '63s': 86, '62s': 85, '54s': 84, '53s': 83, '52s': 82,
+            '43s': 81, '42s': 80, '32s': 79,
+            
+            // Offsuit hands
+            'AKo': 78, 'AQo': 77, 'AJo': 76, 'ATo': 75, 'A9o': 74,
+            'A8o': 73, 'A7o': 72, 'A6o': 71, 'A5o': 70, 'A4o': 69,
+            'A3o': 68, 'A2o': 67, 'KQo': 66, 'KJo': 65, 'KTo': 64,
+            'K9o': 63, 'K8o': 62, 'K7o': 61, 'K6o': 60, 'K5o': 59,
+            'K4o': 58, 'K3o': 57, 'K2o': 56, 'QJo': 55, 'QTo': 54,
+            'Q9o': 53, 'Q8o': 52, 'Q7o': 51, 'Q6o': 50, 'Q5o': 49,
+            'Q4o': 48, 'Q3o': 47, 'Q2o': 46, 'JTo': 45, 'J9o': 44,
+            'J8o': 43, 'J7o': 42, 'J6o': 41, 'J5o': 40, 'J4o': 39,
+            'J3o': 38, 'J2o': 37, 'T9o': 36, 'T8o': 35, 'T7o': 34,
+            'T6o': 33, 'T5o': 32, 'T4o': 31, 'T3o': 30, 'T2o': 29,
+            '98o': 28, '97o': 27, '96o': 26, '95o': 25, '94o': 24,
+            '93o': 23, '92o': 22, '87o': 21, '86o': 20, '85o': 19,
+            '84o': 18, '83o': 17, '82o': 16, '76o': 15, '75o': 14,
+            '74o': 13, '73o': 12, '72o': 11, '65o': 10, '64o': 9,
+            '63o': 8, '62o': 7, '54o': 6, '53o': 5, '52o': 4,
+            '43o': 3, '42o': 2, '32o': 1
+        };
+
+        function parseHand(handStr) {
+            handStr = handStr.trim().toUpperCase();
+            
+            // Handle pairs first
+            if (handStr.length === 2 && handStr[0] === handStr[1]) {
+                return handStr;
+            }
+            
+            // Handle standard format like AhKs
+            if (handStr.length === 4) {
+                const cards = [handStr.substring(0,2), handStr.substring(2,4)];
+                const rank1 = cards[0][0];
+                const suit1 = cards[0][1];
+                const rank2 = cards[1][0];
+                const suit2 = cards[1][1];
+                
+                const suited = suit1 === suit2 ? 's' : 'o';
+                
+                // Sort ranks for consistency
+                const ranks = [rank1, rank2].sort((a, b) => {
+                    const order = 'AKQJT98765432';
+                    return order.indexOf(a) - order.indexOf(b);
+                });
+                
+                return ranks[0] + ranks[1] + suited;
+            }
+            
+            // Handle format like AK, 72o, AKs
+            if (handStr.length >= 2) {
+                let rank1 = handStr[0];
+                let rank2 = handStr[1];
+                let suited = 'o';
+                
+                if (handStr.includes('s') || handStr.includes('S')) suited = 's';
+                
+                // If it's a pair
+                if (rank1 === rank2) {
+                    return rank1 + rank2;
+                }
+                
+                // Sort ranks
+                const ranks = [rank1, rank2].sort((a, b) => {
+                    const order = 'AKQJT98765432';
+                    return order.indexOf(a) - order.indexOf(b);
+                });
+                
+                return ranks[0] + ranks[1] + suited;
+            }
+            
+            return null;
+        }
+
+        function analyzeHands() {
+            const input = document.getElementById('hands').value;
+            const resultsDiv = document.getElementById('results');
+            
+            if (!input.trim()) {
+                resultsDiv.innerHTML = '<div class="error">Please enter some poker hands to analyze!</div>';
+                return;
+            }
+            
+            // Parse hands
+            const handStrings = input.split(/[,\s\n]+/).filter(h => h.trim());
+            const parsedHands = [];
+            const strengths = [];
+            
+            for (let handStr of handStrings) {
+                const parsed = parseHand(handStr);
+                if (parsed && handStrengths[parsed]) {
+                    parsedHands.push({original: handStr, normalized: parsed, strength: handStrengths[parsed]});
+                    strengths.push(handStrengths[parsed]);
+                }
+            }
+            
+            if (strengths.length === 0) {
+                resultsDiv.innerHTML = '<div class="error">No valid hands found. Please check your format!</div>';
+                return;
+            }
+            
+            // Calculate statistics
+            const mean = strengths.reduce((a, b) => a + b, 0) / strengths.length;
+            const expectedMean = 85; // Approximate middle of 1-169 range
+            const variance = strengths.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / strengths.length;
+            const stdDev = Math.sqrt(variance);
+            const expectedStdDev = 48.9; // Approximate std dev for uniform distribution over 169 hands
+            
+            // Z-score calculation
+            const zScore = (mean - expectedMean) / (expectedStdDev / Math.sqrt(strengths.length));
+            
+            // Categorize luck
+            let category, categoryClass, interpretation;
+            if (zScore < -1.5) {
+                category = "Low Roll 😩";
+                categoryClass = "low-roll";
+                interpretation = "You're experiencing significantly worse than expected luck with your dealt hands.";
+            } else if (zScore > 1.5) {
+                category = "High Roll 🚀";
+                categoryClass = "high-roll";
+                interpretation = "You're getting significantly better than expected hands!";
+            } else {
+                category = "Expected 📊";
+                categoryClass = "expected";
+                interpretation = "Your dealt hands are within normal expected variance.";
+            }
+            
+            // Generate results HTML
+            resultsDiv.innerHTML = `
+                <div class="results">
+                    <div class="luck-category ${categoryClass}">${category}</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">${strengths.length}</div>
+                            <div class="stat-label">Hands Analyzed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${mean.toFixed(1)}</div>
+                            <div class="stat-label">Average Strength</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${zScore.toFixed(2)}</div>
+                            <div class="stat-label">Z-Score</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stdDev.toFixed(1)}</div>
+                            <div class="stat-label">Std Deviation</div>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <h3>📈 Statistical Analysis</h3>
+                        <p><strong>Interpretation:</strong> ${interpretation}</p>
+                        <p><strong>Z-Score Explained:</strong> ${Math.abs(zScore).toFixed(2)} standard deviations ${zScore >= 0 ? 'above' : 'below'} expected. Values beyond ±1.5 are considered significantly different from normal.</p>
+                        <p><strong>Your Average:</strong> ${mean.toFixed(1)} vs Expected: ${expectedMean} (scale: 1-169, where 169 = AA)</p>
+                    </div>
+                    
+                    <div class="hand-breakdown">
+                        <h3>🃏 Your Dealt Hands</h3>
+                        <div class="hand-list">
+                            ${parsedHands.map(hand => 
+                                `<div class="hand-item">${hand.normalized}<br><small>(${hand.strength})</small></div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
