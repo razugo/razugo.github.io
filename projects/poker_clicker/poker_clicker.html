@@ -12,7 +12,8 @@
 
     .app-container { width: 100%; }
 
-    #topbar { position: sticky; top: 0; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; background: linear-gradient(#f7f7f7, rgba(247,247,247,0.85)); backdrop-filter: saturate(180%) blur(6px); z-index: 10; }
+    #topbar { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; background: linear-gradient(#f7f7f7, rgba(247,247,247,0.85)); backdrop-filter: saturate(180%) blur(6px); z-index: 10; }
+    #topbar-buttons { display: flex; gap: 12px; }
     #total { font-weight: 700; font-size: clamp(16px, 3.7vw, 20px); padding: 8px 12px; background: #fff; border: 1px solid #ddd; border-radius: 10px; }
     button { padding: 10px 14px; border: 1px solid #bbb; border-radius: 12px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     button:active { transform: translateY(1px); }
@@ -31,6 +32,15 @@
     }
 
     .note { margin-top: 10px; font-size: 12px; color: #666; }
+
+    #toggle-controls {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      text-align: center;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
 
     /* Desktop-ish defaults */
     @media (min-width: 900px) { body { margin: 24px; } }
@@ -114,13 +124,19 @@
 <div class="app-container">
   <div id="topbar">
     <div id="total">Total: 0</div>
-    <button id="toggleCounts">Toggle Counts</button>
-    <button id="toggleStrength">Toggle Strength</button>
-    <button id="undo">Undo</button>
-    <button id="reset">Reset</button>
+    <div id="topbar-buttons">
+      <button id="undo">Undo</button>
+      <button id="reset">Reset</button>
+    </div>
   </div>
 
   <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
+  
+  <div id="toggle-controls">
+    <button id="toggleCounts">Toggle Counts</button>
+    <button id="toggleStrength">Toggle Strength</button>
+  </div>
+  
   <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase. <br> Strength is the hand's percentile rank (lower is better). For example, a hand with strength 20 is in the top 20% of hands. <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Original post</a></div>
   <div id="analysis-results"></div>
 </div>
@@ -408,13 +424,13 @@
 
         let category, categoryClass, interpretation;
         if (zScore < -1.5) {
-            category = "Low Roll 😩";
-            categoryClass = "low-roll";
-            interpretation = "You're experiencing significantly worse than expected luck with your dealt hands.";
-        } else if (zScore > 1.5) {
             category = "High Roll 🚀";
             categoryClass = "high-roll";
             interpretation = "You're getting significantly better than expected hands!";
+        } else if (zScore > 1.5) {
+            category = "Low Roll 😩";
+            categoryClass = "low-roll";
+            interpretation = "You're experiencing significantly worse than expected luck with your dealt hands.";
         } else {
             category = "Expected 📊";
             categoryClass = "expected";
