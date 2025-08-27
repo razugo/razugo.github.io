@@ -1,4 +1,4 @@
-Poker Starting-Hand Clicker — Product Spec (v0.1)
+Poker Starting-Hand Clicker — Product Spec (v0.2)
 1) Purpose
 
 A single-page tool to track how often each preflop starting hand is dealt (or clicked), visualize relative frequencies, and analyze “luck” against an expected hand-strength distribution. Users increment cells by dragging/tapping across a 13×13 starting-hand grid and can toggle labels between hand codes, counts, and strength percentiles. Results include a basic statistical readout and “luck” category. 
@@ -21,7 +21,9 @@ Toggle Controls:
 
 Toggle Counts — switch cell labels to show counts (exclusive with Strength).
 
-Toggle Strength — show percentile rank per hand (exclusive with Counts). 
+Toggle Strength — show percentile rank per hand (exclusive with Counts).
+
+Toggle Heatmap — switch cell background to a color scale representing hand strength.
 
 Note/Help: brief usage note, color-scale explanation, and external link to original ranking source. 
 
@@ -29,7 +31,7 @@ Analysis Results: dynamic panel with luck category (“High Roll / Expected / Lo
 
 3) Visual/Interaction Design
 
-Grid cells are <button>s with rounded borders; tapping/dragging highlights the “active” cell (scale up) and increments on interaction end. Mobile increases active scale and offsets upward for finger affordance. Background color scales from white → red with higher counts; text color flips to keep contrast. Base background hints type (pair/offsuit/suited). 
+Grid cells are <button>s with rounded borders; tapping/dragging highlights the “active” cell (scale up) and increments on interaction end. Mobile increases active scale and offsets upward for finger affordance. Background color is determined by the active heatmap mode (frequency or strength). Text color flips to keep contrast. Base background hints at hand type (pair/offsuit/suited) only when counts are zero and the frequency map is active. 
 
 Responsive sizing: CSS variables (--cell, --gap, --radius) are recalculated on resize/orientation to keep the 13×13 grid fitting the viewport, with min/max cell caps and adaptive app max-width. 
 
@@ -45,7 +47,7 @@ Derived expectations: expectedMean, expectedStdDev computed from handStrengths w
 
 Mutable state:
 
-counts (per hand integer), total (sum), history (stack of clicked keys), showCounts (bool), showStrength (bool), activeCell (DOM ref), isMouseDown (bool).
+counts (per hand integer), total (sum), history (stack of clicked keys), showCounts (bool), showStrength (bool), showHeatmap (bool), activeCell (DOM ref), isMouseDown (bool).
 
 Persistence: Full state (except computed fields) saves/loads via localStorage key pokerClickerState. 
 
@@ -71,6 +73,8 @@ Toggle Counts: flips showCounts; forcibly disables showStrength when enabled (mu
 
 Toggle Strength: flips showStrength; disables showCounts when enabled. Rerender & persist. 
 
+Toggle Heatmap: flips showHeatmap. Rerender & persist. This coloring mode is mutually exclusive with the default frequency-based heatmap.
+
 7) Rendering Rules
 
 Topbar: Total: N uses total.
@@ -83,11 +87,17 @@ Counts mode → counts[key] || 0.
 
 Strength mode → handStrengths[key] (percentile integer).
 
-Coloring: For each cell:
+Coloring: Governed by the `showHeatmap` flag.
 
-If count > 0 → compute ratio c/max, lerp to rgb(255, g, b) with g=b=255*(1-ratio) (white→red). Adjust text color by luminance threshold.
+If `showHeatmap` is true (Strength Heatmap):
+- Cell background is determined by a 3-point color gradient based on the hand's strength percentile (0-100).
+- 0-50 strength: Interpolates from High Roll green to Expected blue.
+- 50-100 strength: Interpolates from Expected blue to Low Roll orange.
+- Text color flips to keep contrast based on luminance.
 
-If 0 → base color by type: suited #D8D8D8, pair #A9A9A9, offsuit #FFFFFF. 
+If `showHeatmap` is false (Frequency Heatmap):
+- If count > 0 → compute ratio c/max, lerp to rgb(255, g, b) with g=b=255*(1-ratio) (white→red). Adjust text color by luminance threshold.
+- If 0 → base color by type: suited #D8D8D8, pair #A9A9A9, offsuit #FFFFFF. 
 
 8) Luck / Statistical Analysis
 
@@ -109,7 +119,7 @@ z < −1.5 → High Roll 🚀 (better than expected).
 
 z > 1.5 → Low Roll 😩 (worse than expected).
 
-UI: Render a results card with category banner, stat cards (Average Strength, Z-Score, Std Deviation of the mean), and an explanation block comparing observed vs expected. Clear results when history is empty. 
+UI: Render a results card with category banner, stat cards (Average Strength, Z-Score, and Std Deviation of the mean), and an explanation block comparing observed vs expected. Clear results when history is empty. 
 
 9) Responsiveness & Performance
 
@@ -143,6 +153,8 @@ AC-06 Persistence: After increments, a reload preserves counts, total, history, 
 
 AC-07 Responsiveness: On a 390×844 viewport (iPhone 12), app uses full width (no body/container padding), grid maximizes available space with 2px gaps, cells scale to 80px max, and active cells scale 1.5x with -20px vertical offset.
 
+AC-08 Heatmap Toggle: Tapping Toggle Heatmap changes cell backgrounds to a green-blue-orange gradient. Toggling it off reverts to the white-red frequency coloring. The state is persisted on reload.
+
 12) Visual Design System
 Color Palette
 
@@ -161,7 +173,7 @@ Semantic Colors:
 High Roll (Lucky): Linear gradient #10b981 → #059669 (emerald greens)
 Expected (Normal): Linear gradient #3b82f6 → #2563eb (confident blues)
 Low Roll (Unlucky): Linear gradient #f59e0b → #d97706 (amber-orange warning)
-Heat Map: Dynamic RGB interpolation from white rgb(255,255,255) to pure red rgb(255,0,0)
+Heat Map: Two modes exist. 1) Frequency: Dynamic RGB interpolation from white rgb(255,255,255) to pure red rgb(255,0,0). 2) Strength: A 3-point gradient from High Roll green (strength 0) to Expected blue (strength 50) to Low Roll orange (strength 100).
 
 Typography
 Font Stack: System UI fonts for optimal performance and native feel

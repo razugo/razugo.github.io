@@ -289,8 +289,9 @@
     <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
     
     <div id="toggle-controls">
-      <button id="toggleCounts">Toggle Counts</button>
-      <button id="toggleStrength">Toggle Strength</button>
+      <button id="toggleCounts">Counts</button>
+      <button id="toggleStrength">Strength</button>
+      <button id="toggleHeatmap">Heatmap</button>
     </div>
     
     <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase. <br> Strength is the hand's percentile rank (lower is better). For example, a hand with strength 20 is in the top 20% of hands. <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Original post</a></div>
@@ -342,6 +343,7 @@
     const history = [];
     let showCounts = false;
     let showStrength = false;
+    let showHeatmap = false;
     let activeCell = null;
     let isMouseDown = false;
 
@@ -352,6 +354,7 @@
     const undoBtn = document.getElementById('undo');
     const toggleBtn = document.getElementById('toggleCounts');
     const toggleStrengthBtn = document.getElementById('toggleStrength');
+    const toggleHeatmapBtn = document.getElementById('toggleHeatmap');
     const analysisResultsEl = document.getElementById('analysis-results');
     const appContainer = document.querySelector('.app-container');
 
@@ -460,8 +463,14 @@
       saveState();
     }
 
+    function toggleHeatmap() {
+      showHeatmap = !showHeatmap;
+      render();
+      saveState();
+    }
+
     function saveState() {
-      const state = { counts, total, history, showCounts, showStrength };
+      const state = { counts, total, history, showCounts, showStrength, showHeatmap };
       localStorage.setItem('pokerClickerState', JSON.stringify(state));
     }
 
@@ -473,42 +482,75 @@
         total = state.total || 0;
         showCounts = state.showCounts || false;
         showStrength = state.showStrength || false;
+        showHeatmap = state.showHeatmap || false;
         if (state.history) {
             history.push(...state.history);
         }
       }
     }
 
-    // Compute and apply colors, scaling to the current max cell count.
-    function updateColors() {
+    function updateCellColors() {
       const cells = grid.children;
-      const values = Object.values(counts);
-      const max = Math.max(1, ...values);
-      for (const cell of cells) {
-        const key = cell.dataset.key;
-        const c = counts[key] || 0;
 
-        let baseColor;
-        if (key.endsWith('s')) { // Suited
-          baseColor = '#D8D8D8';
-        } else if (key.length === 2) { // Pair
-          baseColor = '#A9A9A9';
-        } else { // Off-suit
-          baseColor = '#FFFFFF';
+      if (showHeatmap) {
+        // Strength Heatmap: 3-point gradient
+        const strongColor = { r: 16, g: 185, b: 129 };   // high-roll green
+        const midColor = { r: 59, g: 130, b: 246 };      // expected blue
+        const weakColor = { r: 245, g: 158, b: 11 };     // low-roll orange
+
+        for (const cell of cells) {
+            const key = cell.dataset.key;
+            const strength = handStrengths[key];
+            let r, g, b;
+
+            if (strength <= 50) {
+                // 0-50: Interpolate between strongColor (green) and midColor (blue)
+                const ratio = strength / 50;
+                r = Math.round(strongColor.r + ratio * (midColor.r - strongColor.r));
+                g = Math.round(strongColor.g + ratio * (midColor.g - strongColor.g));
+                b = Math.round(strongColor.b + ratio * (midColor.b - strongColor.b));
+            } else {
+                // 50-100: Interpolate between midColor (blue) and weakColor (orange)
+                const ratio = (strength - 50) / 50;
+                r = Math.round(midColor.r + ratio * (weakColor.r - midColor.r));
+                g = Math.round(midColor.g + ratio * (weakColor.g - midColor.g));
+                b = Math.round(midColor.b + ratio * (weakColor.b - midColor.b));
+            }
+            
+            cell.style.backgroundColor = `rgb(${r},${g},${b})`;
+
+            const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
         }
+      } else {
+        // Frequency Heatmap (white to red)
+        const values = Object.values(counts);
+        const max = Math.max(1, ...values);
+        for (const cell of cells) {
+            const key = cell.dataset.key;
+            const c = counts[key] || 0;
 
-        if (c > 0) {
-          const ratio = c / max; // 0..1
-          const r = 255;
-          const g = Math.round(255 * (1 - ratio));
-          const b = Math.round(255 * (1 - ratio));
-          cell.style.backgroundColor = `rgb(${r},${g},${b})`; // white -> red
-          // Dynamic text color switching at luminance threshold 128
-          const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
-          cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
-        } else {
-          cell.style.backgroundColor = baseColor;
-          cell.style.color = '#2d3748';
+            let baseColor;
+            if (key.endsWith('s')) { // Suited
+              baseColor = '#D8D8D8';
+            } else if (key.length === 2) { // Pair
+              baseColor = '#A9A9A9';
+            } else { // Off-suit
+              baseColor = '#FFFFFF';
+            }
+
+            if (c > 0) {
+              const ratio = c / max; // 0..1
+              const r = 255;
+              const g = Math.round(255 * (1 - ratio));
+              const b = Math.round(255 * (1 - ratio));
+              cell.style.backgroundColor = `rgb(${r},${g},${b})`;
+              const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
+              cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
+            } else {
+              cell.style.backgroundColor = baseColor;
+              cell.style.color = '#2d3748';
+            }
         }
       }
     }
@@ -525,7 +567,7 @@
           cell.textContent = key;
         }
       }
-      updateColors();
+      updateCellColors();
     }
 
     function handleInteractionStart(e) {
@@ -668,6 +710,7 @@
     undoBtn.addEventListener('click', undo);
     toggleBtn.addEventListener('click', toggleCounts);
     toggleStrengthBtn.addEventListener('click', toggleStrength);
+    toggleHeatmapBtn.addEventListener('click', toggleHeatmap);  
     // Use throttled resize for better performance
     let resizeTimeout;
     window.addEventListener('resize', () => {
