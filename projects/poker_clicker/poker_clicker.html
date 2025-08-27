@@ -5,77 +5,223 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Poker Starting-Hand Clicker</title>
   <style>
-    :root { --cell: 54px; --gap: 6px; --radius: 8px; }
+    :root { 
+      --cell: 54px; --gap: 4px; --radius: 8px;
+      /* Color Palette */
+      --color-dark: #2d3748;
+      --color-mid-dark: #4a5568;
+      --color-mid: #718096;
+      --color-light: #e2e8f0;
+      --color-lighter: #edf2f7;
+      --color-lightest: #f7fafc;
+      --color-white: #ffffff;
+      /* Semantic Colors */
+      --color-high-roll: linear-gradient(135deg, #10b981, #059669);
+      --color-expected: linear-gradient(135deg, #3b82f6, #2563eb);
+      --color-low-roll: linear-gradient(135deg, #f59e0b, #d97706);
+      /* Typography */
+      --font-size-banner: 24px;
+      --font-size-large: 20px;
+      --font-size-body: 14px;
+      --font-size-label: 12px;
+      --font-size-cell: 11px;
+      --font-weight-bold: 700;
+      --font-weight-semibold: 600;
+      --font-weight-medium: 500;
+      --font-weight-normal: 400;
+      /* Shadows */
+      --shadow-hero: 0 20px 60px rgba(0,0,0,0.3);
+      --shadow-elevated: 0 4px 12px rgba(0,0,0,0.3);
+      --shadow-subtle: 0 2px 8px rgba(0,0,0,0.1);
+      /* Transitions */
+      --transition-micro: 0.15s ease;
+      --transition-standard: 0.2s ease;
+      --transition-smooth: 0.3s ease;
+    }
     * { box-sizing: border-box; }
-    html, body { height: 100%; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif; margin: 16px; background: #f7f7f7; color: #111; display: flex; justify-content: center; -webkit-text-size-adjust: none; text-size-adjust: none; }
+    html, body { min-height: 100%; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      margin: 0; 
+      padding: 20px;
+      background: var(--color-lightest); 
+      color: var(--color-dark); 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start;
+      -webkit-text-size-adjust: none; 
+      text-size-adjust: none; 
+    }
 
-    .app-container { width: 100%; }
+    .app-container { 
+      width: 100%; 
+      max-width: 900px;
+      background: var(--color-white);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-hero);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-    #topbar { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; background: linear-gradient(#f7f7f7, rgba(247,247,247,0.85)); backdrop-filter: saturate(180%) blur(6px); z-index: 10; }
+    #topbar { 
+      position: sticky; 
+      top: 0; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 12px 16px;
+      background: var(--color-white);
+      border-radius: 8px;
+      box-shadow: var(--shadow-subtle);
+      z-index: 10; 
+    }
     #topbar-buttons { display: flex; gap: 12px; }
-    #total { font-weight: 700; font-size: clamp(16px, 3.7vw, 20px); padding: 8px 12px; background: #fff; border: 1px solid #ddd; border-radius: 10px; }
-    button { padding: 10px 14px; border: 1px solid #bbb; border-radius: 12px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-    button:active { transform: translateY(1px); }
+    #total { 
+      font-weight: var(--font-weight-semibold); 
+      font-size: var(--font-size-large); 
+      padding: 12px 16px; 
+      background: var(--color-lightest); 
+      border: 1px solid var(--color-light); 
+      border-radius: 20px; 
+      color: var(--color-dark);
+    }
+    button { 
+      padding: 10px 14px; 
+      border: 1px solid var(--color-light); 
+      border-radius: 6px; 
+      background: var(--color-white); 
+      color: var(--color-dark);
+      font-weight: var(--font-weight-medium);
+      font-size: var(--font-size-body);
+      cursor: pointer; 
+      transition: var(--transition-standard);
+      -webkit-tap-highlight-color: transparent; 
+      touch-action: manipulation; 
+    }
+    button:hover {
+      transform: translateY(-1px);
+      background: var(--color-lighter);
+    }
+    button:active { 
+      transform: translateY(0); 
+    }
 
-    #grid { margin-top: auto; width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); min-width: 0; justify-content: center; }
+    #grid-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
 
-    .cell { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px solid #696969; border-radius: var(--radius); background: #fff; user-select: none; cursor: pointer; transition: background-color 80ms linear, color 80ms linear, transform 40ms ease; font-size: clamp(9px, calc(var(--cell) * 0.33), 16px); padding: 0; line-height: 1.05; min-width: var(--cell); min-height: var(--cell); white-space: nowrap; overflow: hidden; }
-    .cell.pair { font-weight: 600; }
-    .cell:active { transform: scale(0.98); }
-    .cell.active { transform: scale(1.2); z-index: 11; }
+    #grid { width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); min-width: 0; justify-content: center; }
+
+    .cell { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      text-align: center; 
+      border: 1px solid var(--color-light); 
+      border-radius: var(--radius); 
+      background: var(--color-white); 
+      color: var(--color-dark);
+      user-select: none; 
+      cursor: pointer; 
+      transition: var(--transition-micro); 
+      font-size: var(--font-size-cell); 
+      font-weight: var(--font-weight-normal);
+      padding: 0; 
+      line-height: 1.05; 
+      min-width: var(--cell); 
+      min-height: var(--cell); 
+      white-space: nowrap; 
+      overflow: hidden; 
+    }
+    .cell.pair { 
+      font-weight: var(--font-weight-semibold); 
+    }
+    .cell:active { 
+      transform: scale(0.98); 
+    }
+    .cell.active { 
+      transform: scale(1.15); 
+      z-index: 11; 
+      box-shadow: var(--shadow-elevated);
+    }
 
     @media (hover: none) and (pointer: coarse) {
       .cell.active {
-        transform: scale(1.5) translateY(-18px);
+        transform: scale(1.5) translateY(-20px);
       }
     }
 
-    .note { margin-top: 10px; font-size: 12px; color: #666; }
+    .note { 
+      font-size: var(--font-size-body); 
+      color: var(--color-mid); 
+      font-weight: var(--font-weight-normal);
+      text-align: center;
+      max-width: 600px;
+      line-height: 1.5;
+    }
 
     #toggle-controls {
-      margin-top: 15px;
-      margin-bottom: 10px;
-      text-align: center;
       display: flex;
       gap: 12px;
       justify-content: center;
     }
 
-    /* Desktop-ish defaults */
-    @media (min-width: 900px) { body { margin: 24px; } }
+    /* Responsive Breakpoints */
+    @media (max-width: 479px) {
+      body { padding: 0; }
+      .app-container { 
+        padding: 12px; 
+        border-radius: 0;
+        box-shadow: none;
+      }
+      #topbar { padding: 8px 12px; }
+    }
+    
+    @media (min-width: 480px) and (max-width: 767px) {
+      body { padding: 20px; }
+    }
+    
+    @media (min-width: 768px) {
+      body { padding: 24px; }
+    }
+    
+    @media (min-width: 1200px) {
+      .app-container { max-width: 900px; }
+    }
 
     .results {
-        margin-top: 30px;
-        padding: 25px;
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        border-radius: 10px;
+        padding: 20px;
+        background: var(--color-lightest);
+        border-radius: 8px;
     }
 
     .luck-category {
         text-align: center;
         padding: 20px;
-        border-radius: 10px;
+        border-radius: 8px;
         margin: 20px 0;
-        font-size: 24px;
-        font-weight: bold;
+        font-size: var(--font-size-banner);
+        font-weight: var(--font-weight-bold);
         text-transform: uppercase;
         letter-spacing: 2px;
+        color: var(--color-white);
     }
 
     .low-roll {
-        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-        color: white;
+        background: var(--color-low-roll);
     }
 
     .expected {
-        background: linear-gradient(135deg, #54a0ff, #2e86de);
-        color: white;
+        background: var(--color-expected);
     }
 
     .high-roll {
-        background: linear-gradient(135deg, #5f27cd, #341f97);
-        color: white;
+        background: var(--color-high-roll);
     }
 
     .stats-grid {
@@ -86,37 +232,46 @@
     }
 
     .stat-card {
-        background: white;
+        background: var(--color-white);
         padding: 15px;
         border-radius: 8px;
         text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        box-shadow: var(--shadow-subtle);
     }
 
     .stat-value {
-        font-size: 24px;
-        font-weight: bold;
-        color: #2c3e50;
+        font-size: var(--font-size-large);
+        font-weight: var(--font-weight-bold);
+        color: var(--color-dark);
     }
 
     .stat-label {
-        color: #7f8c8d;
-        font-size: 12px;
+        color: var(--color-mid);
+        font-size: var(--font-size-label);
+        font-weight: var(--font-weight-normal);
         text-transform: uppercase;
         margin-top: 5px;
     }
 
     .explanation {
-        background: #e8f4fd;
-        border: 1px solid #bee5eb;
+        background: var(--color-lightest);
+        border: 1px solid var(--color-light);
         border-radius: 8px;
         padding: 20px;
         margin-top: 20px;
     }
 
     .explanation h3 {
-        color: #0c5460;
+        color: var(--color-dark);
+        font-weight: var(--font-weight-semibold);
         margin-top: 0;
+    }
+    
+    .explanation p {
+        font-size: var(--font-size-body);
+        font-weight: var(--font-weight-normal);
+        color: var(--color-mid-dark);
+        line-height: 1.5;
     }
   </style>
 </head>
@@ -130,14 +285,16 @@
     </div>
   </div>
 
-  <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
-  
-  <div id="toggle-controls">
-    <button id="toggleCounts">Toggle Counts</button>
-    <button id="toggleStrength">Toggle Strength</button>
+  <div id="grid-container">
+    <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
+    
+    <div id="toggle-controls">
+      <button id="toggleCounts">Toggle Counts</button>
+      <button id="toggleStrength">Toggle Strength</button>
+    </div>
+    
+    <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase. <br> Strength is the hand's percentile rank (lower is better). For example, a hand with strength 20 is in the top 20% of hands. <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Original post</a></div>
   </div>
-  
-  <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase. <br> Strength is the hand's percentile rank (lower is better). For example, a hand with strength 20 is in the top 20% of hands. <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Original post</a></div>
   <div id="analysis-results"></div>
 </div>
 
@@ -346,11 +503,12 @@
           const g = Math.round(255 * (1 - ratio));
           const b = Math.round(255 * (1 - ratio));
           cell.style.backgroundColor = `rgb(${r},${g},${b})`; // white -> red
+          // Dynamic text color switching at luminance threshold 128
           const luminance = 0.2126*r + 0.7152*g + 0.0722*b;
-          cell.style.color = luminance < 140 ? '#fff' : '#111';
+          cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
         } else {
           cell.style.backgroundColor = baseColor;
-          cell.style.color = '#111';
+          cell.style.color = '#2d3748';
         }
       }
     }
@@ -470,30 +628,40 @@
     function fitGridToViewport() {
       const root = document.documentElement;
       const vw = document.documentElement.clientWidth;
-      // Choose a tighter gap on phones
-      const chosenGap = vw <= 420 ? 2 : (vw <= 820 ? 4 : 6);
+      
+      // Responsive gap based on breakpoints
+      let chosenGap;
+      if (vw < 480) chosenGap = 2; // phone
+      else if (vw < 768) chosenGap = 3; // tablet
+      else chosenGap = 4; // desktop
+      
       root.style.setProperty('--gap', chosenGap + 'px');
 
-      // Use viewport width for calculations to allow proper scaling up/down
-      const gridWidth = vw - 32; // Account for body margin (16px * 2)
+      // Calculate available width based on viewport size
+      let containerPadding, bodyPadding;
+      if (vw < 480) {
+        // Mobile: no body padding, minimal container padding
+        containerPadding = 24; // 12px * 2
+        bodyPadding = 0;
+      } else {
+        // Desktop/tablet: normal padding
+        containerPadding = 40; // 20px * 2
+        bodyPadding = 40; // 20px * 2
+      }
+      
+      const gridWidth = vw - containerPadding - bodyPadding;
 
-      const MAX_CELL = 56; // desktop/tablet cap similar to first iteration
-      const MIN_CELL = 18; // smaller minimum to prevent wrapping
+      const MAX_CELL = vw < 480 ? 80 : 56; // Allow larger cells on mobile
+      const MIN_CELL = 18;
 
-      const ideal = Math.floor((gridWidth - chosenGap * 12 - 1) / 13);
+      // Dynamic calculation: (viewport - padding - gaps) / 13
+      const ideal = Math.floor((gridWidth - chosenGap * 12) / 13);
       const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, ideal));
       root.style.setProperty('--cell', cell + 'px');
 
-      // Adapt border radius so small cells don't look like circles
-      const radius = Math.max(3, Math.round(cell * 0.18));
+      // Border radius: cell-size / 10, minimum 2px
+      const radius = Math.max(2, Math.round(cell / 10));
       root.style.setProperty('--radius', radius + 'px');
-
-      // Remove any previous maxWidth constraint to allow scaling up
-      appContainer.style.maxWidth = 'none';
-      // Set a reasonable maxWidth for very large screens
-      if (vw > 1200) {
-        appContainer.style.maxWidth = `${13 * MAX_CELL + 12 * chosenGap}px`;
-      }
     }
 
     resetBtn.addEventListener('click', resetAll);

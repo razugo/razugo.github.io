@@ -13,7 +13,9 @@ Undo button — removes the most recent increment.
 
 Reset button — clears all counts/history. 
 
-Hand Grid: 13×13 responsive grid of button “cells,” one per starting hand. Diagonal = pairs; upper triangle = suited; lower triangle = offsuit. Cell labels display per current mode (codes / counts / strength). 
+Grid Container: Contains hand grid, toggle controls, and help note in vertical flexbox layout with consistent spacing.
+
+Hand Grid: 13×13 responsive grid of button "cells," one per starting hand. Diagonal = pairs; upper triangle = suited; lower triangle = offsuit. Cell labels display per current mode (codes / counts / strength). 
 
 Toggle Controls:
 
@@ -139,4 +141,144 @@ AC-05 Analysis Panel: With n≥1 history, panel appears with category per z-scor
 
 AC-06 Persistence: After increments, a reload preserves counts, total, history, and toggle state. 
 
-AC-07 Responsiveness: On a 390×844 viewport (iPhone 12), grid fits width with smaller gaps and larger active scale while dragging.
+AC-07 Responsiveness: On a 390×844 viewport (iPhone 12), app uses full width (no body/container padding), grid maximizes available space with 2px gaps, cells scale to 80px max, and active cells scale 1.5x with -20px vertical offset.
+
+12) Visual Design System
+Color Palette
+
+Neutral Foundation:
+
+Dark: #2d3748 (topbar, primary text)
+Mid-dark: #4a5568 (secondary UI elements, muted text)
+Mid: #718096 (tertiary text, labels)
+Light: #e2e8f0 (borders, subtle dividers)
+Lighter: #edf2f7 (hover states)
+Lightest: #f7fafc (background panels)
+White: #FFFFFF (card backgrounds)
+
+Semantic Colors:
+
+High Roll (Lucky): Linear gradient #10b981 → #059669 (emerald greens)
+Expected (Normal): Linear gradient #3b82f6 → #2563eb (confident blues)
+Low Roll (Unlucky): Linear gradient #f59e0b → #d97706 (amber-orange warning)
+Heat Map: Dynamic RGB interpolation from white rgb(255,255,255) to pure red rgb(255,0,0)
+
+Typography
+Font Stack: System UI fonts for optimal performance and native feel
+-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+Size Hierarchy:
+
+Banner/Hero: 24px (luck category display)
+Large Value: 20px (statistical values)
+Body: 14px (explanations, help text)
+Label: 12px (stat labels)
+Cell: 11px (hand codes/values)
+
+Weight System:
+
+Bold (700): Statistical values, luck banners
+Semibold (600): Total badge, cell labels, headers
+Medium (500): Buttons, toggles
+Normal (400): Body text, explanations
+
+Spatial Design
+Container Architecture:
+
+App wrapper: Maximum 900px on large screens, full-width on mobile
+Border radius: 12px for main container (premium card feel), 0px on mobile
+Content padding: 20px desktop/tablet, 12px mobile (edge-to-edge mobile)
+Body padding: 20px desktop/tablet, 0px mobile (full viewport utilization)
+Topbar padding: 12px vertical, 16px horizontal (compact utility bar)
+Grid container: Flexbox column layout containing grid, toggles, and notes with 24px gap
+
+Component Spacing:
+
+Grid gap: Responsive (2px phone, 3px tablet, 4px desktop)
+Control gap: 12px between toggle buttons
+Section gap: 20px between app sections (topbar, grid-container, analysis), 24px within grid-container
+Inline gap: 8px for related elements
+
+Border Radii:
+
+Large: 20px (total badge pill shape)
+Medium: 12px (app container)
+Standard: 8px (panels, controls)
+Small: 6px (buttons)
+Micro: Dynamic 2-10px (grid cells based on size)
+
+Elevation & Depth
+Shadow Hierarchy:
+
+Hero: 0 20px 60px rgba(0,0,0,0.3) (main app container, floating card effect)
+Elevated: 0 4px 12px rgba(0,0,0,0.3) (active cell during interaction)
+Subtle: 0 2px 8px rgba(0,0,0,0.1) (sticky topbar separation)
+None: Flat elements maintain clean hierarchy
+
+Animation & Motion
+Transition Timing:
+
+Micro: 0.15s (cell hover/active states)
+Standard: 0.2s (button interactions)
+Smooth: 0.3s (panel appearances)
+
+Easing Function:
+
+Universal ease for natural motion feel
+
+Transform Effects:
+
+Button hover: translateY(-1px) (subtle lift)
+Button press: translateY(0) (return to ground)
+Cell active: scale(1.15) desktop, scale(1.5) translateY(-20px) mobile
+No animations: Analysis panel updates appear instantly without fade-in for rapid interaction
+
+Interaction Design Philosophy
+Visual Feedback Principles:
+
+Immediate Response: Active states appear instantly on touch/click
+Finger Accommodation: Mobile active states scale larger and offset upward to remain visible under finger
+Progressive Disclosure: Heat map intensifies gradually with use
+State Persistence: Visual states clearly indicate current mode (counts/strength/default)
+
+Color Psychology:
+
+Light neutral background: Clean, professional appearance focused on data visualization
+Green "High Roll": Positive reinforcement, luck, success
+Blue "Expected": Neutral, stable, analytical
+Amber "Low Roll": Caution without alarm, empathetic acknowledgment
+Red heat mapping: Intuitive frequency visualization
+
+Responsive Scaling Logic
+Breakpoint Philosophy: Fluid, not fixed
+
+Phone: < 480px (compact, touch-optimized)
+Tablet: 480-768px (balanced spacing)
+Desktop: > 768px (generous spacing, hover states)
+Large: > 1200px (capped width for readability)
+
+Dynamic Calculations:
+
+Cell size: (viewport - padding - gaps) / 13, clamped 18-56px desktop, 18-80px mobile
+Border radius: cell-size / 10, minimum 2px
+Active scale: 15% boost desktop, 50% boost + elevation mobile
+
+Accessibility Aesthetics
+Contrast Management:
+
+Dynamic text color switching at luminance threshold 128
+Minimum WCAG AA contrast ratios maintained
+Clear visual hierarchy without relying solely on color
+
+Interactive Affordances:
+
+All interactive elements use pointer cursor
+Focus states inherit from hover states
+Touch targets meet 44x44px minimum through scaling
+
+Brand Personality
+The aesthetic combines:
+
+Professional: Clean typography, structured layout, reliable interactions
+Playful: Gradient background, emoji indicators, smooth animations
+Analytical: Clear data visualization, statistical presentation
+Premium: Shadow depth, smooth transitions, cohesive color system
