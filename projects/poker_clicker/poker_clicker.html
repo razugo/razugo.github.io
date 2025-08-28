@@ -101,17 +101,19 @@
     }
     
     #play-style-indicator {
-      color: var(--color-white);
       font-size: 14px;
       font-weight: var(--font-weight-medium);
       padding: 6px 12px;
       border-radius: 12px;
-      background: #3b82f6;
       transition: var(--transition-standard);
     }
     
     #play-style-indicator.nit {
       background: #EFD30B;
+    }
+
+    #play-style-indicator.tight {
+      background: #3b82f6;
     }
     
     #play-style-indicator.normal {
@@ -553,7 +555,7 @@
     <div class="stat-item">
       <span id="vpip-display">VPIP: 0% (0/0)</span>
     </div>
-    <div id="play-style-indicator">Tight</div>
+    <div id="play-style-indicator">&nbsp</div>
   </div>
 
   <div id="view-tabs">
@@ -803,22 +805,41 @@
       
       // Update play style indicator with fun labels
       playStyleIndicator.classList.remove('normal', 'loose', 'nit', 'maniac');
+      playStyleIndicator.innerHTML = '&nbsp';
+      if (total == 0) {
+        return
+      }
+
+      let bgColor;
       if (vpip < 10) {
         playStyleIndicator.textContent = 'Nit';
         playStyleIndicator.classList.add('nit');
+        bgColor = '#EFD30B'; // yellow
       } else if (vpip < 20) {
         playStyleIndicator.textContent = 'Tight';
         playStyleIndicator.className = 'tight';
+        bgColor = '#3b82f6'; // blue
       } else if (vpip <= 30) {
         playStyleIndicator.textContent = 'Normal';
         playStyleIndicator.classList.add('normal');
+        bgColor = '#10b981'; // green
       } else if (vpip <= 50) {
         playStyleIndicator.textContent = 'Loose';
         playStyleIndicator.classList.add('loose');
+        bgColor = '#f59e0b'; // orange
       } else {
         playStyleIndicator.textContent = 'Maniac';
         playStyleIndicator.classList.add('maniac');
+        bgColor = '#ef4444'; // red
       }
+      
+      // Calculate luminance and set text color
+      const hex = bgColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      playStyleIndicator.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
     }
 
     function undo() {
