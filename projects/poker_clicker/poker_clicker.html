@@ -804,7 +804,7 @@
       vpipDisplay.textContent = `VPIP: ${vpip.toFixed(1)}% (${totalPlayed}/${total})`;
       
       // Update play style indicator with fun labels
-      playStyleIndicator.classList.remove('normal', 'loose', 'nit', 'maniac');
+      playStyleIndicator.classList.remove('normal', 'tight', 'loose', 'nit', 'maniac');
       playStyleIndicator.innerHTML = '&nbsp';
       if (total == 0) {
         return
