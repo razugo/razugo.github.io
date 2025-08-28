@@ -110,12 +110,20 @@
       transition: var(--transition-standard);
     }
     
+    #play-style-indicator.nit {
+      background: #EFD30B;
+    }
+    
     #play-style-indicator.normal {
       background: #10b981;
     }
     
     #play-style-indicator.loose {
       background: #f59e0b;
+    }
+    
+    #play-style-indicator.maniac {
+      background: #ef4444;
     }
     
     #view-tabs {
@@ -347,7 +355,7 @@
         overflow: hidden;
         pointer-events: none;
         z-index: 1000;
-        transform: scale(2.0) translateY(-40px);
+        transform: scale(2.0) translateY(-20px);
         transform-origin: center center;
         box-shadow: var(--shadow-elevated);
         transition: none;
@@ -560,7 +568,7 @@
       <button id="toggleCounts">Counts</button>
       <button id="toggleStrength">Strength</button>
       <button id="toggleHeatmap">Heatmap</button>
-      <button id="togglePlayedOnly">Played Only</button>
+      <button id="togglePlayed">Played</button>
     </div>
     
     <div class="note">Quick tap: dealt (folded). Long press (>600ms): dealt AND played. <br> Strength is percentile rank (lower = better). <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Hand rankings reference</a></div>
@@ -624,7 +632,7 @@
     let showCounts = false;
     let showStrength = false;
     let showHeatmap = false;
-    let showPlayedOnly = false;
+    let showPlayed = false;
     let activeCell = null;
     let isMouseDown = false;
     let longPressTimer = null;
@@ -637,7 +645,7 @@
     const toggleBtn = document.getElementById('toggleCounts');
     const toggleStrengthBtn = document.getElementById('toggleStrength');
     const toggleHeatmapBtn = document.getElementById('toggleHeatmap');
-    const togglePlayedOnlyBtn = document.getElementById('togglePlayedOnly');
+    const togglePlayedBtn = document.getElementById('togglePlayed');
     const analysisResultsEl = document.getElementById('analysis-results');
     const appContainer = document.querySelector('.app-container');
     
@@ -793,17 +801,23 @@
       // Update display
       vpipDisplay.textContent = `VPIP: ${vpip.toFixed(1)}% (${totalPlayed}/${total})`;
       
-      // Update play style indicator
-      playStyleIndicator.classList.remove('normal', 'loose');
-      if (vpip < 20) {
+      // Update play style indicator with fun labels
+      playStyleIndicator.classList.remove('normal', 'loose', 'nit', 'maniac');
+      if (vpip < 10) {
+        playStyleIndicator.textContent = 'Nit';
+        playStyleIndicator.classList.add('nit');
+      } else if (vpip < 20) {
         playStyleIndicator.textContent = 'Tight';
         playStyleIndicator.className = 'tight';
       } else if (vpip <= 30) {
         playStyleIndicator.textContent = 'Normal';
         playStyleIndicator.classList.add('normal');
-      } else {
+      } else if (vpip <= 50) {
         playStyleIndicator.textContent = 'Loose';
         playStyleIndicator.classList.add('loose');
+      } else {
+        playStyleIndicator.textContent = 'Maniac';
+        playStyleIndicator.classList.add('maniac');
       }
     }
 
@@ -871,14 +885,14 @@
       saveState();
     }
     
-    function togglePlayedOnly() {
-      showPlayedOnly = !showPlayedOnly;
+    function togglePlayed() {
+      showPlayed = !showPlayed;
       
       // Update button appearance
-      if (showPlayedOnly) {
-        togglePlayedOnlyBtn.classList.add('toggle-active');
+      if (showPlayed) {
+        togglePlayedBtn.classList.add('toggle-active');
       } else {
-        togglePlayedOnlyBtn.classList.remove('toggle-active');
+        togglePlayedBtn.classList.remove('toggle-active');
       }
       
       render();
@@ -916,7 +930,7 @@
         showCounts,
         showStrength,
         showHeatmap,
-        showPlayedOnly
+        showPlayed
       };
       localStorage.setItem('pokerClickerState', JSON.stringify(state));
     }
@@ -935,7 +949,7 @@
         showCounts = state.showCounts || false;
         showStrength = state.showStrength || false;
         showHeatmap = state.showHeatmap || false;
-        showPlayedOnly = state.showPlayedOnly || false;
+        showPlayed = state.showPlayed || false;
         
         // Legacy support for old history format
         if (state.history && !state.hands) {
@@ -988,8 +1002,8 @@
             cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
         }
       } else {
-        // Frequency Heatmap - choose between total counts or played counts based on showPlayedOnly
-        const sourceData = showPlayedOnly ? playedCounts : counts;
+        // Frequency Heatmap - choose between total counts or played counts based on showPlayed
+        const sourceData = showPlayed ? playedCounts : counts;
         const values = Object.values(sourceData);
         const max = Math.max(1, ...values);
         
@@ -1030,10 +1044,10 @@
         const playedCount = playedCounts[key] || 0;
         const totalCount = counts[key] || 0;
         
-        // Update cell content based on showPlayedOnly mode
+        // Update cell content based on showPlayed mode
         if (showCounts) {
-          // Show played counts when Played Only is active, otherwise show total counts
-          cell.textContent = showPlayedOnly ? playedCount : totalCount;
+          // Show played counts when Played is active, otherwise show total counts
+          cell.textContent = showPlayed ? playedCount : totalCount;
         } else if (showStrength) {
           cell.textContent = handStrengths[key];
         } else {
@@ -1043,10 +1057,9 @@
         // Update played indicator (always show when there are played hands)
         cell.classList.toggle('played', playedCount > 0);
         
-        // Show all cells - don't hide any when Played Only is active
+        // Show all cells - don't hide any when Played is active
         cell.style.display = 'flex';
       }
-      
       updateCellColors();
     }
 
@@ -1321,11 +1334,10 @@
       const root = document.documentElement;
       const vw = document.documentElement.clientWidth;
       
-      // Responsive gap based on breakpoints
+      // Responsive gap based on breakpoints - NO gaps on mobile
       let chosenGap;
-      if (vw < 480) chosenGap = 2; // phone
-      else if (vw < 768) chosenGap = 3; // tablet
-      else chosenGap = 4; // desktop
+      if (vw < 768) chosenGap = 0; // mobile/tablet - no gaps
+      else chosenGap = 4; // desktop only
       
       root.style.setProperty('--gap', chosenGap + 'px');
 
@@ -1343,7 +1355,7 @@
       
       const gridWidth = vw - containerPadding - bodyPadding;
 
-      const MAX_CELL = vw < 480 ? 80 : 56; // Allow larger cells on mobile
+      const MAX_CELL = vw < 480 ? 100 : 56; // Even larger cells on mobile with no gaps
       const MIN_CELL = 18;
 
       // Dynamic calculation: (viewport - padding - gaps) / 13
@@ -1351,8 +1363,8 @@
       const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, ideal));
       root.style.setProperty('--cell', cell + 'px');
 
-      // Border radius: cell-size / 10, minimum 2px
-      const radius = Math.max(2, Math.round(cell / 10));
+      // Border radius: smaller on mobile for seamless appearance
+      const radius = Math.max(5, Math.round(cell / 10));
       root.style.setProperty('--radius', radius + 'px');
     }
 
@@ -1361,7 +1373,7 @@
     toggleBtn.addEventListener('click', toggleCounts);
     toggleStrengthBtn.addEventListener('click', toggleStrength);
     toggleHeatmapBtn.addEventListener('click', toggleHeatmap);
-    togglePlayedOnlyBtn.addEventListener('click', togglePlayedOnly);
+    togglePlayedBtn.addEventListener('click', togglePlayed);
     
     // View tab handlers
     gridTab.addEventListener('click', () => switchView('grid'));
@@ -1393,8 +1405,8 @@
     switchView(currentView);
     
     // Set initial toggle button states
-    if (showPlayedOnly) {
-      togglePlayedOnlyBtn.classList.add('toggle-active');
+    if (showPlayed) {
+      togglePlayedBtn.classList.add('toggle-active');
     }
     
     analyzeLuck();
