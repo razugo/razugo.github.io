@@ -78,6 +78,75 @@
       z-index: 10; 
     }
     #topbar-buttons { display: flex; gap: 12px; }
+    
+    #stats-bar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(74, 85, 104, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 8px;
+      z-index: 9;
+      margin-top: -8px;
+      gap: 16px;
+    }
+    
+    .stat-item {
+      color: var(--color-white);
+      font-size: 16px;
+      font-weight: var(--font-weight-semibold);
+    }
+    
+    #play-style-indicator {
+      color: var(--color-white);
+      font-size: 14px;
+      font-weight: var(--font-weight-medium);
+      padding: 6px 12px;
+      border-radius: 12px;
+      background: #3b82f6;
+      transition: var(--transition-standard);
+    }
+    
+    #play-style-indicator.normal {
+      background: #10b981;
+    }
+    
+    #play-style-indicator.loose {
+      background: #f59e0b;
+    }
+    
+    #view-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--color-lighter);
+      border-radius: 8px;
+      padding: 4px;
+    }
+    
+    .view-tab {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--color-mid);
+      font-weight: var(--font-weight-medium);
+      transition: var(--transition-standard);
+      cursor: pointer;
+    }
+    
+    .view-tab.active {
+      background: var(--color-white);
+      color: var(--color-dark);
+      box-shadow: var(--shadow-subtle);
+    }
+    
+    .view-tab:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.5);
+    }
     #total { 
       font-weight: var(--font-weight-semibold); 
       font-size: var(--font-size-large); 
@@ -114,6 +183,104 @@
       align-items: center;
       gap: 24px;
     }
+    
+    #list-container {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    
+    #list-container.active {
+      display: flex;
+    }
+    
+    .list-item {
+      display: flex;
+      align-items: center;
+      min-height: 56px;
+      padding: 8px 16px;
+      background: var(--color-white);
+      border: 1px solid var(--color-light);
+      border-radius: 8px;
+      transition: var(--transition-standard);
+      position: relative;
+      gap: 12px;
+    }
+    
+    .list-item:nth-child(even) {
+      background: var(--color-lightest);
+    }
+    
+    .list-item-hand {
+      font-weight: var(--font-weight-semibold);
+      font-size: 16px;
+      min-width: 60px;
+    }
+    
+    .list-item-position {
+      flex: 1;
+      text-align: center;
+      color: var(--color-mid);
+      font-size: 14px;
+    }
+    
+    .list-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+    
+    .action-button {
+      padding: 6px 12px;
+      border: 1px solid var(--color-light);
+      border-radius: 4px;
+      background: var(--color-white);
+      color: var(--color-dark);
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition-micro);
+      white-space: nowrap;
+    }
+    
+    .action-button:hover {
+      background: var(--color-lighter);
+    }
+    
+    .action-button.played {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+    
+    .action-button.folded {
+      background: #9CA3AF;
+      color: white;
+      border-color: #9CA3AF;
+    }
+    
+    .delete-button {
+      padding: 6px 8px;
+      border: 1px solid #ef4444;
+      border-radius: 4px;
+      background: #ef4444;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-micro);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .delete-button:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+    
+    
 
     #grid { width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); min-width: 0; justify-content: center; }
 
@@ -145,24 +312,97 @@
       transform: scale(0.98); 
     }
     .cell.active { 
-      transform: scale(1.15); 
-      z-index: 11; 
+      opacity: 0.3;
+    }
+    
+    #magnify-overlay {
+      position: fixed;
+      width: var(--cell);
+      height: var(--cell);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid var(--color-light);
+      border-radius: var(--radius);
+      background: var(--color-white);
+      color: var(--color-dark);
+      font-size: var(--font-size-cell);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1000;
+      transform: scale(1.5);
+      transform-origin: center center;
       box-shadow: var(--shadow-elevated);
+      transition: none;
+      will-change: transform;
+    }
+    
+    
+    .cell.played {
+      position: relative;
+    }
+    
+    .cell.played::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      border: 1px solid var(--color-white);
+    }
+    
+    @media (max-width: 767px) {
+      .cell.played::after {
+        width: 5px;
+        height: 5px;
+        top: 1px;
+        right: 1px;
+        border-width: 0.5px;
+      }
+    }
+    
+    .cell.playing {
+      animation: playingPulse 0.3s ease-in-out;
+      background: rgba(16, 185, 129, 0.2) !important;
+    }
+    
+    @keyframes playingPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
     }
 
     @media (hover: none) and (pointer: coarse) {
-      .cell.active {
-        transform: scale(1.5) translateY(-20px);
+      #magnify-overlay {
+        transform: scale(2.0) translateY(-40px);
       }
     }
 
     .note { 
-      font-size: var(--font-size-body); 
+      font-size: var(--font-size-label); 
       color: var(--color-mid); 
       font-weight: var(--font-weight-normal);
-      text-align: center;
+      text-align: left;
       max-width: 600px;
-      line-height: 1.5;
+      line-height: 1.4;
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--color-light);
+    }
+    
+    @media (max-width: 767px) {
+      .note {
+        font-size: 10px;
+        line-height: 1.3;
+        padding-top: 12px;
+        margin-top: 16px;
+      }
     }
 
     #toggle-controls {
@@ -285,6 +525,18 @@
     </div>
   </div>
 
+  <div id="stats-bar">
+    <div class="stat-item">
+      <span id="vpip-display">VPIP: 0% (0/0)</span>
+    </div>
+    <div id="play-style-indicator">Tight</div>
+  </div>
+
+  <div id="view-tabs">
+    <button id="grid-tab" class="view-tab active">Grid</button>
+    <button id="list-tab" class="view-tab">List</button>
+  </div>
+
   <div id="grid-container">
     <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
     
@@ -292,11 +544,19 @@
       <button id="toggleCounts">Counts</button>
       <button id="toggleStrength">Strength</button>
       <button id="toggleHeatmap">Heatmap</button>
+      <button id="togglePlayedOnly">Played Only</button>
     </div>
     
-    <div class="note">Tap a cell to increment its counter. Colors scale from white (0) toward red as counts increase. <br> Strength is the hand's percentile rank (lower is better). For example, a hand with strength 20 is in the top 20% of hands. <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Original post</a></div>
+    <div class="note">Quick tap: dealt (folded). Long press (>600ms): dealt AND played. Strength is percentile rank (lower = better). <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Hand rankings reference</a></div>
   </div>
+  
+  <div id="list-container">
+    <!-- List items will be dynamically generated -->
+  </div>
+  
   <div id="analysis-results"></div>
+  
+  <div id="magnify-overlay"></div>
 </div>
 
   <script>
@@ -337,15 +597,21 @@
     let expectedMean = 0;
     let expectedStdDev = 0;
 
-    // ---- State ----
-    let counts = {}; // key -> integer
+    // ---- Enhanced State ----
+    let hands = []; // Array of hand objects with detailed tracking
+    let counts = {}; // key -> integer (total dealt count)
+    let playedCounts = {}; // key -> integer (played count)
     let total = 0;
-    const history = [];
+    let totalPlayed = 0;
+    let vpip = 0;
+    let currentView = 'grid'; // 'grid' or 'list'
     let showCounts = false;
     let showStrength = false;
     let showHeatmap = false;
+    let showPlayedOnly = false;
     let activeCell = null;
     let isMouseDown = false;
+    let longPressTimer = null;
 
     // ---- Elements ----
     const grid = document.getElementById('grid');
@@ -355,8 +621,20 @@
     const toggleBtn = document.getElementById('toggleCounts');
     const toggleStrengthBtn = document.getElementById('toggleStrength');
     const toggleHeatmapBtn = document.getElementById('toggleHeatmap');
+    const togglePlayedOnlyBtn = document.getElementById('togglePlayedOnly');
     const analysisResultsEl = document.getElementById('analysis-results');
     const appContainer = document.querySelector('.app-container');
+    
+    // New elements
+    const gridTab = document.getElementById('grid-tab');
+    const listTab = document.getElementById('list-tab');
+    const gridContainer = document.getElementById('grid-container');
+    const listContainer = document.getElementById('list-container');
+    const vpipDisplay = document.getElementById('vpip-display');
+    const playStyleIndicator = document.getElementById('play-style-indicator');
+    
+    // Magnify overlay
+    const magnifyOverlay = document.getElementById('magnify-overlay');
 
     function calculateExpectedValues() {
         let weightedSum = 0;
@@ -418,33 +696,132 @@
       render();
       fitGridToViewport();
     }
+    
+    function updateMagnifyOverlay(cell, clientX, clientY) {
+      // Store current background color to preserve long press state
+      const currentBg = magnifyOverlay.style.backgroundColor;
+      
+      // Copy cell content and styling to overlay
+      magnifyOverlay.textContent = cell.textContent;
+      
+      // Build classes carefully to avoid disrupting display
+      const newClasses = ['cell'];
+      if (cell.classList.contains('pair')) {
+        newClasses.push('pair');
+      }
+      magnifyOverlay.className = newClasses.join(' ');
+      magnifyOverlay.id = 'magnify-overlay'; // Restore ID
+      
+      // Apply cell colors but preserve long press background if active
+      if (currentBg === '#e8f5e8' || currentBg === 'rgb(232, 245, 232)') {
+        // Keep the long press green background
+        magnifyOverlay.style.backgroundColor = '#e8f5e8';
+      } else {
+        // Use cell's background color
+        magnifyOverlay.style.backgroundColor = cell.style.backgroundColor || '';
+      }
+      magnifyOverlay.style.color = cell.style.color || '';
+      
+      // Center overlay over pointer position
+      const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
+      const scaledSize = cellSize * 1.5; // Account for scale(1.5)
+      magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
+      magnifyOverlay.style.top = clientY + 'px';
+    }
+    
+    function showMagnifyOverlay(cell, clientX, clientY) {
+      magnifyOverlay.style.display = 'flex';
+      // Reset background color to clear any leftover green from previous interactions
+      magnifyOverlay.style.backgroundColor = '';
+      updateMagnifyOverlay(cell, clientX, clientY);
+    }
+    
+    function hideMagnifyOverlay() {
+      magnifyOverlay.style.display = 'none';
+    }
 
-    function increment(key) {
-      history.push(key);
+    function increment(key, played = false) {
+      const handEntry = {
+        key: key,
+        timestamp: Date.now(),
+        played: played,
+        position: hands.length + 1,
+        outcome: null,
+        pot: null,
+        notes: ""
+      };
+      
+      hands.push(handEntry);
       counts[key] = (counts[key] || 0) + 1;
       total += 1;
+      
+      if (played) {
+        playedCounts[key] = (playedCounts[key] || 0) + 1;
+        totalPlayed += 1;
+      }
+      
+      updateStats();
       render();
       saveState();
       analyzeLuck();
     }
+    
+    function updateStats() {
+      vpip = hands.length > 0 ? (totalPlayed / total * 100) : 0;
+      
+      // Update display
+      vpipDisplay.textContent = `VPIP: ${vpip.toFixed(1)}% (${totalPlayed}/${total})`;
+      
+      // Update play style indicator
+      playStyleIndicator.classList.remove('normal', 'loose');
+      if (vpip < 20) {
+        playStyleIndicator.textContent = 'Tight';
+        playStyleIndicator.className = 'tight';
+      } else if (vpip <= 30) {
+        playStyleIndicator.textContent = 'Normal';
+        playStyleIndicator.classList.add('normal');
+      } else {
+        playStyleIndicator.textContent = 'Loose';
+        playStyleIndicator.classList.add('loose');
+      }
+    }
 
     function undo() {
-      if (history.length === 0) return;
-      const lastKey = history.pop();
-      if (counts[lastKey] > 0) {
-        counts[lastKey] -= 1;
+      if (hands.length === 0) return;
+      
+      const lastHand = hands.pop();
+      const key = lastHand.key;
+      
+      if (counts[key] > 0) {
+        counts[key] -= 1;
         total -= 1;
       }
+      
+      if (lastHand.played && playedCounts[key] > 0) {
+        playedCounts[key] -= 1;
+        totalPlayed -= 1;
+      }
+      
+      updateStats();
       render();
       saveState();
       analyzeLuck();
     }
 
     function resetAll() {
+      if (!confirm('Reset all data? This cannot be undone.')) return;
+      
+      hands.length = 0;
       for (const k in counts) counts[k] = 0;
+      for (const k in playedCounts) playedCounts[k] = 0;
       total = 0;
-      history.length = 0;
+      totalPlayed = 0;
+      vpip = 0;
+      pfr = 0;
+      
+      updateStats();
       render();
+      renderList();
       saveState();
       analyzeLuck();
     }
@@ -468,9 +845,46 @@
       render();
       saveState();
     }
+    
+    function togglePlayedOnly() {
+      showPlayedOnly = !showPlayedOnly;
+      render();
+      saveState();
+    }
+    
+    function switchView(view) {
+      currentView = view;
+      
+      if (view === 'grid') {
+        gridContainer.style.display = 'flex';
+        listContainer.classList.remove('active');
+        gridTab.classList.add('active');
+        listTab.classList.remove('active');
+      } else {
+        gridContainer.style.display = 'none';
+        listContainer.classList.add('active');
+        gridTab.classList.remove('active');
+        listTab.classList.add('active');
+        renderList();
+      }
+      
+      saveState();
+    }
 
     function saveState() {
-      const state = { counts, total, history, showCounts, showStrength, showHeatmap };
+      const state = {
+        hands,
+        counts,
+        playedCounts,
+        total,
+        totalPlayed,
+        vpip,
+        currentView,
+        showCounts,
+        showStrength,
+        showHeatmap,
+        showPlayedOnly
+      };
       localStorage.setItem('pokerClickerState', JSON.stringify(state));
     }
 
@@ -478,13 +892,31 @@
       const savedState = localStorage.getItem('pokerClickerState');
       if (savedState) {
         const state = JSON.parse(savedState);
+        hands = state.hands || [];
         counts = state.counts || {};
+        playedCounts = state.playedCounts || {};
         total = state.total || 0;
+        totalPlayed = state.totalPlayed || 0;
+        vpip = state.vpip || 0;
+        currentView = state.currentView || 'grid';
         showCounts = state.showCounts || false;
         showStrength = state.showStrength || false;
         showHeatmap = state.showHeatmap || false;
-        if (state.history) {
-            history.push(...state.history);
+        showPlayedOnly = state.showPlayedOnly || false;
+        
+        // Legacy support for old history format
+        if (state.history && !state.hands) {
+          for (let i = 0; i < state.history.length; i++) {
+            hands.push({
+              key: state.history[i],
+              timestamp: Date.now() - (state.history.length - i) * 1000,
+              played: false,
+              position: i + 1,
+              outcome: null,
+              pot: null,
+              notes: ""
+            });
+          }
         }
       }
     }
@@ -523,12 +955,14 @@
             cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
         }
       } else {
-        // Frequency Heatmap (white to red)
-        const values = Object.values(counts);
+        // Frequency Heatmap - choose between total counts or played counts based on showPlayedOnly
+        const sourceData = showPlayedOnly ? playedCounts : counts;
+        const values = Object.values(sourceData);
         const max = Math.max(1, ...values);
+        
         for (const cell of cells) {
             const key = cell.dataset.key;
-            const c = counts[key] || 0;
+            const c = sourceData[key] || 0;
 
             let baseColor;
             if (key.endsWith('s')) { // Suited
@@ -557,16 +991,29 @@
 
     function render() {
       totalEl.textContent = 'Total: ' + total;
+      
       for (const cell of grid.children) {
         const key = cell.dataset.key;
+        const playedCount = playedCounts[key] || 0;
+        const totalCount = counts[key] || 0;
+        
+        // Update cell content based on showPlayedOnly mode
         if (showCounts) {
-          cell.textContent = counts[key] || 0;
+          // Show played counts when Played Only is active, otherwise show total counts
+          cell.textContent = showPlayedOnly ? playedCount : totalCount;
         } else if (showStrength) {
           cell.textContent = handStrengths[key];
         } else {
           cell.textContent = key;
         }
+        
+        // Update played indicator (always show when there are played hands)
+        cell.classList.toggle('played', playedCount > 0);
+        
+        // Show all cells - don't hide any when Played Only is active
+        cell.style.display = 'flex';
       }
+      
       updateCellColors();
     }
 
@@ -574,29 +1021,80 @@
       if (e.target.classList.contains('cell')) {
         isMouseDown = true;
         if (activeCell) {
-          activeCell.classList.remove('active');
+          activeCell.classList.remove('active', 'playing');
         }
         activeCell = e.target;
         activeCell.classList.add('active');
+        
+        // Show magnify overlay
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        showMagnifyOverlay(activeCell, clientX, clientY);
+        
+        // Start long press timer (600ms = more than half a second)
+        longPressTimer = setTimeout(() => {
+          if (isMouseDown && activeCell) {
+            activeCell.classList.add('playing');
+            // Update overlay background directly via style - no class changes
+            magnifyOverlay.style.backgroundColor = '#e8f5e8';
+            // Haptic feedback on mobile
+            if (navigator.vibrate) {
+              navigator.vibrate(50);
+            }
+          }
+        }, 600);
+        
         e.preventDefault();
       }
     }
 
     function handleInteractionMove(e) {
       if (isMouseDown) {
-        let target;
+        let clientX, clientY;
         if (e.touches) {
-          target = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
         } else {
-          target = e.target;
+          clientX = e.clientX;
+          clientY = e.clientY;
         }
+        
+        // Update overlay position immediately - centered over pointer
+        const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
+        const scaledSize = cellSize * 1.5; // Account for scale(1.5)
+        magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
+        magnifyOverlay.style.top = clientY + 'px';
+        
+        // Use native browser hover detection
+        const target = document.elementFromPoint(clientX, clientY);
 
         if (target && target.classList.contains('cell') && target !== activeCell) {
+          // Clear long press timer when moving to different cell
+          clearTimeout(longPressTimer);
+          
           if (activeCell) {
-            activeCell.classList.remove('active');
+            activeCell.classList.remove('active', 'playing');
           }
+          // Reset overlay background when switching cells
+          magnifyOverlay.style.backgroundColor = '';
+          
           activeCell = target;
           activeCell.classList.add('active');
+          
+          // Update overlay content for new cell
+          updateMagnifyOverlay(activeCell, clientX, clientY);
+          
+          // Restart long press timer for new cell (600ms = more than half a second)
+          longPressTimer = setTimeout(() => {
+            if (isMouseDown && activeCell) {
+              activeCell.classList.add('playing');
+              // Update overlay background directly via style - no class changes
+              magnifyOverlay.style.backgroundColor = '#e8f5e8';
+              if (navigator.vibrate) {
+                navigator.vibrate(50);
+              }
+            }
+          }, 600);
         }
         e.preventDefault();
       }
@@ -604,21 +1102,138 @@
 
     function handleInteractionEnd(e) {
       if (isMouseDown && activeCell) {
-        const key = activeCell.dataset.key;
-        increment(key);
-        activeCell.classList.remove('active');
+        // Check if the release happened over a cell
+        let releaseTarget;
+        if (e.touches && e.changedTouches && e.changedTouches.length > 0) {
+          // Touch event - use the touch point to find the element
+          releaseTarget = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+        } else {
+          // Mouse event
+          releaseTarget = e.target;
+        }
+        
+        // Check if we're releasing over the grid container or any cell within it
+        const gridContainer = document.getElementById('grid');
+        const isOverGrid = releaseTarget && (releaseTarget.classList.contains('cell') || gridContainer.contains(releaseTarget));
+        
+        if (isOverGrid) {
+          // Released over the grid - process the interaction
+          const key = activeCell.dataset.key;
+          const wasLongPress = activeCell.classList.contains('playing');
+          
+          clearTimeout(longPressTimer);
+          increment(key, wasLongPress);
+        } else {
+          // Released outside the grid - just clear without incrementing
+          clearTimeout(longPressTimer);
+        }
+        
+        activeCell.classList.remove('active', 'playing');
         activeCell = null;
       }
+      
+      // Hide overlay
+      hideMagnifyOverlay();
+      
       isMouseDown = false;
+      clearTimeout(longPressTimer);
+    }
+
+    function renderList() {
+      listContainer.innerHTML = '';
+      
+      // Reverse chronological order (newest first)
+      const sortedHands = [...hands].reverse();
+      
+      sortedHands.forEach((hand, index) => {
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
+        listItem.dataset.handIndex = hands.length - 1 - index; // Original index
+        
+        listItem.innerHTML = `
+          <div class="list-item-hand">${hand.key}</div>
+          <div class="list-item-position">#${hand.position}</div>
+          <div class="list-item-actions">
+            <button class="action-button ${hand.played ? 'played' : 'folded'}" data-action="toggle">
+              ${hand.played ? 'Played' : 'Folded'}
+            </button>
+            <button class="delete-button" data-action="delete">
+              🗑️
+            </button>
+          </div>
+        `;
+        
+        // Action button handlers
+        const toggleButton = listItem.querySelector('[data-action="toggle"]');
+        const deleteButton = listItem.querySelector('[data-action="delete"]');
+        
+        toggleButton.addEventListener('click', () => {
+          toggleHandStatus(parseInt(listItem.dataset.handIndex));
+        });
+        
+        deleteButton.addEventListener('click', () => {
+          deleteHand(parseInt(listItem.dataset.handIndex));
+        });
+        
+        listContainer.appendChild(listItem);
+      });
+    }
+    
+    function toggleHandStatus(handIndex) {
+      const hand = hands[handIndex];
+      if (!hand) return;
+      
+      hand.played = !hand.played;
+      
+      if (hand.played) {
+        playedCounts[hand.key] = (playedCounts[hand.key] || 0) + 1;
+        totalPlayed += 1;
+      } else {
+        playedCounts[hand.key] = Math.max(0, (playedCounts[hand.key] || 0) - 1);
+        totalPlayed = Math.max(0, totalPlayed - 1);
+      }
+      
+      updateStats();
+      render();
+      renderList();
+      saveState();
+    }
+    
+    function deleteHand(handIndex) {
+      const hand = hands[handIndex];
+      if (!hand) return;
+      
+      // Update counts
+      counts[hand.key] = Math.max(0, (counts[hand.key] || 0) - 1);
+      total = Math.max(0, total - 1);
+      
+      if (hand.played) {
+        playedCounts[hand.key] = Math.max(0, (playedCounts[hand.key] || 0) - 1);
+        totalPlayed = Math.max(0, totalPlayed - 1);
+      }
+      
+      // Remove from hands array
+      hands.splice(handIndex, 1);
+      
+      // Update position numbers for remaining hands
+      hands.forEach((h, i) => {
+        h.position = i + 1;
+      });
+      
+      updateStats();
+      render();
+      renderList();
+      saveState();
+      analyzeLuck();
     }
 
     function analyzeLuck() {
-        if (history.length === 0) {
+        if (hands.length === 0) {
             analysisResultsEl.innerHTML = '';
             return;
         }
 
-        const strengths = history.map(hand => handStrengths[hand]);
+        const strengths = hands.map(hand => handStrengths[hand.key]);
         const mean = strengths.reduce((a, b) => a + b, 0) / strengths.length;
         const zScore = (mean - expectedMean) / (expectedStdDev / Math.sqrt(strengths.length));
 
@@ -710,7 +1325,13 @@
     undoBtn.addEventListener('click', undo);
     toggleBtn.addEventListener('click', toggleCounts);
     toggleStrengthBtn.addEventListener('click', toggleStrength);
-    toggleHeatmapBtn.addEventListener('click', toggleHeatmap);  
+    toggleHeatmapBtn.addEventListener('click', toggleHeatmap);
+    togglePlayedOnlyBtn.addEventListener('click', togglePlayedOnly);
+    
+    // View tab handlers
+    gridTab.addEventListener('click', () => switchView('grid'));
+    listTab.addEventListener('click', () => switchView('list'));
+    
     // Use throttled resize for better performance
     let resizeTimeout;
     window.addEventListener('resize', () => {
@@ -733,6 +1354,8 @@
     calculateExpectedValues();
     loadState();
     buildGrid();
+    updateStats();
+    switchView(currentView);
     analyzeLuck();
   </script>
 </body>
