@@ -176,6 +176,17 @@
     button:active { 
       transform: translateY(0); 
     }
+    
+    button.toggle-active {
+      background: var(--color-mid-dark) !important;
+      color: var(--color-white) !important;
+      border-color: var(--color-mid-dark) !important;
+    }
+    
+    button.toggle-active:hover {
+      background: var(--color-dark) !important;
+      border-color: var(--color-dark) !important;
+    }
 
     #grid-container {
       display: flex;
@@ -315,30 +326,40 @@
       opacity: 0.3;
     }
     
-    #magnify-overlay {
-      position: fixed;
-      width: var(--cell);
-      height: var(--cell);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      border: 1px solid var(--color-light);
-      border-radius: var(--radius);
-      background: var(--color-white);
-      color: var(--color-dark);
-      font-size: var(--font-size-cell);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.05;
-      white-space: nowrap;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: 1000;
-      transform: scale(1.5);
-      transform-origin: center center;
-      box-shadow: var(--shadow-elevated);
-      transition: none;
-      will-change: transform;
+    /* Overlay only visible on mobile devices */
+    @media (hover: none) and (pointer: coarse) {
+      #magnify-overlay {
+        position: fixed;
+        width: var(--cell);
+        height: var(--cell);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 1px solid var(--color-light);
+        border-radius: var(--radius);
+        background: var(--color-white);
+        color: var(--color-dark);
+        font-size: var(--font-size-cell);
+        font-weight: var(--font-weight-normal);
+        line-height: 1.05;
+        white-space: nowrap;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1000;
+        transform: scale(2.0) translateY(-40px);
+        transform-origin: center center;
+        box-shadow: var(--shadow-elevated);
+        transition: none;
+        will-change: transform;
+      }
+    }
+    
+    /* Hide overlay on desktop */
+    @media (hover: hover) and (pointer: fine) {
+      #magnify-overlay {
+        display: none !important;
+      }
     }
     
     
@@ -378,11 +399,6 @@
       50% { transform: scale(1.1); }
     }
 
-    @media (hover: none) and (pointer: coarse) {
-      #magnify-overlay {
-        transform: scale(2.0) translateY(-40px);
-      }
-    }
 
     .note { 
       font-size: var(--font-size-label); 
@@ -547,7 +563,7 @@
       <button id="togglePlayedOnly">Played Only</button>
     </div>
     
-    <div class="note">Quick tap: dealt (folded). Long press (>600ms): dealt AND played. Strength is percentile rank (lower = better). <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Hand rankings reference</a></div>
+    <div class="note">Quick tap: dealt (folded). Long press (>600ms): dealt AND played. <br> Strength is percentile rank (lower = better). <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Hand rankings reference</a></div>
   </div>
   
   <div id="list-container">
@@ -722,18 +738,23 @@
       }
       magnifyOverlay.style.color = cell.style.color || '';
       
-      // Center overlay over pointer position
-      const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
-      const scaledSize = cellSize * 1.5; // Account for scale(1.5)
-      magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
-      magnifyOverlay.style.top = clientY + 'px';
+      // Center overlay over pointer position (mobile only)
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
+        const scaledSize = cellSize * 2.0; // Account for scale(2.0) on mobile
+        magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
+        magnifyOverlay.style.top = (clientY - 40) + 'px'; // Account for translateY(-40px)
+      }
     }
     
     function showMagnifyOverlay(cell, clientX, clientY) {
-      magnifyOverlay.style.display = 'flex';
-      // Reset background color to clear any leftover green from previous interactions
-      magnifyOverlay.style.backgroundColor = '';
-      updateMagnifyOverlay(cell, clientX, clientY);
+      // Only show overlay on mobile devices
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        magnifyOverlay.style.display = 'flex';
+        // Reset background color to clear any leftover green from previous interactions
+        magnifyOverlay.style.backgroundColor = '';
+        updateMagnifyOverlay(cell, clientX, clientY);
+      }
     }
     
     function hideMagnifyOverlay() {
@@ -804,6 +825,10 @@
       
       updateStats();
       render();
+      // Update list view if it's currently active
+      if (currentView === 'list') {
+        renderList();
+      }
       saveState();
       analyzeLuck();
     }
@@ -848,6 +873,14 @@
     
     function togglePlayedOnly() {
       showPlayedOnly = !showPlayedOnly;
+      
+      // Update button appearance
+      if (showPlayedOnly) {
+        togglePlayedOnlyBtn.classList.add('toggle-active');
+      } else {
+        togglePlayedOnlyBtn.classList.remove('toggle-active');
+      }
+      
       render();
       saveState();
     }
@@ -1059,11 +1092,13 @@
           clientY = e.clientY;
         }
         
-        // Update overlay position immediately - centered over pointer
-        const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
-        const scaledSize = cellSize * 1.5; // Account for scale(1.5)
-        magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
-        magnifyOverlay.style.top = clientY + 'px';
+        // Update overlay position immediately - centered over pointer (mobile only)
+        if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+          const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
+          const scaledSize = cellSize * 2.0; // Account for scale(2.0) on mobile
+          magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
+          magnifyOverlay.style.top = (clientY - 40) + 'px'; // Account for translateY(-40px)
+        }
         
         // Use native browser hover detection
         const target = document.elementFromPoint(clientX, clientY);
@@ -1356,6 +1391,12 @@
     buildGrid();
     updateStats();
     switchView(currentView);
+    
+    // Set initial toggle button states
+    if (showPlayedOnly) {
+      togglePlayedOnlyBtn.classList.add('toggle-active');
+    }
+    
     analyzeLuck();
   </script>
 </body>
