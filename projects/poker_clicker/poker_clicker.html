@@ -1335,7 +1335,7 @@
                         <div class="stat-label">Z-Score</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-value">${(expectedStdDev * Math.sqrt(strengths.length)).toFixed(1)}</div>
+                        <div class="stat-value">${Math.sqrt(strengths.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (strengths.length - 1)).toFixed(1)}</div>
                         <div class="stat-label">Std Deviation</div>
                     </div>
                 </div>
