@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Poker Starting-Hand Clicker</title>
+  <title>Poker Multi-Session Tracker</title>
   <style>
     :root { 
       --cell: 54px; --gap: 4px; --radius: 8px;
@@ -63,6 +63,148 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+    }
+
+    /* Session Management Section */
+    #session-management {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--color-lightest);
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid var(--color-light);
+    }
+
+    .session-title {
+      font-size: var(--font-size-large);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-dark);
+    }
+
+    .session-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    #session-selector {
+      padding: 8px 12px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      background: var(--color-white);
+      color: var(--color-dark);
+      font-size: var(--font-size-body);
+      cursor: pointer;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    #session-selector option.new-session {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-mid-dark);
+    }
+
+    .session-button {
+      padding: 8px 12px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      background: var(--color-white);
+      color: var(--color-dark);
+      font-size: var(--font-size-body);
+      cursor: pointer;
+      transition: var(--transition-standard);
+      white-space: nowrap;
+    }
+
+    .session-button:hover {
+      background: var(--color-lighter);
+      transform: translateY(-1px);
+    }
+
+    .session-button.danger {
+      background: #ef4444;
+      color: var(--color-white);
+      border-color: #ef4444;
+    }
+
+    .session-button.danger:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    /* Modal for session creation */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--color-white);
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: var(--shadow-hero);
+    }
+
+    .modal h3 {
+      margin: 0 0 16px 0;
+      color: var(--color-dark);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      font-size: var(--font-size-body);
+      margin-bottom: 16px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .modal button {
+      padding: 10px 16px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      background: var(--color-white);
+      color: var(--color-dark);
+      cursor: pointer;
+      transition: var(--transition-standard);
+    }
+
+    .modal button.primary {
+      background: var(--color-mid-dark);
+      color: var(--color-white);
+      border-color: var(--color-mid-dark);
+    }
+
+    .modal button:hover {
+      background: var(--color-lighter);
+    }
+
+    .modal button.primary:hover {
+      background: var(--color-dark);
+      border-color: var(--color-dark);
     }
 
     #topbar { 
@@ -301,7 +443,7 @@
       border-color: #dc2626;
     }
     
-    
+
 
     #grid { width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); min-width: 0; justify-content: center; }
 
@@ -435,6 +577,7 @@
       display: flex;
       gap: 12px;
       justify-content: center;
+      flex-wrap: wrap;
     }
 
     /* Responsive Breakpoints */
@@ -446,6 +589,25 @@
         box-shadow: none;
       }
       #topbar { padding: 8px 12px; }
+      
+      #session-management {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      
+      .session-controls {
+        justify-content: space-between;
+      }
+      
+      #session-selector {
+        min-width: 120px;
+      }
+      
+      .session-button {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
     }
     
     @media (min-width: 480px) and (max-width: 767px) {
@@ -543,17 +705,23 @@
 </head>
 <body>
 <div class="app-container">
-  <div id="topbar">
-    <div id="total">Total: 0</div>
-    <div id="topbar-buttons">
-      <button id="undo">Undo</button>
-      <button id="reset">Reset</button>
+  <!-- Session Management Section -->
+  <div id="session-management">
+    <div class="session-title">Multi-Session Poker Tracker</div>
+    <div class="session-controls">
+      <select id="session-selector">
+        <option value="__new__" class="new-session">+ Create New Session</option>
+        <option value="" disabled>────────────────</option>
+      </select>
+      <button id="rename-session" class="session-button">Rename</button>
+      <button id="delete-session" class="session-button danger">Delete</button>
     </div>
   </div>
 
+
   <div id="stats-bar">
     <div class="stat-item">
-      <span id="vpip-display">VPIP: 0% (0/0)</span>
+      <span id="vpip-display">Select session to start tracking</span>
     </div>
     <div id="play-style-indicator">&nbsp</div>
   </div>
@@ -571,6 +739,7 @@
       <button id="toggleStrength">Strength</button>
       <button id="toggleHeatmap">Heatmap</button>
       <button id="togglePlayed">Played</button>
+      <button id="undo">Undo</button>
     </div>
     
     <div class="note">Quick tap: dealt (folded). Long press (>600ms): dealt AND played. <br> Strength is percentile rank (lower = better). <a href="https://www.reddit.com/r/poker/comments/ig8nvw/poker_hand_rankings_chart/">Hand rankings reference</a></div>
@@ -583,6 +752,18 @@
   <div id="analysis-results"></div>
   
   <div id="magnify-overlay"></div>
+</div>
+
+<!-- Session Creation Modal -->
+<div id="session-modal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Create New Session</h3>
+    <input type="text" id="session-name-input" placeholder="Enter session name..." />
+    <div class="modal-actions">
+      <button id="modal-cancel">Cancel</button>
+      <button id="modal-confirm" class="primary">Create</button>
+    </div>
+  </div>
 </div>
 
   <script>
@@ -623,35 +804,33 @@
     let expectedMean = 0;
     let expectedStdDev = 0;
 
-    // ---- Enhanced State ----
-    let hands = []; // Array of hand objects with detailed tracking
-    let counts = {}; // key -> integer (total dealt count)
-    let playedCounts = {}; // key -> integer (played count)
-    let total = 0;
-    let totalPlayed = 0;
-    let vpip = 0;
+    // ---- Multi-Session State ----
+    let sessions = {}; // sessionId -> session data
+    let currentSessionId = null;
+    let sessionCounter = 1;
+    
+    // Current view state (applies to all sessions)
     let currentView = 'grid'; // 'grid' or 'list'
     let showCounts = false;
     let showStrength = false;
     let showHeatmap = false;
     let showPlayed = false;
+    
+    // Interaction state
     let activeCell = null;
     let isMouseDown = false;
     let longPressTimer = null;
 
     // ---- Elements ----
     const grid = document.getElementById('grid');
-    const totalEl = document.getElementById('total');
-    const resetBtn = document.getElementById('reset');
     const undoBtn = document.getElementById('undo');
     const toggleBtn = document.getElementById('toggleCounts');
     const toggleStrengthBtn = document.getElementById('toggleStrength');
     const toggleHeatmapBtn = document.getElementById('toggleHeatmap');
     const togglePlayedBtn = document.getElementById('togglePlayed');
     const analysisResultsEl = document.getElementById('analysis-results');
-    const appContainer = document.querySelector('.app-container');
     
-    // New elements
+    // View elements
     const gridTab = document.getElementById('grid-tab');
     const listTab = document.getElementById('list-tab');
     const gridContainer = document.getElementById('grid-container');
@@ -659,9 +838,269 @@
     const vpipDisplay = document.getElementById('vpip-display');
     const playStyleIndicator = document.getElementById('play-style-indicator');
     
+    // Session management elements
+    const sessionSelector = document.getElementById('session-selector');
+    const renameSessionBtn = document.getElementById('rename-session');
+    const deleteSessionBtn = document.getElementById('delete-session');
+    
+    // Modal elements
+    const sessionModal = document.getElementById('session-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const sessionNameInput = document.getElementById('session-name-input');
+    const modalCancel = document.getElementById('modal-cancel');
+    const modalConfirm = document.getElementById('modal-confirm');
+    
     // Magnify overlay
     const magnifyOverlay = document.getElementById('magnify-overlay');
 
+    // ---- Session Management ----
+    function createSession(name) {
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessions[sessionId] = {
+        id: sessionId,
+        name: name || `Session ${sessionCounter++}`,
+        created: new Date().toISOString(),
+        hands: [],
+        counts: {},
+        playedCounts: {},
+        total: 0,
+        totalPlayed: 0,
+        vpip: 0
+      };
+      return sessionId;
+    }
+
+    function switchToSession(sessionId) {
+      if (!sessionId || (sessionId !== '__all__' && !sessions[sessionId])) {
+        currentSessionId = null;
+        updateUI();
+        return;
+      }
+      
+      console.log('Switching to session:', sessionId);
+      currentSessionId = sessionId;
+      sessionSelector.value = sessionId;
+      updateUI();
+      analyzeLuck(); // Recalculate stats when switching sessions
+      saveState();
+    }
+
+    function deleteSession(sessionId) {
+      if (!sessionId || !sessions[sessionId]) return;
+      
+      const sessionName = sessions[sessionId].name;
+      if (!confirm(`Delete session "${sessionName}"? This cannot be undone.`)) return;
+      
+      delete sessions[sessionId];
+      
+      // If we deleted the current session, switch to another one or none
+      if (currentSessionId === sessionId) {
+        const remainingSessions = Object.keys(sessions);
+        currentSessionId = remainingSessions.length > 0 ? remainingSessions[0] : null;
+      }
+      
+      updateSessionSelector();
+      updateUI();
+      saveState();
+    }
+
+    function renameSession(sessionId, newName) {
+      if (!sessionId || !sessions[sessionId] || !newName.trim()) return;
+      
+      sessions[sessionId].name = newName.trim();
+      updateSessionSelector();
+      saveState();
+    }
+
+    function updateSessionSelector() {
+      // Clear all options except the new session option
+      sessionSelector.innerHTML = `
+        <option value="__new__" class="new-session">+ Create New Session</option>
+        <option value="" disabled>────────────────</option>
+      `;
+      
+      // Add "All Sessions" option if there are multiple sessions
+      const sessionCount = Object.keys(sessions).length;
+      if (sessionCount > 1) {
+        const allSessionsOption = document.createElement('option');
+        allSessionsOption.value = '__all__';
+        allSessionsOption.textContent = '📊 All Sessions';
+        allSessionsOption.style.fontWeight = 'bold';
+        if (currentSessionId === '__all__') {
+          allSessionsOption.selected = true;
+        }
+        sessionSelector.appendChild(allSessionsOption);
+        
+        // Add separator
+        const separator = document.createElement('option');
+        separator.value = '';
+        separator.disabled = true;
+        separator.textContent = '────────────────';
+        sessionSelector.appendChild(separator);
+      }
+      
+      // Sort sessions by creation date (newest first)
+      const sortedSessions = Object.values(sessions).sort((a, b) => 
+        new Date(b.created) - new Date(a.created)
+      );
+      
+      sortedSessions.forEach(session => {
+        const option = document.createElement('option');
+        option.value = session.id;
+        option.textContent = session.name;
+        if (session.id === currentSessionId) {
+          option.selected = true;
+        }
+        sessionSelector.appendChild(option);
+      });
+      
+      // If no session is selected, default to the newest session
+      if (!currentSessionId && sortedSessions.length > 0) {
+        currentSessionId = sortedSessions[0].id;
+        sessionSelector.value = currentSessionId;
+      }
+    }
+
+    function getCurrentSession() {
+      if (currentSessionId === '__all__') {
+        return getAggregatedSession();
+      }
+      return currentSessionId ? sessions[currentSessionId] : null;
+    }
+    
+    function getAggregatedSession() {
+      const allSessions = Object.values(sessions);
+      if (allSessions.length === 0) return null;
+      
+      console.log('Starting aggregation from sessions:', allSessions.map(s => ({
+        name: s.name,
+        total: s.total,
+        totalPlayed: s.totalPlayed,
+        handsCount: s.hands?.length || 0,
+        countsKeys: Object.keys(s.counts || {}).length,
+        sampleCounts: Object.entries(s.counts || {}).filter(([k,v]) => v > 0).slice(0, 3)
+      })));
+      
+      // Create aggregated session data
+      const aggregated = {
+        id: '__all__',
+        name: 'All Sessions',
+        created: new Date().toISOString(),
+        hands: [],
+        counts: {},
+        playedCounts: {},
+        total: 0,
+        totalPlayed: 0,
+        vpip: 0
+      };
+      
+      // Initialize all possible hand combinations to 0
+      const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+      for (let i = 0; i < 13; i++) {
+        for (let j = 0; j < 13; j++) {
+          const key = keyFor(i, j);
+          aggregated.counts[key] = 0;
+          aggregated.playedCounts[key] = 0;
+        }
+      }
+      
+      // Merge all data from all sessions
+      allSessions.forEach((session, sessionIndex) => {
+        console.log(`Processing session ${sessionIndex + 1}:`, {
+          name: session.name,
+          total: session.total,
+          handsLength: session.hands?.length || 0,
+          countsEntries: Object.entries(session.counts || {}).filter(([k,v]) => v > 0).length
+        });
+        
+        if (!session) return;
+        
+        // Deep copy hands to avoid reference issues
+        if (session.hands && Array.isArray(session.hands)) {
+          session.hands.forEach(hand => {
+            if (hand && hand.key) {
+              aggregated.hands.push({
+                key: hand.key,
+                timestamp: hand.timestamp,
+                played: hand.played,
+                position: hand.position,
+                outcome: hand.outcome,
+                pot: hand.pot,
+                notes: hand.notes
+              });
+            }
+          });
+        }
+        
+        // Merge counts - ensure we're working with actual numbers
+        if (session.counts && typeof session.counts === 'object') {
+          for (const [hand, count] of Object.entries(session.counts)) {
+            if (typeof count === 'number' && count > 0) {
+              aggregated.counts[hand] = (aggregated.counts[hand] || 0) + count;
+              console.log(`Adding ${count} to ${hand}, new total: ${aggregated.counts[hand]}`);
+            }
+          }
+        }
+        
+        // Merge played counts
+        if (session.playedCounts && typeof session.playedCounts === 'object') {
+          for (const [hand, count] of Object.entries(session.playedCounts)) {
+            if (typeof count === 'number' && count > 0) {
+              aggregated.playedCounts[hand] = (aggregated.playedCounts[hand] || 0) + count;
+            }
+          }
+        }
+        
+        // Add session totals
+        aggregated.total += session.total || 0;
+        aggregated.totalPlayed += session.totalPlayed || 0;
+      });
+      
+      // Sort hands chronologically
+      aggregated.hands.sort((a, b) => a.timestamp - b.timestamp);
+      
+      // Renumber positions for the merged list
+      aggregated.hands.forEach((hand, index) => {
+        hand.position = index + 1;
+      });
+      
+      // Recalculate VPIP based on actual totals
+      aggregated.vpip = aggregated.total > 0 ? (aggregated.totalPlayed / aggregated.total * 100) : 0;
+      
+      const nonZeroCounts = Object.entries(aggregated.counts).filter(([k,v]) => v > 0);
+      console.log('Final aggregated session data:', {
+        totalSessions: allSessions.length,
+        totalHands: aggregated.total,
+        totalPlayed: aggregated.totalPlayed,
+        vpip: aggregated.vpip,
+        handsArrayLength: aggregated.hands.length,
+        nonZeroCountsLength: nonZeroCounts.length,
+        sampleCounts: nonZeroCounts.slice(0, 10)
+      });
+      
+      return aggregated;
+    }
+
+    function updateSessionInfo() {
+      // Session info is now displayed in the main stats bar and topbar
+      // This function is kept for compatibility but doesn't need to do anything
+    }
+
+    // ---- Modal Management ----
+    function showModal(title, confirmText, placeholder = '') {
+      modalTitle.textContent = title;
+      modalConfirm.textContent = confirmText;
+      sessionNameInput.placeholder = placeholder;
+      sessionNameInput.value = '';
+      sessionModal.classList.add('active');
+      sessionNameInput.focus();
+    }
+
+    function hideModal() {
+      sessionModal.classList.remove('active');
+    }
+
+    // ---- Core Functions (adapted for multi-session) ----
     function calculateExpectedValues() {
         let weightedSum = 0;
         let totalCombinations = 0;
@@ -697,7 +1136,6 @@
         expectedStdDev = Math.sqrt(expectedVariance);
     }
 
-    // Compose the canonical key for a grid position
     function keyFor(i, j) {
       if (i === j) return RANKS[i] + RANKS[i]; // pair
       const r1 = RANKS[Math.min(i, j)];
@@ -711,7 +1149,6 @@
       for (let i = 0; i < 13; i++) {
         for (let j = 0; j < 13; j++) {
           const key = keyFor(i, j);
-          counts[key] = counts[key] || 0;
           const cell = document.createElement('button');
           cell.type = 'button';
           cell.className = 'cell' + (i === j ? ' pair' : '');
@@ -724,44 +1161,35 @@
     }
     
     function updateMagnifyOverlay(cell, clientX, clientY) {
-      // Store current background color to preserve long press state
       const currentBg = magnifyOverlay.style.backgroundColor;
       
-      // Copy cell content and styling to overlay
       magnifyOverlay.textContent = cell.textContent;
       
-      // Build classes carefully to avoid disrupting display
       const newClasses = ['cell'];
       if (cell.classList.contains('pair')) {
         newClasses.push('pair');
       }
       magnifyOverlay.className = newClasses.join(' ');
-      magnifyOverlay.id = 'magnify-overlay'; // Restore ID
+      magnifyOverlay.id = 'magnify-overlay';
       
-      // Apply cell colors but preserve long press background if active
       if (currentBg === '#e8f5e8' || currentBg === 'rgb(232, 245, 232)') {
-        // Keep the long press green background
         magnifyOverlay.style.backgroundColor = '#e8f5e8';
       } else {
-        // Use cell's background color
         magnifyOverlay.style.backgroundColor = cell.style.backgroundColor || '';
       }
       magnifyOverlay.style.color = cell.style.color || '';
       
-      // Center overlay over pointer position (mobile only)
       if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
         const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
-        const scaledSize = cellSize * 2.0; // Account for scale(2.0) on mobile
+        const scaledSize = cellSize * 2.0;
         magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
-        magnifyOverlay.style.top = (clientY - 40) + 'px'; // Account for translateY(-40px)
+        magnifyOverlay.style.top = (clientY - 40) + 'px';
       }
     }
     
     function showMagnifyOverlay(cell, clientX, clientY) {
-      // Only show overlay on mobile devices
       if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
         magnifyOverlay.style.display = 'flex';
-        // Reset background color to clear any leftover green from previous interactions
         magnifyOverlay.style.backgroundColor = '';
         updateMagnifyOverlay(cell, clientX, clientY);
       }
@@ -772,68 +1200,97 @@
     }
 
     function increment(key, played = false) {
+      // Can't add hands to aggregated view
+      if (currentSessionId === '__all__') return;
+      
+      const session = getCurrentSession();
+      if (!session) return;
+      
       const handEntry = {
         key: key,
         timestamp: Date.now(),
         played: played,
-        position: hands.length + 1,
+        position: session.hands.length + 1,
         outcome: null,
         pot: null,
         notes: ""
       };
       
-      hands.push(handEntry);
-      counts[key] = (counts[key] || 0) + 1;
-      total += 1;
+      session.hands.push(handEntry);
+      session.counts[key] = (session.counts[key] || 0) + 1;
+      session.total += 1;
       
       if (played) {
-        playedCounts[key] = (playedCounts[key] || 0) + 1;
-        totalPlayed += 1;
+        session.playedCounts[key] = (session.playedCounts[key] || 0) + 1;
+        session.totalPlayed += 1;
       }
       
       updateStats();
       render();
+      updateSessionInfo();
+      
+      // Update session selector in case we now have multiple sessions
+      updateSessionSelector();
+      
       saveState();
       analyzeLuck();
     }
     
     function updateStats() {
-      vpip = hands.length > 0 ? (totalPlayed / total * 100) : 0;
+      const session = getCurrentSession();
+      if (!session) {
+        vpipDisplay.textContent = 'Select session to start tracking';
+        playStyleIndicator.classList.remove('normal', 'tight', 'loose', 'nit', 'maniac');
+        playStyleIndicator.innerHTML = '&nbsp';
+        return;
+      }
       
-      // Update display
-      vpipDisplay.textContent = `VPIP: ${vpip.toFixed(1)}% (${totalPlayed}/${total})`;
+      // For aggregated sessions, VPIP is already calculated correctly
+      if (session.id !== '__all__') {
+        session.vpip = session.total > 0 ? (session.totalPlayed / session.total * 100) : 0;
+      }
       
-      // Update play style indicator with fun labels
+      // Debug for aggregated sessions
+      if (session.id === '__all__') {
+        console.log('Updating stats for All Sessions:', {
+          total: session.total,
+          totalPlayed: session.totalPlayed,
+          vpip: session.vpip,
+          handsLength: session.hands?.length || 0
+        });
+      }
+      
+      vpipDisplay.textContent = `VPIP: ${session.vpip.toFixed(1)}% (${session.totalPlayed}/${session.total})`;
+      
       playStyleIndicator.classList.remove('normal', 'tight', 'loose', 'nit', 'maniac');
       playStyleIndicator.innerHTML = '&nbsp';
-      if (total == 0) {
+      if (session.total == 0) {
         return
       }
 
       let bgColor;
-      if (vpip < 10) {
+      if (session.vpip < 10) {
         playStyleIndicator.textContent = 'Nit';
         playStyleIndicator.classList.add('nit');
-        bgColor = '#EFD30B'; // yellow
-      } else if (vpip < 20) {
+        bgColor = '#EFD30B';
+      } else if (session.vpip < 20) {
         playStyleIndicator.textContent = 'Tight';
         playStyleIndicator.className = 'tight';
-        bgColor = '#3b82f6'; // blue
-      } else if (vpip <= 30) {
+        bgColor = '#3b82f6';
+      } else if (session.vpip <= 30) {
         playStyleIndicator.textContent = 'Normal';
         playStyleIndicator.classList.add('normal');
-        bgColor = '#10b981'; // green
-      } else if (vpip <= 50) {
+        bgColor = '#10b981';
+      } else if (session.vpip <= 50) {
         playStyleIndicator.textContent = 'Loose';
         playStyleIndicator.classList.add('loose');
-        bgColor = '#f59e0b'; // orange
+        bgColor = '#f59e0b';
       } else {
         playStyleIndicator.textContent = 'Maniac';
         playStyleIndicator.classList.add('maniac');
-        bgColor = '#ef4444'; // red
+        bgColor = '#ef4444';
       }
       
-      // Calculate luminance and set text color
       const hex = bgColor.replace('#', '');
       const r = parseInt(hex.substr(0, 2), 16);
       const g = parseInt(hex.substr(2, 2), 16);
@@ -843,48 +1300,39 @@
     }
 
     function undo() {
-      if (hands.length === 0) return;
+      // Can't undo in aggregated view
+      if (currentSessionId === '__all__') return;
       
-      const lastHand = hands.pop();
+      const session = getCurrentSession();
+      if (!session || session.hands.length === 0) return;
+      
+      const lastHand = session.hands.pop();
       const key = lastHand.key;
       
-      if (counts[key] > 0) {
-        counts[key] -= 1;
-        total -= 1;
+      if (session.counts[key] > 0) {
+        session.counts[key] -= 1;
+        session.total -= 1;
       }
       
-      if (lastHand.played && playedCounts[key] > 0) {
-        playedCounts[key] -= 1;
-        totalPlayed -= 1;
+      if (lastHand.played && session.playedCounts[key] > 0) {
+        session.playedCounts[key] -= 1;
+        session.totalPlayed -= 1;
       }
       
       updateStats();
       render();
-      // Update list view if it's currently active
       if (currentView === 'list') {
         renderList();
       }
+      updateSessionInfo();
+      
+      // Update session selector in case we no longer have multiple sessions
+      updateSessionSelector();
+      
       saveState();
       analyzeLuck();
     }
 
-    function resetAll() {
-      if (!confirm('Reset all data? This cannot be undone.')) return;
-      
-      hands.length = 0;
-      for (const k in counts) counts[k] = 0;
-      for (const k in playedCounts) playedCounts[k] = 0;
-      total = 0;
-      totalPlayed = 0;
-      vpip = 0;
-      pfr = 0;
-      
-      updateStats();
-      render();
-      renderList();
-      saveState();
-      analyzeLuck();
-    }
 
     function toggleCounts() {
       showCounts = !showCounts;
@@ -909,7 +1357,6 @@
     function togglePlayed() {
       showPlayed = !showPlayed;
       
-      // Update button appearance
       if (showPlayed) {
         togglePlayedBtn.classList.add('toggle-active');
       } else {
@@ -940,64 +1387,85 @@
       saveState();
     }
 
+    function updateUI() {
+      const session = getCurrentSession();
+      const isAggregated = currentSessionId === '__all__';
+      
+      if (session) {
+        // Enable/disable controls based on session type
+        undoBtn.disabled = isAggregated; // Can't undo in aggregated view
+        renameSessionBtn.disabled = isAggregated; // Can't rename "All Sessions"
+        deleteSessionBtn.disabled = isAggregated; // Can't delete "All Sessions"
+      } else {
+        // Disable controls
+        undoBtn.disabled = true;
+        renameSessionBtn.disabled = true;
+        deleteSessionBtn.disabled = true;
+      }
+      
+      updateStats();
+      render();
+      updateSessionInfo();
+      
+      if (currentView === 'list') {
+        renderList();
+      }
+    }
+
     function saveState() {
       const state = {
-        hands,
-        counts,
-        playedCounts,
-        total,
-        totalPlayed,
-        vpip,
+        sessions,
+        currentSessionId,
+        sessionCounter,
         currentView,
         showCounts,
         showStrength,
         showHeatmap,
         showPlayed
       };
-      localStorage.setItem('pokerClickerState', JSON.stringify(state));
+      localStorage.setItem('pokerMultiSessionState', JSON.stringify(state));
     }
 
     function loadState() {
-      const savedState = localStorage.getItem('pokerClickerState');
+      const savedState = localStorage.getItem('pokerMultiSessionState');
       if (savedState) {
-        const state = JSON.parse(savedState);
-        hands = state.hands || [];
-        counts = state.counts || {};
-        playedCounts = state.playedCounts || {};
-        total = state.total || 0;
-        totalPlayed = state.totalPlayed || 0;
-        vpip = state.vpip || 0;
-        currentView = state.currentView || 'grid';
-        showCounts = state.showCounts || false;
-        showStrength = state.showStrength || false;
-        showHeatmap = state.showHeatmap || false;
-        showPlayed = state.showPlayed || false;
-        
-        // Legacy support for old history format
-        if (state.history && !state.hands) {
-          for (let i = 0; i < state.history.length; i++) {
-            hands.push({
-              key: state.history[i],
-              timestamp: Date.now() - (state.history.length - i) * 1000,
-              played: false,
-              position: i + 1,
-              outcome: null,
-              pot: null,
-              notes: ""
-            });
+        try {
+          const state = JSON.parse(savedState);
+          sessions = state.sessions || {};
+          currentSessionId = state.currentSessionId || null;
+          sessionCounter = state.sessionCounter || 1;
+          currentView = state.currentView || 'grid';
+          showCounts = state.showCounts || false;
+          showStrength = state.showStrength || false;
+          showHeatmap = state.showHeatmap || false;
+          showPlayed = state.showPlayed || false;
+          
+          // Ensure current session still exists
+          if (currentSessionId && !sessions[currentSessionId]) {
+            currentSessionId = null;
           }
+        } catch (e) {
+          console.error('Failed to load state:', e);
         }
+      }
+      
+      // If no sessions exist, create a default one
+      if (Object.keys(sessions).length === 0) {
+        const defaultSessionId = createSession('Session 1');
+        currentSessionId = defaultSessionId;
       }
     }
 
     function updateCellColors() {
+      const session = getCurrentSession();
+      if (!session) return;
+      
       const cells = grid.children;
 
       if (showHeatmap) {
-        // Strength Heatmap: 3-point gradient
-        const strongColor = { r: 16, g: 185, b: 129 };   // high-roll green
-        const midColor = { r: 59, g: 130, b: 246 };      // expected blue
-        const weakColor = { r: 245, g: 158, b: 11 };     // low-roll orange
+        const strongColor = { r: 16, g: 185, b: 129 };
+        const midColor = { r: 59, g: 130, b: 246 };
+        const weakColor = { r: 245, g: 158, b: 11 };
 
         for (const cell of cells) {
             const key = cell.dataset.key;
@@ -1005,13 +1473,11 @@
             let r, g, b;
 
             if (strength <= 50) {
-                // 0-50: Interpolate between strongColor (green) and midColor (blue)
                 const ratio = strength / 50;
                 r = Math.round(strongColor.r + ratio * (midColor.r - strongColor.r));
                 g = Math.round(strongColor.g + ratio * (midColor.g - strongColor.g));
                 b = Math.round(strongColor.b + ratio * (midColor.b - strongColor.b));
             } else {
-                // 50-100: Interpolate between midColor (blue) and weakColor (orange)
                 const ratio = (strength - 50) / 50;
                 r = Math.round(midColor.r + ratio * (weakColor.r - midColor.r));
                 g = Math.round(midColor.g + ratio * (weakColor.g - midColor.g));
@@ -1024,8 +1490,7 @@
             cell.style.color = luminance < 128 ? '#ffffff' : '#2d3748';
         }
       } else {
-        // Frequency Heatmap - choose between total counts or played counts based on showPlayed
-        const sourceData = showPlayed ? playedCounts : counts;
+        const sourceData = showPlayed ? session.playedCounts : session.counts;
         const values = Object.values(sourceData);
         const max = Math.max(1, ...values);
         
@@ -1043,7 +1508,7 @@
             }
 
             if (c > 0) {
-              const ratio = c / max; // 0..1
+              const ratio = c / max;
               const r = 255;
               const g = Math.round(255 * (1 - ratio));
               const b = Math.round(255 * (1 - ratio));
@@ -1059,16 +1524,43 @@
     }
 
     function render() {
-      totalEl.textContent = 'Total: ' + total;
+      const session = getCurrentSession();
+      if (!session) {
+        // Clear grid when no session selected
+        for (const cell of grid.children) {
+          const key = cell.dataset.key;
+          cell.textContent = key;
+          cell.classList.remove('played');
+          cell.style.backgroundColor = '';
+          cell.style.color = '';
+        }
+        return;
+      }
+      
+      // Debug logging for aggregated sessions
+      if (session.id === '__all__') {
+        const nonZeroCounts = Object.entries(session.counts).filter(([k,v]) => v > 0);
+        console.log('Rendering All Sessions grid with data:', {
+          id: session.id,
+          name: session.name,
+          total: session.total,
+          totalPlayed: session.totalPlayed,
+          nonZeroCountsLength: nonZeroCounts.length,
+          sampleNonZeroCounts: nonZeroCounts.slice(0, 5)
+        });
+      }
       
       for (const cell of grid.children) {
         const key = cell.dataset.key;
-        const playedCount = playedCounts[key] || 0;
-        const totalCount = counts[key] || 0;
+        const playedCount = session.playedCounts[key] || 0;
+        const totalCount = session.counts[key] || 0;
         
-        // Update cell content based on showPlayed mode
+        // Debug specific cells that should have data
+        if (session.id === '__all__' && totalCount > 0) {
+          console.log(`Cell ${key}: played=${playedCount}, total=${totalCount}`);
+        }
+        
         if (showCounts) {
-          // Show played counts when Played is active, otherwise show total counts
           cell.textContent = showPlayed ? playedCount : totalCount;
         } else if (showStrength) {
           cell.textContent = handStrengths[key];
@@ -1076,16 +1568,15 @@
           cell.textContent = key;
         }
         
-        // Update played indicator (always show when there are played hands)
         cell.classList.toggle('played', playedCount > 0);
-        
-        // Show all cells - don't hide any when Played is active
         cell.style.display = 'flex';
       }
       updateCellColors();
     }
 
     function handleInteractionStart(e) {
+      if (!getCurrentSession()) return;
+      
       if (e.target.classList.contains('cell')) {
         isMouseDown = true;
         if (activeCell) {
@@ -1094,18 +1585,14 @@
         activeCell = e.target;
         activeCell.classList.add('active');
         
-        // Show magnify overlay
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         showMagnifyOverlay(activeCell, clientX, clientY);
         
-        // Start long press timer (600ms = more than half a second)
         longPressTimer = setTimeout(() => {
           if (isMouseDown && activeCell) {
             activeCell.classList.add('playing');
-            // Update overlay background directly via style - no class changes
             magnifyOverlay.style.backgroundColor = '#e8f5e8';
-            // Haptic feedback on mobile
             if (navigator.vibrate) {
               navigator.vibrate(50);
             }
@@ -1127,38 +1614,31 @@
           clientY = e.clientY;
         }
         
-        // Update overlay position immediately - centered over pointer (mobile only)
         if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
           const cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell'));
-          const scaledSize = cellSize * 2.0; // Account for scale(2.0) on mobile
+          const scaledSize = cellSize * 2.0;
           magnifyOverlay.style.left = (clientX - scaledSize / 2) + 'px';
-          magnifyOverlay.style.top = (clientY - 40) + 'px'; // Account for translateY(-40px)
+          magnifyOverlay.style.top = (clientY - 40) + 'px';
         }
         
-        // Use native browser hover detection
         const target = document.elementFromPoint(clientX, clientY);
 
         if (target && target.classList.contains('cell') && target !== activeCell) {
-          // Clear long press timer when moving to different cell
           clearTimeout(longPressTimer);
           
           if (activeCell) {
             activeCell.classList.remove('active', 'playing');
           }
-          // Reset overlay background when switching cells
           magnifyOverlay.style.backgroundColor = '';
           
           activeCell = target;
           activeCell.classList.add('active');
           
-          // Update overlay content for new cell
           updateMagnifyOverlay(activeCell, clientX, clientY);
           
-          // Restart long press timer for new cell (600ms = more than half a second)
           longPressTimer = setTimeout(() => {
             if (isMouseDown && activeCell) {
               activeCell.classList.add('playing');
-              // Update overlay background directly via style - no class changes
               magnifyOverlay.style.backgroundColor = '#e8f5e8';
               if (navigator.vibrate) {
                 navigator.vibrate(50);
@@ -1172,29 +1652,23 @@
 
     function handleInteractionEnd(e) {
       if (isMouseDown && activeCell) {
-        // Check if the release happened over a cell
         let releaseTarget;
         if (e.touches && e.changedTouches && e.changedTouches.length > 0) {
-          // Touch event - use the touch point to find the element
           releaseTarget = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
         } else {
-          // Mouse event
           releaseTarget = e.target;
         }
         
-        // Check if we're releasing over the grid container or any cell within it
         const gridContainer = document.getElementById('grid');
         const isOverGrid = releaseTarget && (releaseTarget.classList.contains('cell') || gridContainer.contains(releaseTarget));
         
         if (isOverGrid) {
-          // Released over the grid - process the interaction
           const key = activeCell.dataset.key;
           const wasLongPress = activeCell.classList.contains('playing');
           
           clearTimeout(longPressTimer);
           increment(key, wasLongPress);
         } else {
-          // Released outside the grid - just clear without incrementing
           clearTimeout(longPressTimer);
         }
         
@@ -1202,7 +1676,6 @@
         activeCell = null;
       }
       
-      // Hide overlay
       hideMagnifyOverlay();
       
       isMouseDown = false;
@@ -1210,96 +1683,120 @@
     }
 
     function renderList() {
+      const session = getCurrentSession();
+      const isAggregated = currentSessionId === '__all__';
       listContainer.innerHTML = '';
       
-      // Reverse chronological order (newest first)
-      const sortedHands = [...hands].reverse();
+      if (!session) return;
+      
+      const sortedHands = [...session.hands].reverse();
       
       sortedHands.forEach((hand, index) => {
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
-        listItem.dataset.handIndex = hands.length - 1 - index; // Original index
+        listItem.dataset.handIndex = session.hands.length - 1 - index;
+        
+        // For aggregated view, show which session the hand came from
+        let sessionInfo = '';
+        if (isAggregated) {
+          // Find which session this hand belongs to
+          const originalSession = Object.values(sessions).find(s => 
+            s.hands.some(h => h.timestamp === hand.timestamp && h.key === hand.key)
+          );
+          sessionInfo = originalSession ? ` <span style="color: var(--color-mid); font-size: 12px;">(${originalSession.name})</span>` : '';
+        }
         
         listItem.innerHTML = `
-          <div class="list-item-hand">${hand.key}</div>
+          <div class="list-item-hand">${hand.key}${sessionInfo}</div>
           <div class="list-item-position">#${hand.position}</div>
           <div class="list-item-actions">
-            <button class="action-button ${hand.played ? 'played' : 'folded'}" data-action="toggle">
+            <button class="action-button ${hand.played ? 'played' : 'folded'}" data-action="toggle" ${isAggregated ? 'disabled' : ''}>
               ${hand.played ? 'Played' : 'Folded'}
             </button>
-            <button class="delete-button" data-action="delete">
+            <button class="delete-button" data-action="delete" ${isAggregated ? 'disabled style="opacity: 0.5;"' : ''}>
               🗑️
             </button>
           </div>
         `;
         
-        // Action button handlers
-        const toggleButton = listItem.querySelector('[data-action="toggle"]');
-        const deleteButton = listItem.querySelector('[data-action="delete"]');
-        
-        toggleButton.addEventListener('click', () => {
-          toggleHandStatus(parseInt(listItem.dataset.handIndex));
-        });
-        
-        deleteButton.addEventListener('click', () => {
-          deleteHand(parseInt(listItem.dataset.handIndex));
-        });
+        if (!isAggregated) {
+          const toggleButton = listItem.querySelector('[data-action="toggle"]');
+          const deleteButton = listItem.querySelector('[data-action="delete"]');
+          
+          toggleButton.addEventListener('click', () => {
+            toggleHandStatus(parseInt(listItem.dataset.handIndex));
+          });
+          
+          deleteButton.addEventListener('click', () => {
+            deleteHand(parseInt(listItem.dataset.handIndex));
+          });
+        }
         
         listContainer.appendChild(listItem);
       });
     }
     
     function toggleHandStatus(handIndex) {
-      const hand = hands[handIndex];
+      const session = getCurrentSession();
+      if (!session) return;
+      
+      const hand = session.hands[handIndex];
       if (!hand) return;
       
       hand.played = !hand.played;
       
       if (hand.played) {
-        playedCounts[hand.key] = (playedCounts[hand.key] || 0) + 1;
-        totalPlayed += 1;
+        session.playedCounts[hand.key] = (session.playedCounts[hand.key] || 0) + 1;
+        session.totalPlayed += 1;
       } else {
-        playedCounts[hand.key] = Math.max(0, (playedCounts[hand.key] || 0) - 1);
-        totalPlayed = Math.max(0, totalPlayed - 1);
+        session.playedCounts[hand.key] = Math.max(0, (session.playedCounts[hand.key] || 0) - 1);
+        session.totalPlayed = Math.max(0, session.totalPlayed - 1);
       }
       
       updateStats();
       render();
       renderList();
+      updateSessionInfo();
       saveState();
     }
     
     function deleteHand(handIndex) {
-      const hand = hands[handIndex];
+      const session = getCurrentSession();
+      if (!session) return;
+      
+      const hand = session.hands[handIndex];
       if (!hand) return;
       
-      // Update counts
-      counts[hand.key] = Math.max(0, (counts[hand.key] || 0) - 1);
-      total = Math.max(0, total - 1);
+      session.counts[hand.key] = Math.max(0, (session.counts[hand.key] || 0) - 1);
+      session.total = Math.max(0, session.total - 1);
       
       if (hand.played) {
-        playedCounts[hand.key] = Math.max(0, (playedCounts[hand.key] || 0) - 1);
-        totalPlayed = Math.max(0, totalPlayed - 1);
+        session.playedCounts[hand.key] = Math.max(0, (session.playedCounts[hand.key] || 0) - 1);
+        session.totalPlayed = Math.max(0, session.totalPlayed - 1);
       }
       
-      // Remove from hands array
-      hands.splice(handIndex, 1);
+      session.hands.splice(handIndex, 1);
       
-      // Update position numbers for remaining hands
-      hands.forEach((h, i) => {
+      session.hands.forEach((h, i) => {
         h.position = i + 1;
       });
       
       updateStats();
       render();
       renderList();
+      updateSessionInfo();
       saveState();
       analyzeLuck();
     }
 
     function analyzeLuck() {
-        // Filter hands based on toggle state
-        const handsToAnalyze = showPlayed ? hands.filter(hand => hand.played) : hands;
+        const session = getCurrentSession();
+        if (!session) {
+          analysisResultsEl.innerHTML = '';
+          return;
+        }
+        
+        const handsToAnalyze = showPlayed ? session.hands.filter(hand => hand.played) : session.hands;
         
         if (handsToAnalyze.length === 0) {
             analysisResultsEl.innerHTML = '';
@@ -1354,82 +1851,133 @@
         `;
     }
 
-    // ---- Responsive sizing ----
     function fitGridToViewport() {
       const root = document.documentElement;
       const vw = document.documentElement.clientWidth;
       
-      // Responsive gap based on breakpoints - NO gaps on mobile
       let chosenGap;
-      if (vw < 768) chosenGap = 0; // mobile/tablet - no gaps
-      else chosenGap = 4; // desktop only
+      if (vw < 768) chosenGap = 0;
+      else chosenGap = 4;
       
       root.style.setProperty('--gap', chosenGap + 'px');
 
-      // Calculate available width based on viewport size
       let containerPadding, bodyPadding;
       if (vw < 480) {
-        // Mobile: no body padding, minimal container padding
-        containerPadding = 24; // 12px * 2
+        containerPadding = 24;
         bodyPadding = 0;
       } else {
-        // Desktop/tablet: normal padding
-        containerPadding = 40; // 20px * 2
-        bodyPadding = 40; // 20px * 2
+        containerPadding = 40;
+        bodyPadding = 40;
       }
       
       const gridWidth = vw - containerPadding - bodyPadding;
 
-      const MAX_CELL = vw < 480 ? 100 : 56; // Even larger cells on mobile with no gaps
+      const MAX_CELL = vw < 480 ? 100 : 56;
       const MIN_CELL = 18;
 
-      // Dynamic calculation: (viewport - padding - gaps) / 13
       const ideal = Math.floor((gridWidth - chosenGap * 12) / 13);
       const cell = Math.max(MIN_CELL, Math.min(MAX_CELL, ideal));
       root.style.setProperty('--cell', cell + 'px');
 
-      // Border radius: smaller on mobile for seamless appearance
       const radius = Math.max(5, Math.round(cell / 10));
       root.style.setProperty('--radius', radius + 'px');
     }
 
-    resetBtn.addEventListener('click', resetAll);
+    // ---- Event Listeners ----
     undoBtn.addEventListener('click', undo);
     toggleBtn.addEventListener('click', toggleCounts);
     toggleStrengthBtn.addEventListener('click', toggleStrength);
     toggleHeatmapBtn.addEventListener('click', toggleHeatmap);
     togglePlayedBtn.addEventListener('click', togglePlayed);
     
-    // View tab handlers
     gridTab.addEventListener('click', () => switchView('grid'));
     listTab.addEventListener('click', () => switchView('list'));
     
-    // Use throttled resize for better performance
+    // Session management events
+    sessionSelector.addEventListener('change', (e) => {
+      if (e.target.value === '__new__') {
+        showModal('Create New Session', 'Create', 'Enter session name...');
+        // Reset selector to current session or empty
+        setTimeout(() => {
+          if (currentSessionId) {
+            sessionSelector.value = currentSessionId;
+          } else {
+            updateSessionSelector();
+          }
+        }, 0);
+      } else if (e.target.value === '__all__') {
+        switchToSession('__all__');
+      } else {
+        switchToSession(e.target.value);
+      }
+    });
+    
+    renameSessionBtn.addEventListener('click', () => {
+      const session = getCurrentSession();
+      if (!session) return;
+      sessionNameInput.value = session.name;
+      showModal('Rename Session', 'Rename', 'Enter new name...');
+    });
+    
+    deleteSessionBtn.addEventListener('click', () => {
+      if (currentSessionId) {
+        deleteSession(currentSessionId);
+      }
+    });
+    
+    // Modal events
+    modalCancel.addEventListener('click', hideModal);
+    
+    modalConfirm.addEventListener('click', () => {
+      const name = sessionNameInput.value.trim();
+      if (!name) return;
+      
+      if (modalTitle.textContent === 'Create New Session') {
+        const newSessionId = createSession(name);
+        switchToSession(newSessionId);
+        updateSessionSelector();
+      } else if (modalTitle.textContent === 'Rename Session' && currentSessionId) {
+        renameSession(currentSessionId, name);
+      }
+      
+      hideModal();
+    });
+    
+    sessionNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        modalConfirm.click();
+      } else if (e.key === 'Escape') {
+        modalCancel.click();
+      }
+    });
+    
+    // Grid interaction events
+    grid.addEventListener('mousedown', handleInteractionStart);
+    grid.addEventListener('mousemove', handleInteractionMove);
+    document.addEventListener('mouseup', handleInteractionEnd);
+
+    grid.addEventListener('touchstart', handleInteractionStart, { passive: false });
+    grid.addEventListener('touchmove', handleInteractionMove, { passive: false });
+    grid.addEventListener('touchend', handleInteractionEnd);
+
+    // Responsive events
     let resizeTimeout;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(fitGridToViewport, 100);
     }, { passive: true });
     window.addEventListener('orientationchange', () => {
-      setTimeout(fitGridToViewport, 200); // Delay for orientation change
+      setTimeout(fitGridToViewport, 200);
     });
 
-    grid.addEventListener('mousedown', handleInteractionStart);
-    grid.addEventListener('mousemove', handleInteractionMove);
-    document.addEventListener('mouseup', handleInteractionEnd); // Listen on document to catch mouseup outside grid
-
-    grid.addEventListener('touchstart', handleInteractionStart, { passive: false });
-    grid.addEventListener('touchmove', handleInteractionMove, { passive: false });
-    grid.addEventListener('touchend', handleInteractionEnd);
-
-    // Initialize
+    // ---- Initialize ----
     calculateExpectedValues();
     loadState();
+    updateSessionSelector();
     buildGrid();
-    updateStats();
     switchView(currentView);
+    updateUI();
     
-    // Set initial toggle button states
     if (showPlayed) {
       togglePlayedBtn.classList.add('toggle-active');
     }
