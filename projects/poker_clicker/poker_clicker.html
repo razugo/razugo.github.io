@@ -918,6 +918,7 @@
       
       render();
       saveState();
+      analyzeLuck();
     }
     
     function switchView(view) {
@@ -1297,14 +1298,17 @@
     }
 
     function analyzeLuck() {
-        if (hands.length === 0) {
+        // Filter hands based on toggle state
+        const handsToAnalyze = showPlayed ? hands.filter(hand => hand.played) : hands;
+        
+        if (handsToAnalyze.length === 0) {
             analysisResultsEl.innerHTML = '';
             return;
         }
 
-        const strengths = hands.map(hand => handStrengths[hand.key]);
+        const strengths = handsToAnalyze.map(hand => handStrengths[hand.key]);
         const mean = strengths.reduce((a, b) => a + b, 0) / strengths.length;
-        const zScore = (mean - expectedMean) / (expectedStdDev / Math.sqrt(strengths.length));
+        const zScore = (mean - expectedMean) / (expectedStdDev / Math.sqrt(handsToAnalyze.length));
 
         let category, categoryClass, interpretation;
         if (zScore < -1.5) {
