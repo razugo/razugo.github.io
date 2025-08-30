@@ -711,7 +711,7 @@
     <div class="session-controls">
       <select id="session-selector">
         <option value="__new__" class="new-session">+ Create New Session</option>
-        <option value="" disabled>────────────────</option>
+        <option value="" disabled>──</option>
       </select>
       <button id="rename-session" class="session-button">Rename</button>
       <button id="delete-session" class="session-button danger">Delete</button>
@@ -916,7 +916,7 @@
       // Clear all options except the new session option
       sessionSelector.innerHTML = `
         <option value="__new__" class="new-session">+ Create New Session</option>
-        <option value="" disabled>────────────────</option>
+        <option value="" disabled>──</option>
       `;
       
       // Add "All Sessions" option if there are multiple sessions
@@ -935,7 +935,7 @@
         const separator = document.createElement('option');
         separator.value = '';
         separator.disabled = true;
-        separator.textContent = '────────────────';
+        separator.textContent = '──';
         sessionSelector.appendChild(separator);
       }
       
