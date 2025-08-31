@@ -361,8 +361,8 @@
     
     .list-item {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      min-height: 56px;
       padding: 8px 16px;
       background: var(--color-white);
       border: 1px solid var(--color-light);
@@ -443,6 +443,32 @@
       border-color: #dc2626;
     }
     
+    .list-item-notes-container {
+      display: none;
+      flex-basis: 100%;
+      padding-top: 8px;
+    }
+
+    .list-item-notes-container.active {
+      display: block;
+    }
+
+    .list-item-notes {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      font-size: var(--font-size-body);
+      resize: vertical;
+      min-height: 60px;
+      background-color: var(--color-lightest);
+    }
+    
+    .notes-button.toggle-active {
+      background: var(--color-mid-dark) !important;
+      color: var(--color-white) !important;
+      border-color: var(--color-mid-dark) !important;
+    }
 
 
     #grid { width: 100%; display: grid; grid-template-columns: repeat(13, var(--cell)); grid-auto-rows: var(--cell); gap: var(--gap); min-width: 0; justify-content: center; }
@@ -1680,34 +1706,54 @@
       clearTimeout(longPressTimer);
     }
 
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), wait);
+      };
+    }
+
+    function saveNotes(handIndex, notes) {
+      const session = getCurrentSession();
+      if (!session || currentSessionId === '__all__') return;
+
+      const hand = session.hands[handIndex];
+      if (hand) {
+        hand.notes = notes;
+        saveState();
+      }
+    }
+
     function renderList() {
       const session = getCurrentSession();
       const isAggregated = currentSessionId === '__all__';
       listContainer.innerHTML = '';
-      
+
       if (!session) return;
-      
+
       const sortedHands = [...session.hands].reverse();
-      
+
       sortedHands.forEach((hand, index) => {
+        const handIndex = session.hands.length - 1 - index;
         const listItem = document.createElement('div');
         listItem.className = 'list-item';
-        listItem.dataset.handIndex = session.hands.length - 1 - index;
-        
-        // For aggregated view, show which session the hand came from
+        listItem.dataset.handIndex = handIndex;
+
         let sessionInfo = '';
         if (isAggregated) {
-          // Find which session this hand belongs to
-          const originalSession = Object.values(sessions).find(s => 
+          const originalSession = Object.values(sessions).find(s =>
             s.hands.some(h => h.timestamp === hand.timestamp && h.key === hand.key)
           );
           sessionInfo = originalSession ? ` <span style="color: var(--color-mid); font-size: 12px;">(${originalSession.name})</span>` : '';
         }
-        
+
         listItem.innerHTML = `
           <div class="list-item-hand">${hand.key}${sessionInfo}</div>
           <div class="list-item-position">#${hand.position}</div>
           <div class="list-item-actions">
+            <button class="action-button notes-button" data-action="notes" ${isAggregated ? 'disabled' : ''}>Notes</button>
             <button class="action-button ${hand.played ? 'played' : 'folded'}" data-action="toggle" ${isAggregated ? 'disabled' : ''}>
               ${hand.played ? 'Played' : 'Folded'}
             </button>
@@ -1715,21 +1761,41 @@
               🗑️
             </button>
           </div>
+          <div class="list-item-notes-container">
+            <textarea class="list-item-notes" placeholder="Add notes...">${hand.notes || ''}</textarea>
+          </div>
         `;
-        
+
         if (!isAggregated) {
           const toggleButton = listItem.querySelector('[data-action="toggle"]');
           const deleteButton = listItem.querySelector('[data-action="delete"]');
-          
+          const notesButton = listItem.querySelector('[data-action="notes"]');
+          const notesContainer = listItem.querySelector('.list-item-notes-container');
+          const notesTextarea = listItem.querySelector('.list-item-notes');
+
+          if (hand.notes && hand.notes.trim() !== '') {
+            notesContainer.classList.add('active');
+            notesButton.classList.add('toggle-active');
+          }
+
           toggleButton.addEventListener('click', () => {
-            toggleHandStatus(parseInt(listItem.dataset.handIndex));
+            toggleHandStatus(handIndex);
           });
-          
+
           deleteButton.addEventListener('click', () => {
-            deleteHand(parseInt(listItem.dataset.handIndex));
+            deleteHand(handIndex);
           });
+
+          notesButton.addEventListener('click', () => {
+            notesContainer.classList.toggle('active');
+            notesButton.classList.toggle('toggle-active');
+          });
+
+          notesTextarea.addEventListener('input', debounce(() => {
+            saveNotes(handIndex, notesTextarea.value);
+          }, 500));
         }
-        
+
         listContainer.appendChild(listItem);
       });
     }
