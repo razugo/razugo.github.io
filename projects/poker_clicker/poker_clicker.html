@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Poker Multi-Session Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root { 
       --cell: 54px; --gap: 4px; --radius: 8px;
@@ -424,6 +425,54 @@
       border-color: #9CA3AF;
     }
     
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 28px;
+      background: #9CA3AF;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      padding: 0;
+      outline: none;
+    }
+    
+    .toggle-switch:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    
+    .toggle-switch.played {
+      background: #10b981;
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .toggle-switch.played::after {
+      transform: translateX(32px);
+    }
+    
+    .toggle-label {
+      font-size: 11px;
+      font-weight: var(--font-weight-medium);
+      color: var(--color-mid);
+      margin-left: 6px;
+    }
+    
     .delete-button {
       padding: 6px 8px;
       border: 1px solid #ef4444;
@@ -679,32 +728,57 @@
     }
 
     .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin: 20px 0;
+        display: flex;
+        gap: 8px;
+        margin: 15px 0;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
     .stat-card {
         background: var(--color-white);
-        padding: 15px;
-        border-radius: 8px;
+        padding: 8px 12px;
+        border-radius: 6px;
         text-align: center;
         box-shadow: var(--shadow-subtle);
+        flex: 0 1 auto;
+        min-width: 80px;
     }
 
     .stat-value {
-        font-size: var(--font-size-large);
+        font-size: 16px;
         font-weight: var(--font-weight-bold);
         color: var(--color-dark);
+        line-height: 1.2;
     }
 
     .stat-label {
         color: var(--color-mid);
-        font-size: var(--font-size-label);
-        font-weight: var(--font-weight-normal);
+        font-size: 10px;
+        font-weight: var(--font-weight-medium);
         text-transform: uppercase;
-        margin-top: 5px;
+        margin-top: 2px;
+        line-height: 1.1;
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            gap: 6px;
+            margin: 12px 0;
+        }
+        
+        .stat-card {
+            padding: 6px 8px;
+            min-width: 70px;
+        }
+        
+        .stat-value {
+            font-size: 14px;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+        }
     }
 
     .explanation {
@@ -726,6 +800,31 @@
         font-weight: var(--font-weight-normal);
         color: var(--color-mid-dark);
         line-height: 1.5;
+    }
+    
+    .histogram-container {
+        background: var(--color-white);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: var(--shadow-subtle);
+        height: 400px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .histogram-title {
+        font-size: var(--font-size-large);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-dark);
+        margin: 0 0 15px 0;
+        text-align: center;
+    }
+    
+    .chart-wrapper {
+        flex: 1;
+        position: relative;
+        min-height: 0;
     }
   </style>
 </head>
@@ -1754,9 +1853,10 @@
           <div class="list-item-position">#${hand.position}</div>
           <div class="list-item-actions">
             <button class="action-button notes-button" data-action="notes">Notes</button>
-            <button class="action-button ${hand.played ? 'played' : 'folded'}" data-action="toggle" ${isAggregated ? 'disabled' : ''}>
-              ${hand.played ? 'Played' : 'Folded'}
-            </button>
+            <div style="display: flex; align-items: center;">
+              <button class="toggle-switch ${hand.played ? 'played' : ''}" data-action="toggle" ${isAggregated ? 'disabled' : ''}></button>
+              <span class="toggle-label">${hand.played ? 'Played' : 'Folded'}</span>
+            </div>
             <button class="delete-button" data-action="delete" ${isAggregated ? 'disabled style="opacity: 0.5;"' : ''}>
               🗑️
             </button>
@@ -1823,6 +1923,7 @@
       renderList();
       updateSessionInfo();
       saveState();
+      analyzeLuck();
     }
     
     function deleteHand(handIndex) {
@@ -1852,6 +1953,105 @@
       updateSessionInfo();
       saveState();
       analyzeLuck();
+    }
+
+    let histogramChart = null;
+
+    function generateNormalDistribution(mean, stdDev, count, min = 0, max = 100, bins = 20) {
+        const binWidth = (max - min) / bins;
+        const normalData = new Array(bins).fill(0);
+        
+        // Generate points for the normal distribution curve
+        for (let i = 0; i < bins; i++) {
+            const binCenter = min + (i + 0.5) * binWidth;
+            const exponent = -0.5 * Math.pow((binCenter - mean) / stdDev, 2);
+            const value = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+            normalData[i] = value * count * binWidth; // Scale to match sample size
+        }
+        
+        return normalData;
+    }
+
+    function createHistogram(strengths, mean, expectedMean, expectedStdDev) {
+        const binWidth = 5;
+        const bins = 20;
+        const actualData = new Array(bins).fill(0);
+        
+        // Create histogram bins for actual data
+        strengths.forEach(strength => {
+            const binIndex = Math.min(Math.floor(strength / binWidth), bins - 1);
+            actualData[binIndex]++;
+        });
+        
+        // Generate expected normal distribution
+        const expectedData = generateNormalDistribution(expectedMean, expectedStdDev, strengths.length, 0, 100, bins);
+        
+        // Create labels for bins
+        const labels = [];
+        for (let i = 0; i < bins; i++) {
+            const binStart = i * binWidth;
+            const binEnd = (i + 1) * binWidth;
+            labels.push(`${binStart}-${binEnd}`);
+        }
+        
+        const ctx = document.getElementById('histogramChart').getContext('2d');
+        
+        if (histogramChart) {
+            histogramChart.destroy();
+        }
+        
+        histogramChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Your Hands',
+                    data: actualData,
+                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Expected Distribution',
+                    data: expectedData,
+                    type: 'line',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderColor: 'rgba(239, 68, 68, 0.8)',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Frequency'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Hand Strength (0=strongest, 100=weakest)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Hand Strength Distribution vs Expected'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
     }
 
     function analyzeLuck() {
@@ -1891,6 +2091,13 @@
             <div class="results">
                 <div class="luck-category ${categoryClass}">${category}</div>
                 
+                <div class="histogram-container">
+                    <h3 class="histogram-title">Hand Strength Distribution</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="histogramChart"></canvas>
+                    </div>
+                </div>
+                
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-value">${mean.toFixed(1)}</div>
@@ -1911,9 +2118,15 @@
                     <p><strong>Interpretation:</strong> ${interpretation}</p>
                     <p><strong>Z-Score Explained:</strong> ${Math.abs(zScore).toFixed(2)} standard deviations ${zScore >= 0 ? 'above' : 'below'} expected. Values beyond ±1.5 are considered significantly different from normal.</p>
                     <p><strong>Your Average:</strong> ${mean.toFixed(1)} vs Expected: ${expectedMean.toFixed(1)} (scale: 0-100)</p>
+                    <p><strong>Histogram:</strong> Blue bars show your actual hand distribution. Red line shows the expected normal distribution for comparison.</p>
                 </div>
             </div>
         `;
+        
+        // Create histogram after DOM is updated
+        setTimeout(() => {
+            createHistogram(strengths, mean, expectedMean, expectedStdDev);
+        }, 100);
     }
 
     function fitGridToViewport() {
