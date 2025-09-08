@@ -1957,19 +1957,9 @@
 
     let histogramChart = null;
 
-    function generateNormalDistribution(mean, stdDev, count, min = 0, max = 100, bins = 20) {
-        const binWidth = (max - min) / bins;
-        const normalData = new Array(bins).fill(0);
-        
-        // Generate points for the normal distribution curve
-        for (let i = 0; i < bins; i++) {
-            const binCenter = min + (i + 0.5) * binWidth;
-            const exponent = -0.5 * Math.pow((binCenter - mean) / stdDev, 2);
-            const value = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
-            normalData[i] = value * count * binWidth; // Scale to match sample size
-        }
-        
-        return normalData;
+    function generateUniformDistribution(count, bins = 20) {
+        const expectedFrequency = count / bins;
+        return new Array(bins).fill(expectedFrequency);
     }
 
     function createHistogram(strengths, mean, expectedMean, expectedStdDev) {
@@ -1983,8 +1973,8 @@
             actualData[binIndex]++;
         });
         
-        // Generate expected normal distribution
-        const expectedData = generateNormalDistribution(expectedMean, expectedStdDev, strengths.length, 0, 100, bins);
+        // Generate expected uniform distribution
+        const expectedData = generateUniformDistribution(strengths.length, bins);
         
         // Create labels for bins
         const labels = [];
@@ -2011,7 +2001,7 @@
                     borderColor: 'rgba(59, 130, 246, 1)',
                     borderWidth: 1
                 }, {
-                    label: 'Expected Distribution',
+                    label: 'Expected Uniform',
                     data: expectedData,
                     type: 'line',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -2019,7 +2009,7 @@
                     borderWidth: 2,
                     fill: false,
                     pointRadius: 0,
-                    tension: 0.4
+                    tension: 0
                 }]
             },
             options: {
@@ -2042,7 +2032,7 @@
                 },
                 plugins: {
                     title: {
-                        display: true,
+                        display: false,
                         text: 'Hand Strength Distribution vs Expected'
                     },
                     legend: {
@@ -2118,7 +2108,7 @@
                     <p><strong>Interpretation:</strong> ${interpretation}</p>
                     <p><strong>Z-Score Explained:</strong> ${Math.abs(zScore).toFixed(2)} standard deviations ${zScore >= 0 ? 'above' : 'below'} expected. Values beyond ±1.5 are considered significantly different from normal.</p>
                     <p><strong>Your Average:</strong> ${mean.toFixed(1)} vs Expected: ${expectedMean.toFixed(1)} (scale: 0-100)</p>
-                    <p><strong>Histogram:</strong> Blue bars show your actual hand distribution. Red line shows the expected normal distribution for comparison.</p>
+                    <p><strong>Histogram:</strong> Blue bars show your actual hand distribution. Red line shows the expected uniform distribution for comparison.</p>
                 </div>
             </div>
         `;
