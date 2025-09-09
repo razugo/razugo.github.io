@@ -1999,6 +1999,15 @@
         // Generate expected uniform distribution
         const expectedData = generateUniformDistribution(strengths.length, bins);
         
+        // Calculate smoothed trend line using moving average of current, left, and right values
+        const trendData = new Array(bins);
+        for (let i = 0; i < bins; i++) {
+            const left = i > 0 ? actualData[i - 1] : actualData[i];
+            const current = actualData[i];
+            const right = i < bins - 1 ? actualData[i + 1] : actualData[i];
+            trendData[i] = (left + current + right) / 3;
+        }
+        
         // Create labels for bins
         const labels = [];
         for (let i = 0; i < bins; i++) {
@@ -2023,6 +2032,19 @@
                     backgroundColor: 'rgba(59, 130, 246, 0.7)',
                     borderColor: 'rgba(59, 130, 246, 1)',
                     borderWidth: 1
+                }, {
+                    label: 'Trend Line',
+                    data: trendData,
+                    type: 'line',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 3,
+                    fill: false,
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                    pointBorderColor: 'rgba(255, 255, 255, 1)',
+                    pointBorderWidth: 2,
+                    tension: 0.4,
                 }, {
                     label: 'Expected Uniform',
                     data: expectedData,
@@ -2059,8 +2081,15 @@
                         text: 'Hand Strength Distribution vs Expected'
                     },
                     legend: {
-                        display: true,
-                        position: 'top'
+                          display: true,
+                          position: 'top',
+                          labels: {
+                            filter: function(legendItem, chartData) {
+                                // Hide the label for Dataset 2 (index 1)
+                                console.log(legendItem)
+                                return legendItem.text != 'Trend Line';
+                            }
+                          }
                     }
                 }
             }
@@ -2131,7 +2160,7 @@
                     <p><strong>Interpretation:</strong> ${interpretation}</p>
                     <p><strong>Z-Score Explained:</strong> ${Math.abs(zScore).toFixed(2)} standard deviations ${zScore >= 0 ? 'above' : 'below'} expected. Values beyond ±1.5 are considered significantly different from normal.</p>
                     <p><strong>Your Average:</strong> ${mean.toFixed(1)} vs Expected: ${expectedMean.toFixed(1)} (scale: 0-100)</p>
-                    <p><strong>Histogram:</strong> Blue bars show your actual hand distribution. Red line shows the expected uniform distribution for comparison.</p>
+                    <p><strong>Histogram:</strong> Blue bars show your actual hand distribution. Green trend line smooths your data to highlight patterns and deviations. Red line shows the expected uniform distribution for comparison.</p>
                 </div>
             </div>
         `;
