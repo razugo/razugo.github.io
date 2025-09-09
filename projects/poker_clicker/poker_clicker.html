@@ -446,6 +446,10 @@
       opacity: 0.5;
     }
     
+    .toggle-switch:not(:disabled) {
+      opacity: 1;
+    }
+    
     .toggle-switch.played {
       background: #10b981;
     }
@@ -462,16 +466,38 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
+    .toggle-switch::before {
+      content: '✕';
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 2;
+      left: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.2s ease;
+    }
+    
     .toggle-switch.played::after {
       transform: translateX(32px);
     }
     
-    .toggle-label {
-      font-size: 11px;
-      font-weight: var(--font-weight-medium);
-      color: var(--color-mid);
-      margin-left: 6px;
+    .toggle-switch.played::before {
+      content: '▶';
+      left: 8px;
+      font-size: 12px;
     }
+    
+    .toggle-switch:hover {
+      transform: none;
+      background: #9CA3AF;
+    }
+    
+    .toggle-switch.played:hover {
+      background: #10b981;
+    }
+    
     
     .delete-button {
       padding: 6px 8px;
@@ -1853,10 +1879,7 @@
           <div class="list-item-position">#${hand.position}</div>
           <div class="list-item-actions">
             <button class="action-button notes-button" data-action="notes">Notes</button>
-            <div style="display: flex; align-items: center;">
-              <button class="toggle-switch ${hand.played ? 'played' : ''}" data-action="toggle" ${isAggregated ? 'disabled' : ''}></button>
-              <span class="toggle-label">${hand.played ? 'Played' : 'Folded'}</span>
-            </div>
+            <button class="toggle-switch ${hand.played ? 'played' : ''}" data-action="toggle" ${isAggregated ? 'disabled' : ''}></button>
             <button class="delete-button" data-action="delete" ${isAggregated ? 'disabled style="opacity: 0.5;"' : ''}>
               🗑️
             </button>
