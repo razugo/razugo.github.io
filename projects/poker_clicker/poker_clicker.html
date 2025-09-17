@@ -243,6 +243,29 @@
       font-weight: var(--font-weight-semibold);
     }
     
+    .profit-loss-display {
+      text-align: center;
+      flex: 1;
+    }
+    
+    #profit-loss-amount {
+      font-size: 20px;
+      font-weight: var(--font-weight-bold);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    #profit-loss-amount.positive {
+      color: #10b981;
+    }
+    
+    #profit-loss-amount.negative {
+      color: #ff5555;
+    }
+    
+    #profit-loss-amount.neutral {
+      color: var(--color-white);
+    }
+    
     #play-style-indicator {
       font-size: 14px;
       font-weight: var(--font-weight-medium);
@@ -358,6 +381,184 @@
     
     #list-container.active {
       display: flex;
+    }
+    
+    #details-container {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    #details-container.active {
+      display: flex;
+    }
+    
+    .details-section {
+      background: var(--color-lightest);
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid var(--color-light);
+    }
+    
+    .details-title {
+      margin: 0 0 20px 0;
+      font-size: var(--font-size-large);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-dark);
+    }
+    
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .detail-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .detail-field-full {
+      grid-column: 1 / -1;
+    }
+    
+    .detail-field label {
+      font-size: var(--font-size-body);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-dark);
+    }
+    
+    .detail-field input,
+    .detail-field textarea {
+      padding: 12px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      font-size: var(--font-size-body);
+      background: var(--color-white);
+      color: var(--color-dark);
+      transition: var(--transition-standard);
+    }
+    
+    .detail-field input:focus,
+    .detail-field textarea:focus {
+      outline: none;
+      border-color: var(--color-mid-dark);
+      box-shadow: 0 0 0 3px rgba(74, 85, 104, 0.1);
+    }
+    
+    .detail-field textarea {
+      resize: vertical;
+      font-family: inherit;
+    }
+    
+    @media (max-width: 767px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .details-section {
+        padding: 16px;
+      }
+    }
+    
+    /* Aggregate Stats Styles */
+    .aggregate-section {
+      margin-bottom: 24px;
+    }
+    
+    .aggregate-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .aggregate-section-title {
+      font-size: var(--font-size-large);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-dark);
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-light);
+    }
+    
+    .aggregate-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+    
+    .aggregate-stat-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-light);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow-subtle);
+      transition: var(--transition-standard);
+    }
+    
+    .aggregate-stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-elevated);
+    }
+    
+    .aggregate-stat-value {
+      font-size: 20px;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-dark);
+      margin-bottom: 4px;
+    }
+    
+    .aggregate-stat-value.positive {
+      color: #10b981;
+    }
+    
+    .aggregate-stat-value.negative {
+      color: #ef4444;
+    }
+    
+    .aggregate-stat-label {
+      font-size: var(--font-size-body);
+      color: var(--color-mid);
+      font-weight: var(--font-weight-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    @media (max-width: 767px) {
+      .aggregate-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      
+      .aggregate-stat-card {
+        padding: 12px;
+      }
+      
+      .aggregate-stat-value {
+        font-size: 18px;
+      }
+      
+      .aggregate-section-title {
+        font-size: 18px;
+      }
+    }
+    
+    /* Bankroll Chart Styles */
+    .bankroll-chart-container {
+      background: var(--color-white);
+      border-radius: 8px;
+      padding: 20px;
+      border: 1px solid var(--color-light);
+      box-shadow: var(--shadow-subtle);
+      height: 400px;
+      position: relative;
+    }
+    
+    @media (max-width: 767px) {
+      .bankroll-chart-container {
+        height: 300px;
+        padding: 16px;
+      }
     }
     
     .list-item {
@@ -873,12 +1074,16 @@
     <div class="stat-item">
       <span id="vpip-display">Select session to start tracking</span>
     </div>
+    <div class="profit-loss-display">
+      <span id="profit-loss-amount"></span>
+    </div>
     <div id="play-style-indicator">&nbsp</div>
   </div>
 
   <div id="view-tabs">
     <button id="grid-tab" class="view-tab active">Grid</button>
     <button id="list-tab" class="view-tab">List</button>
+    <button id="details-tab" class="view-tab">Details</button>
   </div>
 
   <div id="grid-container">
@@ -897,6 +1102,42 @@
   
   <div id="list-container">
     <!-- List items will be dynamically generated -->
+  </div>
+  
+  <div id="details-container">
+    <div class="details-section">
+      <h3 class="details-title">Session Details</h3>
+      <div class="details-grid">
+        <div class="detail-field">
+          <label for="buy-in">Buy In ($)</label>
+          <input type="number" id="buy-in" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="detail-field">
+          <label for="cash-out">Cash Out ($)</label>
+          <input type="number" id="cash-out" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="detail-field">
+          <label for="small-blind">Small Blind ($)</label>
+          <input type="number" id="small-blind" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="detail-field">
+          <label for="big-blind">Big Blind ($)</label>
+          <input type="number" id="big-blind" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="detail-field">
+          <label for="start-time">Start Time</label>
+          <input type="datetime-local" id="start-time">
+        </div>
+        <div class="detail-field">
+          <label for="end-time">End Time</label>
+          <input type="datetime-local" id="end-time">
+        </div>
+        <div class="detail-field detail-field-full">
+          <label for="session-notes">Notes</label>
+          <textarea id="session-notes" placeholder="Session notes, observations, etc." rows="4"></textarea>
+        </div>
+      </div>
+    </div>
   </div>
   
   <div id="analysis-results"></div>
@@ -983,10 +1224,22 @@
     // View elements
     const gridTab = document.getElementById('grid-tab');
     const listTab = document.getElementById('list-tab');
+    const detailsTab = document.getElementById('details-tab');
     const gridContainer = document.getElementById('grid-container');
     const listContainer = document.getElementById('list-container');
+    const detailsContainer = document.getElementById('details-container');
     const vpipDisplay = document.getElementById('vpip-display');
+    const profitLossAmount = document.getElementById('profit-loss-amount');
     const playStyleIndicator = document.getElementById('play-style-indicator');
+    
+    // Details form elements
+    let buyInInput = document.getElementById('buy-in');
+    let cashOutInput = document.getElementById('cash-out');
+    let smallBlindInput = document.getElementById('small-blind');
+    let bigBlindInput = document.getElementById('big-blind');
+    let startTimeInput = document.getElementById('start-time');
+    let endTimeInput = document.getElementById('end-time');
+    let sessionNotesInput = document.getElementById('session-notes');
     
     // Session management elements
     const sessionSelector = document.getElementById('session-selector');
@@ -1015,7 +1268,14 @@
         playedCounts: {},
         total: 0,
         totalPlayed: 0,
-        vpip: 0
+        vpip: 0,
+        buyIn: null,
+        cashOut: null,
+        startTime: null,
+        endTime: null,
+        notes: "",
+        smallBlind: null,
+        bigBlind: null
       };
       return sessionId;
     }
@@ -1140,7 +1400,14 @@
         playedCounts: {},
         total: 0,
         totalPlayed: 0,
-        vpip: 0
+        vpip: 0,
+        buyIn: null,
+        cashOut: null,
+        startTime: null,
+        endTime: null,
+        notes: "",
+        smallBlind: null,
+        bigBlind: null
       };
       
       // Initialize all possible hand combinations to 0
@@ -1293,6 +1560,52 @@
       return r1 + r2 + (suited ? 's' : 'o');
     }
 
+    function calculateProfitLoss(session) {
+      if (!session || session.buyIn === null || session.cashOut === null) {
+        return null;
+      }
+      return session.cashOut - session.buyIn;
+    }
+
+    function formatProfitLoss(profitLoss) {
+      if (profitLoss === null) return '';
+      const sign = profitLoss >= 0 ? '+' : '';
+      return `${sign}$${profitLoss.toFixed(2)}`;
+    }
+
+    function updateProfitLossDisplay(session) {
+      if (!session) {
+        profitLossAmount.textContent = '';
+        profitLossAmount.className = '';
+        return;
+      }
+      
+      if (session.id === '__all__') {
+        // For All Sessions, show total net profit
+        const stats = calculateAggregateStats();
+        const netProfit = stats.netProfit;
+        
+        if (stats.sessionsWithFinancialData === 0) {
+          profitLossAmount.textContent = '';
+          profitLossAmount.className = '';
+        } else {
+          profitLossAmount.textContent = formatProfitLoss(netProfit);
+          profitLossAmount.className = netProfit >= 0 ? 'positive' : 'negative';
+        }
+      } else {
+        // For individual sessions
+        const profitLoss = calculateProfitLoss(session);
+        
+        if (profitLoss === null) {
+          profitLossAmount.textContent = '';
+          profitLossAmount.className = '';
+        } else {
+          profitLossAmount.textContent = formatProfitLoss(profitLoss);
+          profitLossAmount.className = profitLoss >= 0 ? 'positive' : 'negative';
+        }
+      }
+    }
+
     function buildGrid() {
       grid.innerHTML = '';
       for (let i = 0; i < 13; i++) {
@@ -1389,6 +1702,8 @@
       const session = getCurrentSession();
       if (!session) {
         vpipDisplay.textContent = 'Select session to start tracking';
+        profitLossAmount.textContent = '';
+        profitLossAmount.className = '';
         playStyleIndicator.classList.remove('normal', 'tight', 'loose', 'nit', 'maniac');
         playStyleIndicator.innerHTML = '&nbsp';
         return;
@@ -1409,7 +1724,11 @@
         });
       }
       
+      // Update VPIP display (remove profit/loss from here)
       vpipDisplay.textContent = `VPIP: ${session.vpip.toFixed(1)}% (${session.totalPlayed}/${session.total})`;
+      
+      // Update profit/loss display
+      updateProfitLossDisplay(session);
       
       playStyleIndicator.classList.remove('normal', 'tight', 'loose', 'nit', 'maniac');
       playStyleIndicator.innerHTML = '&nbsp';
@@ -1520,20 +1839,405 @@
     function switchView(view) {
       currentView = view;
       
+      // Hide all containers
+      gridContainer.style.display = 'none';
+      listContainer.classList.remove('active');
+      detailsContainer.classList.remove('active');
+      
+      // Remove active class from all tabs
+      gridTab.classList.remove('active');
+      listTab.classList.remove('active');
+      detailsTab.classList.remove('active');
+      
+      // Show selected view
       if (view === 'grid') {
         gridContainer.style.display = 'flex';
-        listContainer.classList.remove('active');
         gridTab.classList.add('active');
-        listTab.classList.remove('active');
-      } else {
-        gridContainer.style.display = 'none';
+        analysisResultsEl.style.display = 'block';
+        analyzeLuck();
+      } else if (view === 'list') {
         listContainer.classList.add('active');
-        gridTab.classList.remove('active');
         listTab.classList.add('active');
+        analysisResultsEl.style.display = 'block';
         renderList();
+        analyzeLuck();
+      } else if (view === 'details') {
+        detailsContainer.classList.add('active');
+        detailsTab.classList.add('active');
+        analysisResultsEl.style.display = 'none';
+        loadDetailsForm();
       }
       
       saveState();
+    }
+
+    function loadDetailsForm() {
+      const session = getCurrentSession();
+      const isAggregated = currentSessionId === '__all__';
+      
+      // Disable form fields for aggregated view
+      buyInInput.disabled = isAggregated;
+      cashOutInput.disabled = isAggregated;
+      smallBlindInput.disabled = isAggregated;
+      bigBlindInput.disabled = isAggregated;
+      startTimeInput.disabled = isAggregated;
+      endTimeInput.disabled = isAggregated;
+      sessionNotesInput.disabled = isAggregated;
+      
+      if (!session) {
+        // Clear form when no session
+        buyInInput.value = '';
+        cashOutInput.value = '';
+        smallBlindInput.value = '';
+        bigBlindInput.value = '';
+        startTimeInput.value = '';
+        endTimeInput.value = '';
+        sessionNotesInput.value = '';
+        return;
+      }
+      
+      if (isAggregated) {
+        // Show aggregate stats instead of form
+        renderAggregateStats();
+        return;
+      }
+      
+      // Restore the original form if coming from aggregate view
+      restoreDetailsForm();
+      
+      // Load session data into form
+      buyInInput.value = session.buyIn !== null ? session.buyIn : '';
+      cashOutInput.value = session.cashOut !== null ? session.cashOut : '';
+      smallBlindInput.value = session.smallBlind !== null ? session.smallBlind : '';
+      bigBlindInput.value = session.bigBlind !== null ? session.bigBlind : '';
+      startTimeInput.value = session.startTime || '';
+      endTimeInput.value = session.endTime || '';
+      sessionNotesInput.value = session.notes || '';
+    }
+
+    function saveDetailsForm() {
+      const session = getCurrentSession();
+      if (!session || currentSessionId === '__all__') return;
+      
+      // Parse and save form values
+      session.buyIn = buyInInput.value ? parseFloat(buyInInput.value) : null;
+      session.cashOut = cashOutInput.value ? parseFloat(cashOutInput.value) : null;
+      session.smallBlind = smallBlindInput.value ? parseFloat(smallBlindInput.value) : null;
+      session.bigBlind = bigBlindInput.value ? parseFloat(bigBlindInput.value) : null;
+      session.startTime = startTimeInput.value || null;
+      session.endTime = endTimeInput.value || null;
+      session.notes = sessionNotesInput.value || '';
+      
+      // Update the display
+      updateStats();
+      saveState();
+    }
+
+    function calculateAggregateStats() {
+      const allSessions = Object.values(sessions);
+      const sessionsWithFinancialData = allSessions.filter(s => 
+        s.buyIn !== null && s.buyIn !== undefined && 
+        s.cashOut !== null && s.cashOut !== undefined
+      );
+      
+      let totalBuyIn = 0;
+      let totalCashOut = 0;
+      let totalHands = 0;
+      let totalHours = 0;
+      let winSessions = 0;
+      
+      // Calculate totals from sessions with financial data
+      sessionsWithFinancialData.forEach(session => {
+        totalBuyIn += session.buyIn;
+        totalCashOut += session.cashOut;
+        
+        // Count winning sessions
+        if (session.cashOut > session.buyIn) {
+          winSessions++;
+        }
+      });
+      
+      // Calculate total hands from all sessions (not just those with financial data)
+      allSessions.forEach(session => {
+        totalHands += session.total || 0;
+      });
+      
+      // Calculate total hours from sessions with time data
+      const sessionsWithTimeData = allSessions.filter(s => s.startTime && s.endTime);
+      sessionsWithTimeData.forEach(session => {
+        const start = new Date(session.startTime);
+        const end = new Date(session.endTime);
+        const hours = (end - start) / (1000 * 60 * 60);
+        if (hours > 0) {
+          totalHours += hours;
+        }
+      });
+      
+      const netProfit = totalCashOut - totalBuyIn;
+      const winPercentage = sessionsWithFinancialData.length > 0 ? (winSessions / sessionsWithFinancialData.length) * 100 : 0;
+      const avgBuyIn = sessionsWithFinancialData.length > 0 ? totalBuyIn / sessionsWithFinancialData.length : 0;
+      const avgProfit = sessionsWithFinancialData.length > 0 ? netProfit / sessionsWithFinancialData.length : 0;
+      const dollarsPerHour = totalHours > 0 ? netProfit / totalHours : 0;
+      
+      return {
+        totalBuyIn,
+        totalCashOut,
+        netProfit,
+        totalSessions: allSessions.length,
+        sessionsWithFinancialData: sessionsWithFinancialData.length,
+        totalHands,
+        winPercentage,
+        avgBuyIn,
+        avgProfit,
+        dollarsPerHour,
+        totalHours
+      };
+    }
+
+    function prepareBankrollChartData() {
+      const allSessions = Object.values(sessions);
+      const sessionsWithFinancialData = allSessions
+        .filter(s => s.buyIn !== null && s.buyIn !== undefined && 
+                     s.cashOut !== null && s.cashOut !== undefined)
+        .sort((a, b) => new Date(a.created) - new Date(b.created)); // Sort by creation date
+      
+      if (sessionsWithFinancialData.length === 0) {
+        return { labels: [], data: [] };
+      }
+      
+      const labels = [];
+      const cumulativeBankroll = [];
+      let runningTotal = 0;
+      
+      sessionsWithFinancialData.forEach((session, index) => {
+        const sessionProfit = session.cashOut - session.buyIn;
+        runningTotal += sessionProfit;
+        
+        labels.push(`Session ${index + 1}`);
+        cumulativeBankroll.push(runningTotal);
+      });
+      
+      return { labels, data: cumulativeBankroll };
+    }
+
+    let bankrollChart = null;
+
+    function createBankrollChart() {
+      const chartData = prepareBankrollChartData();
+      
+      if (chartData.labels.length === 0) {
+        const canvas = document.getElementById('bankrollChart');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#9CA3AF';
+        ctx.textAlign = 'center';
+        ctx.fillText('No financial data available', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+      
+      const ctx = document.getElementById('bankrollChart').getContext('2d');
+      
+      if (bankrollChart) {
+        bankrollChart.destroy();
+      }
+      
+      bankrollChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Cumulative Bankroll',
+            data: chartData.data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.1,
+            pointBackgroundColor: chartData.data.map(value => value >= 0 ? '#10b981' : '#ef4444'),
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Bankroll ($)'
+              },
+              ticks: {
+                callback: function(value) {
+                  return '$' + value.toFixed(0);
+                }
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Session Number'
+              }
+            }
+          },
+          plugins: {
+            title: {
+              display: false
+            },
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return 'Bankroll: $' + context.parsed.y.toFixed(2);
+                }
+              }
+            }
+          },
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          }
+        }
+      });
+    }
+
+    function renderAggregateStats() {
+      const stats = calculateAggregateStats();
+      
+      const detailsSection = detailsContainer.querySelector('.details-section');
+      detailsSection.innerHTML = `
+        <h3 class="details-title">All Sessions Statistics</h3>
+        
+        <div class="aggregate-section">
+          <h4 class="aggregate-section-title">Summary</h4>
+          <div class="aggregate-stats-grid">
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value ${stats.netProfit >= 0 ? 'positive' : 'negative'}">${formatProfitLoss(stats.netProfit)}</div>
+              <div class="aggregate-stat-label">Net Profit</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value">$${stats.totalBuyIn.toFixed(2)}</div>
+              <div class="aggregate-stat-label">Total Buy-in</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value">$${stats.totalCashOut.toFixed(2)}</div>
+              <div class="aggregate-stat-label">Total Cash-out</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="aggregate-section">
+          <h4 class="aggregate-section-title">Sessions</h4>
+          <div class="aggregate-stats-grid">
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value">${stats.totalSessions}</div>
+              <div class="aggregate-stat-label"># of Sessions</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value">${stats.totalHands}</div>
+              <div class="aggregate-stat-label"># of Hands</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value ${stats.dollarsPerHour >= 0 ? 'positive' : 'negative'}">$${stats.dollarsPerHour.toFixed(2)}/hr</div>
+              <div class="aggregate-stat-label">$/hr</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value">${stats.winPercentage.toFixed(1)}%</div>
+              <div class="aggregate-stat-label">Win %</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value">$${stats.avgBuyIn.toFixed(2)}</div>
+              <div class="aggregate-stat-label">Avg Buy-in</div>
+            </div>
+            <div class="aggregate-stat-card">
+              <div class="aggregate-stat-value ${stats.avgProfit >= 0 ? 'positive' : 'negative'}">${formatProfitLoss(stats.avgProfit)}</div>
+              <div class="aggregate-stat-label">Avg Profit</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="aggregate-section">
+          <h4 class="aggregate-section-title">Bankroll Progress</h4>
+          <div class="bankroll-chart-container">
+            <canvas id="bankrollChart"></canvas>
+          </div>
+        </div>
+      `;
+      
+      // Create the bankroll chart after DOM is updated
+      setTimeout(() => {
+        createBankrollChart();
+      }, 100);
+    }
+
+    function restoreDetailsForm() {
+      const detailsSection = detailsContainer.querySelector('.details-section');
+      detailsSection.innerHTML = `
+        <h3 class="details-title">Session Details</h3>
+        <div class="details-grid">
+          <div class="detail-field">
+            <label for="buy-in">Buy In ($)</label>
+            <input type="number" id="buy-in" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="detail-field">
+            <label for="cash-out">Cash Out ($)</label>
+            <input type="number" id="cash-out" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="detail-field">
+            <label for="small-blind">Small Blind ($)</label>
+            <input type="number" id="small-blind" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="detail-field">
+            <label for="big-blind">Big Blind ($)</label>
+            <input type="number" id="big-blind" placeholder="0.00" step="0.01" min="0">
+          </div>
+          <div class="detail-field">
+            <label for="start-time">Start Time</label>
+            <input type="datetime-local" id="start-time">
+          </div>
+          <div class="detail-field">
+            <label for="end-time">End Time</label>
+            <input type="datetime-local" id="end-time">
+          </div>
+          <div class="detail-field detail-field-full">
+            <label for="session-notes">Notes</label>
+            <textarea id="session-notes" placeholder="Session notes, observations, etc." rows="4"></textarea>
+          </div>
+        </div>
+      `;
+      
+      // Re-get the input elements since we just recreated the form
+      const newBuyInInput = document.getElementById('buy-in');
+      const newCashOutInput = document.getElementById('cash-out');
+      const newSmallBlindInput = document.getElementById('small-blind');
+      const newBigBlindInput = document.getElementById('big-blind');
+      const newStartTimeInput = document.getElementById('start-time');
+      const newEndTimeInput = document.getElementById('end-time');
+      const newSessionNotesInput = document.getElementById('session-notes');
+      
+      // Re-add event listeners
+      newBuyInInput.addEventListener('input', debounce(saveDetailsForm, 500));
+      newCashOutInput.addEventListener('input', debounce(saveDetailsForm, 500));
+      newSmallBlindInput.addEventListener('input', debounce(saveDetailsForm, 500));
+      newBigBlindInput.addEventListener('input', debounce(saveDetailsForm, 500));
+      newStartTimeInput.addEventListener('change', saveDetailsForm);
+      newEndTimeInput.addEventListener('change', saveDetailsForm);
+      newSessionNotesInput.addEventListener('input', debounce(saveDetailsForm, 1000));
+      
+      // Update the module-level references
+      buyInInput = newBuyInInput;
+      cashOutInput = newCashOutInput;
+      smallBlindInput = newSmallBlindInput;
+      bigBlindInput = newBigBlindInput;
+      startTimeInput = newStartTimeInput;
+      endTimeInput = newEndTimeInput;
+      sessionNotesInput = newSessionNotesInput;
     }
 
     function updateUI() {
@@ -1558,6 +2262,8 @@
       
       if (currentView === 'list') {
         renderList();
+      } else if (currentView === 'details') {
+        loadDetailsForm();
       }
     }
 
@@ -1588,6 +2294,17 @@
           showStrength = state.showStrength || false;
           showHeatmap = state.showHeatmap || false;
           showPlayed = state.showPlayed || false;
+          
+          // Ensure backwards compatibility - add missing fields to existing sessions
+          Object.values(sessions).forEach(session => {
+            if (session.buyIn === undefined) session.buyIn = null;
+            if (session.cashOut === undefined) session.cashOut = null;
+            if (session.startTime === undefined) session.startTime = null;
+            if (session.endTime === undefined) session.endTime = null;
+            if (session.notes === undefined) session.notes = "";
+            if (session.smallBlind === undefined) session.smallBlind = null;
+            if (session.bigBlind === undefined) session.bigBlind = null;
+          });
           
           // Ensure current session still exists
           if (currentSessionId && !sessions[currentSessionId]) {
@@ -2210,6 +2927,16 @@
     
     gridTab.addEventListener('click', () => switchView('grid'));
     listTab.addEventListener('click', () => switchView('list'));
+    detailsTab.addEventListener('click', () => switchView('details'));
+    
+    // Details form events
+    buyInInput.addEventListener('input', debounce(saveDetailsForm, 500));
+    cashOutInput.addEventListener('input', debounce(saveDetailsForm, 500));
+    smallBlindInput.addEventListener('input', debounce(saveDetailsForm, 500));
+    bigBlindInput.addEventListener('input', debounce(saveDetailsForm, 500));
+    startTimeInput.addEventListener('change', saveDetailsForm);
+    endTimeInput.addEventListener('change', saveDetailsForm);
+    sessionNotesInput.addEventListener('input', debounce(saveDetailsForm, 1000));
     
     // Session management events
     sessionSelector.addEventListener('change', (e) => {
