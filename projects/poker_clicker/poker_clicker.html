@@ -1246,7 +1246,10 @@
       <input type="file" id="file-input" accept=".json" style="display: none;">
     </div>
     <div class="import-export-description">
-      Export your poker session data to a JSON file for backup or transfer to another device. Import previously exported data to restore your sessions.
+      <!-- <p><strong>Your Average:</strong> ${mean.toFixed(1)} vs Expected: ${expectedMean.toFixed(1)} (scale: 0-100)</p> -->
+      <p>Export your poker session data to a JSON file for backup or transfer to another device. Import previously exported data to restore your sessions. </p>
+      <p><strong>Export all data:</strong> Select "All Sessions", then export </p>
+      <p><strong>Export individual session:</strong> Select desired session, then export</p>
     </div>
   </div>
 </div>
@@ -1659,7 +1662,7 @@
     function formatProfitLoss(profitLoss) {
       if (profitLoss === null) return '';
       const sign = profitLoss >= 0 ? '+' : '';
-      return `${sign}$${profitLoss.toFixed(2)}`;
+      return `${sign}${profitLoss.toFixed(2)}`;
     }
 
     function updateProfitLossDisplay(session) {
@@ -2224,11 +2227,11 @@
               <div class="aggregate-stat-label">Net Profit</div>
             </div>
             <div class="aggregate-stat-card">
-              <div class="aggregate-stat-value">$${stats.totalBuyIn.toFixed(2)}</div>
+              <div class="aggregate-stat-value">${stats.totalBuyIn.toFixed(2)}</div>
               <div class="aggregate-stat-label">Total Buy-in</div>
             </div>
             <div class="aggregate-stat-card">
-              <div class="aggregate-stat-value">$${stats.totalCashOut.toFixed(2)}</div>
+              <div class="aggregate-stat-value">${stats.totalCashOut.toFixed(2)}</div>
               <div class="aggregate-stat-label">Total Cash-out</div>
             </div>
           </div>
@@ -2246,7 +2249,7 @@
               <div class="aggregate-stat-label"># of Hands</div>
             </div>
             <div class="aggregate-stat-card">
-              <div class="aggregate-stat-value ${stats.dollarsPerHour >= 0 ? 'positive' : 'negative'}">$${stats.dollarsPerHour.toFixed(2)}/hr</div>
+              <div class="aggregate-stat-value ${stats.dollarsPerHour >= 0 ? 'positive' : 'negative'}">${stats.dollarsPerHour.toFixed(2)}/hr</div>
               <div class="aggregate-stat-label">$/hr</div>
             </div>
             <div class="aggregate-stat-card">
@@ -2254,7 +2257,7 @@
               <div class="aggregate-stat-label">Win %</div>
             </div>
             <div class="aggregate-stat-card">
-              <div class="aggregate-stat-value">$${stats.avgBuyIn.toFixed(2)}</div>
+              <div class="aggregate-stat-value">${stats.avgBuyIn.toFixed(2)}</div>
               <div class="aggregate-stat-label">Avg Buy-in</div>
             </div>
             <div class="aggregate-stat-card">
@@ -2342,6 +2345,17 @@
       sessionNotesInput = newSessionNotesInput;
     }
 
+    function updateExportButton() {
+      const exportBtn = document.getElementById('export-data');
+      if (!exportBtn) return;
+
+      if (currentSessionId === '__all__') {
+        exportBtn.innerHTML = `<span class="btn-icon">📥</span> Export All Session Data`;
+      } else {
+        exportBtn.innerHTML = `<span class="btn-icon">📥</span> Export Session Data`;
+      }
+    }
+
     function updateUI() {
       const session = getCurrentSession();
       const isAggregated = currentSessionId === '__all__';
@@ -2362,6 +2376,7 @@
       updateStats();
       render();
       updateSessionInfo();
+      updateExportButton();
       
       if (currentView === 'list') {
         renderList();
@@ -3103,21 +3118,27 @@
     // ---- Import/Export Functions ----
     function exportData() {
       try {
-        // Get the current state and extract only sessions data
-        const savedState = localStorage.getItem('pokerMultiSessionState');
-        let sessionsData = null;
+        let sessionsToExport;
+        let fileName;
 
-        if (savedState) {
-          try {
-            const state = JSON.parse(savedState);
-            sessionsData = state.sessions || {};
-          } catch (e) {
-            console.warn('Could not parse saved state');
+        if (currentSessionId === '__all__') {
+          // Export all sessions
+          sessionsToExport = sessions;
+          fileName = `poker-tracker-all-data-${new Date().toISOString().split('T')[0]}.json`;
+        } else {
+          // Export only the current session
+          if (!sessions[currentSessionId]) {
+            alert('No session selected to export.');
+            return;
           }
+          const currentSession = sessions[currentSessionId];
+          sessionsToExport = { [currentSessionId]: currentSession };
+          const sessionName = currentSession.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          fileName = `poker-tracker-session-${sessionName}-${new Date().toISOString().split('T')[0]}.json`;
         }
 
         const exportData = {
-          sessions: JSON.stringify(sessionsData),
+          sessions: JSON.stringify(sessionsToExport),
           exportedAt: new Date().toISOString(),
           version: '1.0'
         };
@@ -3127,7 +3148,7 @@
 
         const link = document.createElement('a');
         link.href = URL.createObjectURL(dataBlob);
-        link.download = `poker-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.download = fileName;
         link.click();
 
         URL.revokeObjectURL(link.href);
