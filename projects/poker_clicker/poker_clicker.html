@@ -1141,6 +1141,15 @@
         min-height: 0;
     }
   </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S3ER2YM26W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-S3ER2YM26W');
+  </script>
 </head>
 <body>
 <div class="app-container">
@@ -2171,7 +2180,7 @@
               },
               ticks: {
                 callback: function(value) {
-                  return '$' + value.toFixed(0);
+                  return ' + value.toFixed(0);
                 }
               }
             },
@@ -2197,8 +2206,8 @@
                 label: function(context) {
                   const sessionProfit = chartData.sessionProfits[context.dataIndex];
                   return [
-                    'Bankroll: $' + context.parsed.y.toFixed(2),
-                    'Session P/L: ' + (sessionProfit >= 0 ? '+' : '') + '$' + sessionProfit.toFixed(2)
+                    'Bankroll:  + context.parsed.y.toFixed(2),
+                    'Session P/L: ' + (sessionProfit >= 0 ? '+' : '') + ' + sessionProfit.toFixed(2)
                   ];
                 }
               }
