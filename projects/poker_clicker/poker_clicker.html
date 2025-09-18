@@ -2180,7 +2180,7 @@
               },
               ticks: {
                 callback: function(value) {
-                  return ' + value.toFixed(0);
+                  return '$' + value.toFixed(0);
                 }
               }
             },
@@ -2206,8 +2206,8 @@
                 label: function(context) {
                   const sessionProfit = chartData.sessionProfits[context.dataIndex];
                   return [
-                    'Bankroll:  + context.parsed.y.toFixed(2),
-                    'Session P/L: ' + (sessionProfit >= 0 ? '+' : '') + ' + sessionProfit.toFixed(2)
+                    'Bankroll: $' + context.parsed.y.toFixed(2),
+                    'Session P/L: ' + (sessionProfit >= 0 ? '+' : '') + '$' + sessionProfit.toFixed(2)
                   ];
                 }
               }
