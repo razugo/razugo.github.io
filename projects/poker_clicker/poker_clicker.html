@@ -882,6 +882,93 @@
       flex-wrap: wrap;
     }
 
+    /* Import/Export Styles */
+    .import-export-section {
+      margin-top: 40px;
+      padding: 24px;
+      background: var(--color-lightest);
+      border-radius: 8px;
+      border: 1px solid var(--color-light);
+    }
+
+    .import-export-title {
+      font-size: var(--font-size-large);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-dark);
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--color-light);
+    }
+
+    .import-export-buttons {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .import-export-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: 2px solid;
+      border-radius: 6px;
+      font-size: var(--font-size-body);
+      font-weight: var(--font-weight-medium);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--color-white);
+      min-width: 140px;
+      justify-content: center;
+    }
+
+    .export-btn {
+      border-color: #10b981;
+      color: #10b981;
+    }
+
+    .export-btn:hover {
+      background: #10b981;
+      color: var(--color-white);
+    }
+
+    .import-btn {
+      border-color: #3b82f6;
+      color: #3b82f6;
+    }
+
+    .import-btn:hover {
+      background: #3b82f6;
+      color: var(--color-white);
+    }
+
+    .btn-icon {
+      font-size: 16px;
+    }
+
+    .import-export-description {
+      font-size: var(--font-size-small);
+      color: var(--color-medium);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 479px) {
+      .import-export-section {
+        margin-top: 24px;
+        padding: 16px;
+      }
+
+      .import-export-buttons {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .import-export-btn {
+        width: 100%;
+      }
+    }
+
     /* Responsive Breakpoints */
     @media (max-width: 479px) {
       body { padding: 0; }
@@ -1141,8 +1228,27 @@
   </div>
   
   <div id="analysis-results"></div>
-  
+
   <div id="magnify-overlay"></div>
+
+  <!-- Import/Export Section -->
+  <div class="import-export-section">
+    <h3 class="import-export-title">Data Management</h3>
+    <div class="import-export-buttons">
+      <button id="export-data" class="import-export-btn export-btn">
+        <span class="btn-icon">📥</span>
+        Export Data
+      </button>
+      <button id="import-data" class="import-export-btn import-btn">
+        <span class="btn-icon">📤</span>
+        Import Data
+      </button>
+      <input type="file" id="file-input" accept=".json" style="display: none;">
+    </div>
+    <div class="import-export-description">
+      Export your poker session data to a JSON file for backup or transfer to another device. Import previously exported data to restore your sessions.
+    </div>
+  </div>
 </div>
 
 <!-- Session Creation Modal -->
@@ -1381,15 +1487,6 @@
       const allSessions = Object.values(sessions);
       if (allSessions.length === 0) return null;
       
-      console.log('Starting aggregation from sessions:', allSessions.map(s => ({
-        name: s.name,
-        total: s.total,
-        totalPlayed: s.totalPlayed,
-        handsCount: s.hands?.length || 0,
-        countsKeys: Object.keys(s.counts || {}).length,
-        sampleCounts: Object.entries(s.counts || {}).filter(([k,v]) => v > 0).slice(0, 3)
-      })));
-      
       // Create aggregated session data
       const aggregated = {
         id: '__all__',
@@ -1422,13 +1519,6 @@
       
       // Merge all data from all sessions
       allSessions.forEach((session, sessionIndex) => {
-        console.log(`Processing session ${sessionIndex + 1}:`, {
-          name: session.name,
-          total: session.total,
-          handsLength: session.hands?.length || 0,
-          countsEntries: Object.entries(session.counts || {}).filter(([k,v]) => v > 0).length
-        });
-        
         if (!session) return;
         
         // Deep copy hands to avoid reference issues
@@ -1453,7 +1543,6 @@
           for (const [hand, count] of Object.entries(session.counts)) {
             if (typeof count === 'number' && count > 0) {
               aggregated.counts[hand] = (aggregated.counts[hand] || 0) + count;
-              console.log(`Adding ${count} to ${hand}, new total: ${aggregated.counts[hand]}`);
             }
           }
         }
@@ -1975,6 +2064,9 @@
       
       const netProfit = totalCashOut - totalBuyIn;
       const winPercentage = sessionsWithFinancialData.length > 0 ? (winSessions / sessionsWithFinancialData.length) * 100 : 0;
+      console.log(winSessions)
+      console.log(sessionsWithFinancialData.length)
+      console.log(winPercentage)
       const avgBuyIn = sessionsWithFinancialData.length > 0 ? totalBuyIn / sessionsWithFinancialData.length : 0;
       const avgProfit = sessionsWithFinancialData.length > 0 ? netProfit / sessionsWithFinancialData.length : 0;
       const dollarsPerHour = totalHours > 0 ? netProfit / totalHours : 0;
@@ -1997,27 +2089,31 @@
     function prepareBankrollChartData() {
       const allSessions = Object.values(sessions);
       const sessionsWithFinancialData = allSessions
-        .filter(s => s.buyIn !== null && s.buyIn !== undefined && 
+        .filter(s => s.buyIn !== null && s.buyIn !== undefined &&
                      s.cashOut !== null && s.cashOut !== undefined)
         .sort((a, b) => new Date(a.created) - new Date(b.created)); // Sort by creation date
-      
+
       if (sessionsWithFinancialData.length === 0) {
-        return { labels: [], data: [] };
+        return { labels: [], data: [], sessionProfits: [], pointColors: [] };
       }
-      
+
       const labels = [];
       const cumulativeBankroll = [];
+      const sessionProfits = [];
+      const pointColors = [];
       let runningTotal = 0;
-      
+
       sessionsWithFinancialData.forEach((session, index) => {
         const sessionProfit = session.cashOut - session.buyIn;
         runningTotal += sessionProfit;
-        
-        labels.push(`Session ${index + 1}`);
+
+        labels.push(`${index + 1}`);
         cumulativeBankroll.push(runningTotal);
+        sessionProfits.push(sessionProfit);
+        pointColors.push(sessionProfit >= 0 ? '#10b981' : '#ef4444');
       });
-      
-      return { labels, data: cumulativeBankroll };
+
+      return { labels, data: cumulativeBankroll, sessionProfits, pointColors };
     }
 
     let bankrollChart = null;
@@ -2054,7 +2150,7 @@
             borderWidth: 3,
             fill: true,
             tension: 0.1,
-            pointBackgroundColor: chartData.data.map(value => value >= 0 ? '#10b981' : '#ef4444'),
+            pointBackgroundColor: chartData.pointColors,
             pointBorderColor: '#ffffff',
             pointBorderWidth: 2,
             pointRadius: 6,
@@ -2068,8 +2164,7 @@
             y: {
               beginAtZero: true,
               title: {
-                display: true,
-                text: 'Bankroll ($)'
+                display: false
               },
               ticks: {
                 callback: function(value) {
@@ -2093,8 +2188,15 @@
             },
             tooltip: {
               callbacks: {
+                title: function(context) {
+                  return 'Session ' + context[0].label;
+                },
                 label: function(context) {
-                  return 'Bankroll: $' + context.parsed.y.toFixed(2);
+                  const sessionProfit = chartData.sessionProfits[context.dataIndex];
+                  return [
+                    'Bankroll: $' + context.parsed.y.toFixed(2),
+                    'Session P/L: ' + (sessionProfit >= 0 ? '+' : '') + '$' + sessionProfit.toFixed(2)
+                  ];
                 }
               }
             }
@@ -2163,7 +2265,7 @@
         </div>
         
         <div class="aggregate-section">
-          <h4 class="aggregate-section-title">Bankroll Progress</h4>
+          <h4 class="aggregate-section-title">Bankroll</h4>
           <div class="bankroll-chart-container">
             <canvas id="bankrollChart"></canvas>
           </div>
@@ -2243,7 +2345,7 @@
     function updateUI() {
       const session = getCurrentSession();
       const isAggregated = currentSessionId === '__all__';
-      
+
       if (session) {
         // Enable/disable controls based on session type
         undoBtn.disabled = isAggregated; // Can't undo in aggregated view
@@ -2255,6 +2357,7 @@
         renameSessionBtn.disabled = true;
         deleteSessionBtn.disabled = true;
       }
+
       
       updateStats();
       render();
@@ -2403,28 +2506,10 @@
         return;
       }
       
-      // Debug logging for aggregated sessions
-      if (session.id === '__all__') {
-        const nonZeroCounts = Object.entries(session.counts).filter(([k,v]) => v > 0);
-        console.log('Rendering All Sessions grid with data:', {
-          id: session.id,
-          name: session.name,
-          total: session.total,
-          totalPlayed: session.totalPlayed,
-          nonZeroCountsLength: nonZeroCounts.length,
-          sampleNonZeroCounts: nonZeroCounts.slice(0, 5)
-        });
-      }
-      
       for (const cell of grid.children) {
         const key = cell.dataset.key;
         const playedCount = session.playedCounts[key] || 0;
         const totalCount = session.counts[key] || 0;
-        
-        // Debug specific cells that should have data
-        if (session.id === '__all__' && totalCount > 0) {
-          console.log(`Cell ${key}: played=${playedCount}, total=${totalCount}`);
-        }
         
         if (showCounts) {
           cell.textContent = showPlayed ? playedCount : totalCount;
@@ -3015,6 +3100,232 @@
       setTimeout(fitGridToViewport, 200);
     });
 
+    // ---- Import/Export Functions ----
+    function exportData() {
+      try {
+        // Get the current state and extract only sessions data
+        const savedState = localStorage.getItem('pokerMultiSessionState');
+        let sessionsData = null;
+
+        if (savedState) {
+          try {
+            const state = JSON.parse(savedState);
+            sessionsData = state.sessions || {};
+          } catch (e) {
+            console.warn('Could not parse saved state');
+          }
+        }
+
+        const exportData = {
+          sessions: JSON.stringify(sessionsData),
+          exportedAt: new Date().toISOString(),
+          version: '1.0'
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `poker-tracker-data-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+
+        URL.revokeObjectURL(link.href);
+
+        console.log('Data exported successfully');
+      } catch (error) {
+        console.error('Error exporting data:', error);
+        alert('Error exporting data. Please try again.');
+      }
+    }
+
+    // Helper function to generate a simple hash from session data
+    function generateSessionHash(sessionData) {
+      // Create a string from the core session data (excluding name and created timestamp)
+      const coreData = {
+        hands: sessionData.hands || [],
+        buyIn: sessionData.buyIn,
+        cashOut: sessionData.cashOut,
+        smallBlind: sessionData.smallBlind,
+        bigBlind: sessionData.bigBlind,
+        startTime: sessionData.startTime,
+        endTime: sessionData.endTime,
+        notes: sessionData.notes
+      };
+
+      const dataString = JSON.stringify(coreData);
+
+      // Simple hash function
+      let hash = 0;
+      for (let i = 0; i < dataString.length; i++) {
+        const char = dataString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+
+      // Convert to hex and take first 5 characters
+      return Math.abs(hash).toString(16).substring(0, 5);
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importData = JSON.parse(e.target.result);
+
+          // Validate the imported data structure
+          if (!importData.hasOwnProperty('sessions')) {
+            alert('Invalid file format. Please select a valid poker tracker export file.');
+            return;
+          }
+
+          // Handle case where there are no sessions (sessions: null)
+          if (importData.sessions === null) {
+            alert('This export file contains no session data. Nothing to import.');
+            return;
+          }
+
+          // Parse the imported sessions
+          const importedSessions = JSON.parse(importData.sessions);
+          if (!importedSessions || typeof importedSessions !== 'object') {
+            alert('Invalid sessions data in the import file.');
+            return;
+          }
+
+          // Get existing sessions from the app's current state
+          let existingSessions = {};
+          const savedState = localStorage.getItem('pokerMultiSessionState');
+          if (savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              existingSessions = state.sessions || {};
+            } catch (e) {
+              console.warn('Could not parse existing state, starting fresh');
+              existingSessions = {};
+            }
+          }
+
+          // Create a map of existing session hashes for duplicate detection
+          const existingHashes = new Set();
+          for (const sessionData of Object.values(existingSessions)) {
+            const hash = generateSessionHash(sessionData);
+            existingHashes.add(hash);
+          }
+
+          // Count sessions for user confirmation
+          const importedSessionCount = Object.keys(importedSessions).length;
+          const existingSessionCount = Object.keys(existingSessions).length;
+
+          // Confirm import
+          const confirmMessage = existingSessionCount > 0
+            ? `This will add ${importedSessionCount} sessions to your existing ${existingSessionCount} sessions. Continue?`
+            : `This will import ${importedSessionCount} sessions. Continue?`;
+
+          if (!confirm(confirmMessage)) {
+            return;
+          }
+
+          // Process imported sessions with conflict resolution and duplicate detection
+          let conflictsCount = 0;
+          let duplicatesSkipped = 0;
+          let sessionsAdded = 0;
+
+          // Get next available session counter
+          let maxSessionNumber = 0;
+          for (const sessionId in existingSessions) {
+            const sessionNum = parseInt(sessionId.replace('session-', '')) || 0;
+            maxSessionNumber = Math.max(maxSessionNumber, sessionNum);
+          }
+          // Get current session counter from app state
+          let currentCounter = 1;
+          if (savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              currentCounter = state.sessionCounter || 1;
+            } catch (e) {
+              // Use default
+            }
+          }
+          let nextSessionNumber = Math.max(currentCounter, maxSessionNumber + 1);
+
+          for (const [sessionId, sessionData] of Object.entries(importedSessions)) {
+            const sessionHash = generateSessionHash(sessionData);
+
+            // Check if this is a duplicate session based on data hash
+            if (existingHashes.has(sessionHash)) {
+              duplicatesSkipped++;
+              continue;
+            }
+
+            // If session ID already exists, create a new ID and append hash to name
+            let finalSessionId = sessionId;
+            let finalSessionData = { ...sessionData };
+
+            if (existingSessions[sessionId]) {
+              conflictsCount++;
+              finalSessionId = `session-${nextSessionNumber}`;
+              nextSessionNumber++;
+
+              // Append hash to session name for identification
+              const originalName = sessionData.name || 'Poker Session';
+              finalSessionData.name = `${originalName} (${sessionHash})`;
+            }
+
+            // Add the session
+            existingSessions[finalSessionId] = finalSessionData;
+            existingHashes.add(sessionHash);
+            sessionsAdded++;
+          }
+
+          // Update the app's state with merged sessions and new counter
+          const updatedState = savedState ? JSON.parse(savedState) : {};
+          updatedState.sessions = existingSessions;
+          updatedState.sessionCounter = nextSessionNumber;
+
+          // Save updated state back to localStorage
+          localStorage.setItem('pokerMultiSessionState', JSON.stringify(updatedState));
+
+          // Update the app's internal variables immediately
+          sessions = existingSessions;
+          sessionCounter = nextSessionNumber;
+
+          // Show success message with details
+          let successMessage = `Successfully imported ${sessionsAdded} sessions!`;
+          if (conflictsCount > 0) {
+            successMessage += `\n\n${conflictsCount} sessions had ID conflicts and were renamed with hash identifiers.`;
+          }
+          if (duplicatesSkipped > 0) {
+            successMessage += `\n\n${duplicatesSkipped} duplicate sessions were skipped (already exist with same data).`;
+          }
+          successMessage += '\n\nThe page will now reload to reflect the imported data.';
+
+          alert(successMessage);
+          location.reload();
+
+        } catch (error) {
+          console.error('Error importing data:', error);
+          alert('Error importing data. Please check the file format and try again.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ---- Import/Export Event Listeners ----
+    document.getElementById('export-data').addEventListener('click', exportData);
+
+    document.getElementById('import-data').addEventListener('click', function() {
+      document.getElementById('file-input').click();
+    });
+
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        importData(file);
+      }
+      // Reset the input so the same file can be selected again
+      e.target.value = '';
+    });
+
     // ---- Initialize ----
     calculateExpectedValues();
     loadState();
@@ -3022,11 +3333,11 @@
     buildGrid();
     switchView(currentView);
     updateUI();
-    
+
     if (showPlayed) {
       togglePlayedBtn.classList.add('toggle-active');
     }
-    
+
     analyzeLuck();
   </script>
 </body>
