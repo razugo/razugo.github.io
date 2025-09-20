@@ -1,0 +1,100 @@
+---
+title: PokerTracker - Games
+nav_id: games
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  {% include_relative _includes/styles/main.css %}
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">PokerTracker</div>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="/projects/poker_tracker/" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+      <li><a href="/projects/poker_tracker/sessions" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
+      <li><a href="/projects/poker_tracker/live" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
+      <li><a href="/projects/poker_tracker/games" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </nav>
+
+  <main>
+    <div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Games</h1>
+    <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewGameModal()">+ New Game</button>
+  </div>
+
+  <div class="game-selector" id="gamesList">
+    <!-- Populated by JavaScript -->
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    populateGamesList();
+  });
+
+  function populateGamesList() {
+    const games = PokerTracker.DataStore.games;
+    const container = document.getElementById('gamesList');
+
+    container.innerHTML = games.map(game => `
+      <div class="game-card">
+        <h3>${game.name}</h3>
+        <p><strong>Location:</strong> ${game.location}</p>
+        <p><strong>Stakes:</strong> ${PokerTracker.Utils.formatCurrency(game.stakes.smallBlind)}/${PokerTracker.Utils.formatCurrency(game.stakes.bigBlind)}</p>
+        <p><strong>Default Buy-in:</strong> ${PokerTracker.Utils.formatCurrency(game.defaultBuyIn)}</p>
+        <div style="margin-top: 1rem;">
+          <button class="btn btn-outline btn-sm" onclick="editGame('${game.id}')">Edit</button>
+          <button class="btn btn-outline btn-sm" onclick="deleteGame('${game.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function editGame(gameId) {
+    alert(`Edit game: ${gameId}`);
+  }
+
+  function deleteGame(gameId) {
+    if (confirm('Are you sure you want to delete this game?')) {
+      alert(`Delete game: ${gameId}`);
+    }
+  }
+</script>
+
+<!-- Shared JavaScript -->
+<script>
+  {% include_relative _includes/scripts/data-store.js %}
+</script>
+<script>
+  {% include_relative _includes/scripts/app.js %}
+</script>
+
+<script>
+  // Navigation and FAB
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navMenu').classList.toggle('open');
+    });
+  });
+
+  function quickAction() {
+    alert('Quick Action - Could start new session, add hand, or quick access menu');
+  }
+</script>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="quickAction()">+</button>
+
+    </div>
+  </main>
+</body>
+</html>

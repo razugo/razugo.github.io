@@ -1,0 +1,153 @@
+---
+title: PokerTracker - Sessions
+nav_id: sessions
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  {% include_relative _includes/styles/main.css %}
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">PokerTracker</div>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="/projects/poker_tracker/" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+      <li><a href="/projects/poker_tracker/sessions" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
+      <li><a href="/projects/poker_tracker/live" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
+      <li><a href="/projects/poker_tracker/games" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </nav>
+
+  <main>
+    <div class="container">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1>Sessions</h1>
+    <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewSessionModal()">+ New Session</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <input type="text" class="filter-input" placeholder="Search sessions..." id="sessionSearch">
+    <select class="filter-input" id="gameFilter">
+      <option value="">All Games</option>
+      <option value="aria-1-3">Aria 1/3</option>
+      <option value="home-game">Home Game</option>
+      <option value="bellagio-2-5">Bellagio 2/5</option>
+      <option value="wynn-5-10">Wynn 5/10</option>
+      <option value="commerce-3-5">Commerce 3/5</option>
+    </select>
+    <input type="date" class="filter-input" id="dateFrom">
+    <input type="date" class="filter-input" id="dateTo">
+    <select class="filter-input" id="profitFilter">
+      <option value="">All Results</option>
+      <option value="positive">Winning Sessions</option>
+      <option value="negative">Losing Sessions</option>
+    </select>
+  </div>
+
+  <!-- Sessions Table -->
+  <div class="card">
+    <div class="card-content">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Game</th>
+            <th>Duration</th>
+            <th>Buy-in</th>
+            <th>Cash-out</th>
+            <th>P&L</th>
+            <th>Hands</th>
+            <th>VPIP</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sessionsTableBody">
+          <!-- Populated by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    populateSessionsTable();
+    setupFilters();
+  });
+
+  function populateSessionsTable() {
+    const sessions = PokerTracker.DataStore.getSessions();
+    const tbody = document.getElementById('sessionsTableBody');
+
+    tbody.innerHTML = sessions.map(session => {
+      const game = PokerTracker.DataStore.getGame(session.gameId);
+      const profit = session.cashOut - session.buyIn;
+
+      return `
+        <tr>
+          <td>${session.date}</td>
+          <td>${game?.name || 'Unknown'}</td>
+          <td>${PokerTracker.Utils.formatDuration(session.duration)}</td>
+          <td>${PokerTracker.Utils.formatCurrency(session.buyIn)}</td>
+          <td>${PokerTracker.Utils.formatCurrency(session.cashOut)}</td>
+          <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
+          <td>${session.hands}</td>
+          <td>${session.vpip}%</td>
+          <td><span class="badge ${session.status === 'active' ? 'warning' : 'success'}">${session.status}</span></td>
+          <td><button class="btn btn-outline btn-sm">View</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function setupFilters() {
+    // Add filter functionality here
+    const filters = ['sessionSearch', 'gameFilter', 'dateFrom', 'dateTo', 'profitFilter'];
+    filters.forEach(filterId => {
+      document.getElementById(filterId).addEventListener('change', applyFilters);
+      document.getElementById(filterId).addEventListener('input', applyFilters);
+    });
+  }
+
+  function applyFilters() {
+    // Filter implementation would go here
+    console.log('Applying filters...');
+  }
+</script>
+
+<!-- Shared JavaScript -->
+<script>
+  {% include_relative _includes/scripts/data-store.js %}
+</script>
+<script>
+  {% include_relative _includes/scripts/app.js %}
+</script>
+
+<script>
+  // Navigation and FAB
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navMenu').classList.toggle('open');
+    });
+  });
+
+  function quickAction() {
+    alert('Quick Action - Could start new session, add hand, or quick access menu');
+  }
+</script>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="quickAction()">+</button>
+
+    </div>
+  </main>
+</body>
+</html>

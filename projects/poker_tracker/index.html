@@ -1,0 +1,198 @@
+---
+title: PokerTracker - Dashboard
+nav_id: dashboard
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% include_relative _includes/styles/main.css %}
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">PokerTracker</div>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="/projects/poker_tracker/" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+      <li><a href="/projects/poker_tracker/sessions" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
+      <li><a href="/projects/poker_tracker/live" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
+      <li><a href="/projects/poker_tracker/games" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </nav>
+
+  <main>
+    <div class="container">
+  <h1>Dashboard</h1>
+
+  <!-- Overall Stats -->
+  <div class="stats-grid" id="statsGrid">
+    <!-- Populated by JavaScript -->
+  </div>
+
+  <!-- Recent Sessions -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Sessions</h2>
+      <a href="/projects/poker_tracker/sessions" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="card-content">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Game</th>
+            <th>Duration</th>
+            <th>Hands</th>
+            <th>P&L</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="recentSessionsTableBody">
+          <!-- Populated by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+      <h2 class="card-title">Bankroll Progress</h2>
+    </div>
+    <div class="card-content">
+      <div class="chart-container">
+        <canvas id="bankrollChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    populateStats();
+    populateRecentSessions();
+    createBankrollChart();
+  });
+
+  function populateStats() {
+    const stats = PokerTracker.DataStore.getSessionStats();
+    const statsGrid = document.getElementById('statsGrid');
+
+    statsGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-value ${stats.totalProfit >= 0 ? 'positive' : 'negative'}">${stats.totalProfit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(stats.totalProfit)}</div>
+        <div class="stat-label">Total Profit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${stats.totalSessions}</div>
+        <div class="stat-label">Total Sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${stats.totalHands.toLocaleString()}</div>
+        <div class="stat-label">Hands Played</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${stats.winRate}%</div>
+        <div class="stat-label">Win Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value ${stats.hourlyRate >= 0 ? 'positive' : 'negative'}">${stats.hourlyRate >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(stats.hourlyRate)}</div>
+        <div class="stat-label">$ / Hour</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${stats.avgVpip}%</div>
+        <div class="stat-label">Avg VPIP</div>
+      </div>
+    `;
+  }
+
+  function populateRecentSessions() {
+    const sessions = PokerTracker.DataStore.getSessions().slice(0, 5);
+    const tbody = document.getElementById('recentSessionsTableBody');
+
+    tbody.innerHTML = sessions.map(session => {
+      const game = PokerTracker.DataStore.getGame(session.gameId);
+      const profit = session.cashOut - session.buyIn;
+
+      return `
+        <tr>
+          <td>${session.date}</td>
+          <td>${game?.name || 'Unknown'}</td>
+          <td>${PokerTracker.Utils.formatDuration(session.duration)}</td>
+          <td>${session.hands}</td>
+          <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
+          <td><button class="btn btn-outline btn-sm">View</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function createBankrollChart() {
+    const ctx = document.getElementById('bankrollChart').getContext('2d');
+    const data = Array.from({length: 20}, (_, i) => Math.random() * 1000 - 200);
+    let cumulative = 0;
+    const cumulativeData = data.map(value => cumulative += value);
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array.from({length: 20}, (_, i) => i + 1),
+        datasets: [{
+          label: 'Cumulative P&L',
+          data: cumulativeData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '$' + value;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+
+<!-- Shared JavaScript -->
+<script>
+  {% include_relative _includes/scripts/data-store.js %}
+</script>
+<script>
+  {% include_relative _includes/scripts/app.js %}
+</script>
+
+<script>
+  // Navigation and FAB
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navMenu').classList.toggle('open');
+    });
+  });
+
+  function quickAction() {
+    alert('Quick Action - Could start new session, add hand, or quick access menu');
+  }
+</script>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="quickAction()">+</button>
+
+  </main>
+</body>
+</html>

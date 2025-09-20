@@ -1,0 +1,166 @@
+---
+title: PokerTracker - Live Session
+nav_id: live
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  {% include_relative _includes/styles/main.css %}
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-brand">PokerTracker</div>
+    <ul class="nav-menu" id="navMenu">
+      <li><a href="/projects/poker_tracker/" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+      <li><a href="/projects/poker_tracker/sessions" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
+      <li><a href="/projects/poker_tracker/live" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
+      <li><a href="/projects/poker_tracker/games" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
+    </ul>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </nav>
+
+  <main>
+    <!-- Collapsible Overlay -->
+<div class="session-overlay" id="sessionOverlay">
+  <div class="session-controls">
+    <div>
+      <h3>Live Session: Aria 1/3</h3>
+      <p>VPIP: 23.4% (12/51) | P&L: +$127 | Duration: 2h 7m</p>
+      <p><small>Buy-in: $300 | Current Stack: $427 | Hands: 51</small></p>
+    </div>
+    <div>
+      <button class="btn btn-outline btn-sm">End Session</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="btn btn-outline btn-sm" id="toggleCounts">Show Counts</button>
+    <button class="btn btn-outline btn-sm" id="toggleStrength">Show Strength</button>
+    <button class="btn btn-outline btn-sm" id="togglePlayed">Show Played</button>
+    <button class="btn btn-outline btn-sm">Undo Last</button>
+  </div>
+</div>
+
+<!-- Toggle Button -->
+<button class="toggle-overlay-btn" onclick="toggleSessionOverlay()">⚙️</button>
+
+<!-- Poker Grid -->
+<div class="container" style="padding-top: 6rem;">
+  <div class="poker-grid" id="pokerGrid">
+    <!-- Populated by JavaScript -->
+  </div>
+
+  <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+    <p>Quick tap: dealt (folded) | Long press: dealt & played</p>
+    <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 12px; height: 12px; background: rgba(59, 130, 246, 0.3); border: 1px solid #3b82f6; border-radius: 2px;"></div>
+        Selected to play
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; border-radius: 2px;"></div>
+        Played (won/folded on flop+)
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 12px; height: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 2px;"></div>
+        Folded preflop
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSessionOverlay() {
+    document.getElementById('sessionOverlay').classList.toggle('expanded');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    generatePokerGrid();
+
+    function generatePokerGrid() {
+      const grid = document.getElementById('pokerGrid');
+      if (!grid) return;
+
+      const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+      grid.innerHTML = '';
+      for (let i = 0; i < 13; i++) {
+        for (let j = 0; j < 13; j++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell' + (i === j ? ' pair' : '');
+
+          if (i === j) {
+            cell.textContent = ranks[i] + ranks[i];
+          } else if (i < j) {
+            cell.textContent = ranks[i] + ranks[j] + 's';
+          } else {
+            cell.textContent = ranks[j] + ranks[i] + 'o';
+          }
+
+          // Add click handlers for hand tracking
+          cell.addEventListener('click', function() {
+            this.classList.toggle('selected');
+          });
+
+          // Add some sample pre-selected hands for demo
+          const sampleHands = ['AA', 'KK', 'QQ', 'AKs', 'AQs', 'AJs', 'KQs', 'AKo', 'AQo'];
+          if (sampleHands.includes(cell.textContent)) {
+            cell.classList.add('selected');
+            cell.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
+          }
+
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    // Setup overlay toggle buttons
+    document.getElementById('toggleCounts').addEventListener('click', function() {
+      // Toggle counts display
+      console.log('Toggle counts');
+    });
+
+    document.getElementById('toggleStrength').addEventListener('click', function() {
+      // Toggle strength display
+      console.log('Toggle strength');
+    });
+
+    document.getElementById('togglePlayed').addEventListener('click', function() {
+      // Toggle played hands display
+      console.log('Toggle played');
+    });
+  });
+</script>
+
+<!-- Shared JavaScript -->
+<script>
+  {% include_relative _includes/scripts/data-store.js %}
+</script>
+<script>
+  {% include_relative _includes/scripts/app.js %}
+</script>
+
+<script>
+  // Navigation and FAB
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navMenu').classList.toggle('open');
+    });
+  });
+
+  function quickAction() {
+    alert('Quick Action - Could start new session, add hand, or quick access menu');
+  }
+</script>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="quickAction()">+</button>
+
+  </main>
+</body>
+</html>

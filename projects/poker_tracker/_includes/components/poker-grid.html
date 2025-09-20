@@ -1,0 +1,40 @@
+<!-- Poker Grid Component -->
+<div class="poker-grid" id="pokerGrid">
+  <!-- Populated by JavaScript -->
+</div>
+
+<div style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+  Quick tap: dealt (folded) | Long press: dealt & played
+</div>
+
+<script>
+  function generatePokerGrid() {
+    const grid = document.getElementById('pokerGrid');
+    if (!grid) return;
+
+    const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+    grid.innerHTML = '';
+    for (let i = 0; i < 13; i++) {
+      for (let j = 0; j < 13; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (i === j ? ' pair' : '');
+
+        if (i === j) {
+          cell.textContent = ranks[i] + ranks[i];
+        } else if (i < j) {
+          cell.textContent = ranks[i] + ranks[j] + 's';
+        } else {
+          cell.textContent = ranks[j] + ranks[i] + 'o';
+        }
+
+        // Add click handlers for hand tracking
+        cell.addEventListener('click', function() {
+          this.classList.toggle('selected');
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+  }
+</script>
