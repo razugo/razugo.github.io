@@ -19,18 +19,31 @@ PokerTracker.Utils = {
 
   // Session Management
   showNewSessionModal: function() {
+    const startLive = confirm('Start a live session? (Cancel for regular session)');
+
     const sessionName = prompt('Enter session name (optional):');
     if (sessionName === null) return; // User cancelled
 
-    // Create blank session with no game or buy-in
-    const newSession = PokerTracker.DataStore.createSession(null, 0);
+    let newSession;
+    if (startLive) {
+      // Create live session with no game or buy-in
+      newSession = PokerTracker.DataStore.createLiveSession(null, 0);
+    } else {
+      // Create regular session with no game or buy-in
+      newSession = PokerTracker.DataStore.createSession(null, 0);
+    }
 
     // Update session name if provided
     if (sessionName && sessionName.trim() !== '') {
       PokerTracker.DataStore.updateSession(newSession.id, { name: sessionName.trim() });
     }
 
-    alert(`Session created successfully!`);
+    alert(`${startLive ? 'Live ' : ''}Session created successfully!`);
+
+    // Update nav link globally if live session was created
+    if (startLive && window.updateLiveSessionNavLink) {
+      window.updateLiveSessionNavLink();
+    }
 
     // Redirect to the session page
     window.location.href = `/projects/poker_tracker/session?session_id=${newSession.id}`;

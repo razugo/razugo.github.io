@@ -2,6 +2,28 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Commands
+
+### Local Development
+```bash
+cd /Users/rwakugawa/Documents/razugo.github.io
+bundle exec jekyll serve
+```
+Starts local development server at `http://localhost:4000`. Navigate to `http://localhost:4000/projects/poker_tracker/` to view this poker tracker application.
+
+### Building
+```bash
+cd /Users/rwakugawa/Documents/razugo.github.io
+bundle exec jekyll build
+```
+Builds the entire Jekyll site including this poker tracker project.
+
+### Testing Changes
+- Changes to HTML files auto-reload when Jekyll server is running
+- CSS changes in `_includes/styles/main.css` auto-reload
+- JavaScript changes in `_includes/scripts/` auto-reload
+- No separate build step required for this standalone application
+
 ## Project Overview
 
 This is a poker hand tracking application built using Jekyll with modular components. It uses URL-based routing with separate pages for each section (dashboard, sessions, live tracking, games) while sharing common components and data layers.
@@ -67,20 +89,14 @@ poker_tracker/
 ├── games.html                    # Games management page
 ├── tools.html                    # Tools overview page
 ├── hand_strength.html            # Hand strength analysis tool
-├── _layouts/
-│   └── poker-app.html           # Shared layout template
-├── _includes/
-│   ├── components/
-│   │   ├── nav-bar.html         # Navigation component
-│   │   ├── fab.html             # Floating action button
-│   │   └── poker-grid.html      # Poker hand grid component
-│   ├── scripts/
-│   │   ├── data-store.js        # Centralized data management
-│   │   └── app.js               # Shared utilities
-│   └── styles/
-│       └── main.css             # All CSS styles (includes tool-specific styles)
+├── components/
+│   └── nav-bar.html             # Navigation component
+├── styles/
+│   └── main.css                 # All CSS styles (includes tool-specific styles)
 └── assets/
-    └── js/                      # Additional JS files if needed
+    └── js/
+        ├── data-store.js        # Centralized data management
+        └── app.js               # Shared utilities
 ```
 
 ## Development Notes
@@ -96,7 +112,7 @@ poker_tracker/
 - Statistics calculations happen in the data store for consistency
 
 ### Component System
-- Components are included using Jekyll's `{% include %}` syntax
+- Components are included using Jekyll's `{% include_relative %}` syntax
 - Each component is self-contained with its own HTML, CSS, and JavaScript
 - Shared utilities available through `PokerTracker.Utils`
 
@@ -115,13 +131,13 @@ poker_tracker/
 4. Add navigation link to `_includes/components/nav-bar.html`
 
 ### Adding New Components
-1. Create component file in `_includes/components/`
-2. Include component in pages using `{% include components/component-name.html %}`
-3. Add component-specific styles to `_includes/styles/main.css`
+1. Create component file in `components/`
+2. Include component in pages using `{% include_relative components/component-name.html %}`
+3. Add component-specific styles to `styles/main.css`
 4. Add component JavaScript within the component file
 
 ### Modifying Data Structure
-1. Update data objects in `_includes/scripts/data-store.js`
+1. Update data objects in `assets/js/data-store.js`
 2. Update related display functions across all pages
 3. Ensure data validation and error handling
 
@@ -133,9 +149,9 @@ poker_tracker/
 ### Adding New Tools
 1. Create tool page as Jekyll page with front matter (`nav_id: tools`)
 2. Add tool card to `tools.html` with appropriate `onclick="openTool('tool-name')"`
-3. Add tool-specific styles to `_includes/styles/main.css`
-4. Use shared nav-bar component with `{% include_relative _includes/components/nav-bar.html %}`
-5. Include shared CSS with `{% include_relative _includes/styles/main.css %}`
+3. Add tool-specific styles to `styles/main.css`
+4. Use shared nav-bar component with `{% include_relative components/nav-bar.html %}`
+5. Include shared CSS with `<link rel="stylesheet" href="styles/main.css">`
 
 ### Tool Architecture Notes
 - **Hand Strength Tool**: Uses responsive poker grid with percentage-based range selection

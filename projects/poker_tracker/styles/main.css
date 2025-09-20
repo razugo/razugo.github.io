@@ -12,10 +12,39 @@
       --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
       --radius: 8px;
 
+      /* Poker Grid Variables (from poker_clicker) */
+      --cell: 54px;
+      --gap: 4px;
+      --cell-font-size: 11px;
+
       /* Hand Strength Tool - Grid sizing (responsive) */
       --cell-size: 54px;
       --cell-gap: 4px;
-      --cell-font-size: 11px;
+
+      /* Color Palette from poker_clicker */
+      --color-dark: #2d3748;
+      --color-mid-dark: #4a5568;
+      --color-mid: #718096;
+      --color-light: #e2e8f0;
+      --color-lighter: #edf2f7;
+      --color-lightest: #f7fafc;
+      --color-white: #ffffff;
+
+      /* Typography */
+      --font-size-banner: 24px;
+      --font-size-large: 20px;
+      --font-size-body: 14px;
+      --font-size-label: 12px;
+      --font-size-cell: 11px;
+      --font-weight-bold: 700;
+      --font-weight-semibold: 600;
+      --font-weight-medium: 500;
+      --font-weight-normal: 400;
+
+      /* Transitions */
+      --transition-micro: 0.15s ease;
+      --transition-standard: 0.2s ease;
+      --transition-smooth: 0.3s ease;
     }
 
     * {
@@ -362,7 +391,6 @@
 
     .cell.played {
       background: rgba(16, 185, 129, 0.2);
-      border-color: var(--success);
       position: relative;
     }
 
@@ -371,8 +399,8 @@
       position: absolute;
       top: 2px;
       right: 2px;
-      width: 8px;
-      height: 8px;
+      width: 5px;
+      height: 5px;
       background: var(--success);
       border-radius: 50%;
     }
@@ -538,6 +566,7 @@
     .view-tabs {
       background: var(--surface);
       border: 1px solid var(--border);
+      position: relative;
       border-radius: var(--radius);
       display: flex;
       justify-content: center;
@@ -556,8 +585,10 @@
       font-weight: 500;
       color: var(--text-secondary);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       border-radius: var(--radius);
+      position: relative;
+      z-index: 1;
     }
 
     .view-tab:first-child {
@@ -572,6 +603,8 @@
     .view-tab.active {
       background: var(--primary);
       color: white;
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
     }
 
     .view-tab:not(.active):hover {
@@ -647,7 +680,6 @@
 
     .hand-status-btn.played {
       background: rgba(16, 185, 129, 0.1);
-      border-color: var(--success);
       color: var(--success);
     }
 
@@ -712,7 +744,6 @@
     /* Mobile Responsive */
     @media (max-width: 768px) {
       .nav-menu {
-        display: none;
         position: absolute;
         top: 100%;
         left: 0;
@@ -723,16 +754,29 @@
         padding: 1rem;
         align-items: center;
         gap: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, opacity 0.3s ease;
+        opacity: 0;
+        display: flex;
       }
 
       .nav-link {
         width: 100%;
         text-align: center;
         margin: 0;
+        display: block;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-link:last-child {
+        border-bottom: none;
       }
 
       .nav-menu.open {
-        display: flex;
+        max-height: 300px;
+        opacity: 1;
       }
 
       .nav-toggle {
@@ -807,239 +851,17 @@
       }
 
       .live-stats-toggle {
-        font-size: 1rem;
+        font-size: 1.5rem;
         padding: 0.25rem;
       }
 
       /* Mobile view tabs */
-      .view-tabs {
-        top: 120px;
-      }
 
       .view-tab {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
       }
 
-      /* List Item Styles (poker_clicker inspired) */
-    .list-item {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      padding: 12px 20px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      position: relative;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
-
-    @media (min-width: 768px) {
-      .list-item {
-        padding: 16px 24px;
-        gap: 20px;
-        margin-bottom: 16px;
-      }
-
-      .list-item-hand {
-        font-size: 18px !important;
-        min-width: 80px !important;
-      }
-
-      .list-item-position {
-        font-size: 16px !important;
-      }
-
-      .action-button {
-        padding: 8px 16px !important;
-        font-size: 14px !important;
-      }
-
-      .toggle-switch {
-        width: 70px !important;
-        height: 32px !important;
-      }
-
-      .toggle-switch::after {
-        width: 28px !important;
-        height: 28px !important;
-      }
-
-      .toggle-switch.played::after {
-        transform: translateX(38px) !important;
-      }
-
-      .delete-button {
-        padding: 8px 12px !important;
-        font-size: 14px !important;
-      }
-    }
-
-    .list-item:nth-child(even) {
-      background: var(--background);
-    }
-
-    .list-item-hand {
-      font-weight: 600;
-      font-size: 16px;
-      min-width: 60px;
-      color: var(--text-primary);
-    }
-
-    .list-item-position {
-      flex: 1;
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 14px;
-    }
-
-    .list-item-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-left: auto;
-    }
-
-    .action-button {
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: var(--surface);
-      color: var(--text-primary);
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .action-button:hover {
-      background: var(--background);
-    }
-
-    .notes-button.toggle-active {
-      background: var(--text-primary) !important;
-      color: var(--surface) !important;
-      border-color: var(--text-primary) !important;
-    }
-
-    /* Toggle Switch Styles */
-    .toggle-switch {
-      position: relative;
-      width: 60px;
-      height: 28px;
-      background: #9CA3AF;
-      border-radius: 14px;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      display: flex;
-      align-items: center;
-      padding: 0;
-      outline: none;
-    }
-
-    .toggle-switch.played {
-      background: var(--success);
-    }
-
-    .toggle-switch::after {
-      content: '';
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      background: white;
-      border-radius: 50%;
-      left: 2px;
-      transition: transform 0.2s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    .toggle-switch::before {
-      content: '✕';
-      position: absolute;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      z-index: 2;
-      left: 40px;
-      top: 50%;
-      transform: translateY(-50%);
-      transition: all 0.2s ease;
-    }
-
-    .toggle-switch.played::after {
-      transform: translateX(32px);
-    }
-
-    .toggle-switch.played::before {
-      content: '▶';
-      left: 8px;
-      font-size: 12px;
-    }
-
-    .delete-button {
-      padding: 6px 8px;
-      border: 1px solid var(--danger);
-      border-radius: 4px;
-      background: var(--danger);
-      color: white;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-    }
-
-    .delete-button:hover {
-      background: #dc2626;
-      border-color: #dc2626;
-    }
-
-    .list-item-notes-container {
-      display: none;
-      flex-basis: 100%;
-      padding-top: 8px;
-    }
-
-    .list-item-notes-container.active {
-      display: block;
-    }
-
-    .list-item-notes {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 14px;
-      resize: vertical;
-      min-height: 60px;
-      background-color: var(--background);
-      color: var(--text-primary);
-    }
-
-    /* Mobile hand list */
-      .hand-item {
-        padding: 0.5rem;
-      }
-
-      .hand-item-main {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-      }
-
-      .hand-actions {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .hand-status-btn {
-        flex: 1;
-        margin-right: 0.5rem;
-      }
     }
 
     /* Status badges */
@@ -1200,38 +1022,38 @@
       border: 1px solid var(--border);
     }
 
-    .strength-premium { background: linear-gradient(135deg, #059669, #10b981); }
-    .strength-strong { background: linear-gradient(135deg, #0891b2, #06b6d4); }
-    .strength-decent { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
-    .strength-marginal { background: linear-gradient(135deg, #dc2626, #ef4444); }
-    .strength-weak { background: linear-gradient(135deg, #9ca3af, #d1d5db); }
+    .strength-premium { background: #10b981; }
+    .strength-strong { background: #06b6d4; }
+    .strength-decent { background: #8b5cf6; }
+    .strength-marginal { background: #ef4444; }
+    .strength-weak { background: #d1d5db; }
 
     .cell.strength-premium {
-      background: linear-gradient(135deg, #059669, #10b981);
+      background: #10b981;
       color: white;
       font-weight: 700;
     }
 
     .cell.strength-strong {
-      background: linear-gradient(135deg, #0891b2, #06b6d4);
+      background: #06b6d4;
       color: white;
       font-weight: 600;
     }
 
     .cell.strength-decent {
-      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+      background: #8b5cf6;
       color: white;
       font-weight: 600;
     }
 
     .cell.strength-marginal {
-      background: linear-gradient(135deg, #dc2626, #ef4444);
+      background: #ef4444;
       color: white;
       font-weight: 500;
     }
 
     .cell.strength-weak {
-      background: linear-gradient(135deg, #9ca3af, #d1d5db);
+      background: #d1d5db;
       color: var(--text-primary);
       font-weight: 400;
     }
@@ -1311,7 +1133,7 @@
 
     /* Hand Highlighting */
     .cell.highlighted {
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      background: #3b82f6;
       color: white;
       font-weight: 600;
       border: 2px solid var(--primary);
@@ -1321,6 +1143,429 @@
     input[type="range"] {
       touch-action: pan-y;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== POKER CLICKER GRID SYSTEM ===== */
+
+    /* View Tabs */
+    #view-tabs {
+      display: flex;
+      background: var(--color-lightest);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 20px;
+      border: 1px solid var(--color-light);
+    }
+
+    .view-tab {
+      flex: 1;
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      font-size: var(--font-size-body);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-mid);
+      cursor: pointer;
+      transition: var(--transition-standard);
+    }
+
+    .view-tab.active {
+      background: var(--color-white);
+      color: var(--color-dark);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .view-tab:hover:not(.active) {
+      color: var(--color-mid-dark);
+    }
+
+    /* Grid Container */
+    #grid-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    #grid-container.active {
+      display: flex;
+    }
+
+    /* Poker Grid */
+    #grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(13, var(--cell));
+      grid-auto-rows: var(--cell);
+      gap: var(--gap);
+      min-width: 0;
+      justify-content: center;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid var(--color-light);
+      border-radius: var(--radius);
+      background: var(--color-white);
+      color: var(--color-dark);
+      user-select: none;
+      cursor: pointer;
+      transition: var(--transition-micro);
+      font-size: var(--font-size-cell);
+      font-weight: var(--font-weight-normal);
+      padding: 0;
+      line-height: 1.05;
+    }
+
+    .cell.pair {
+      background: #f3f4f6;
+    }
+
+    .cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 10;
+      position: relative;
+    }
+
+    .cell.active {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 15;
+      position: relative;
+    }
+
+    .cell.long-pressing {
+      background: #fef3c7 !important;
+      transform: scale(1.05);
+    }
+
+    .cell.playing {
+      background: #d1fae5 !important;
+    }
+
+    .cell.played {
+      background: rgba(16, 185, 129, 0.2);
+      color: #047857;
+      font-weight: 600;
+    }
+
+    .cell.folded {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+      color: #dc2626;
+    }
+
+    /* Toggle Controls */
+    #toggle-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #toggle-controls button {
+      padding: 8px 16px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      background: var(--color-white);
+      color: var(--color-dark);
+      font-size: var(--font-size-body);
+      cursor: pointer;
+      transition: var(--transition-standard);
+      white-space: nowrap;
+    }
+
+    #toggle-controls button:hover {
+      background: var(--color-lighter);
+      transform: translateY(-1px);
+    }
+
+    #toggle-controls button.toggle-active {
+      background: var(--color-mid-dark);
+      color: var(--color-white);
+      border-color: var(--color-mid-dark);
+    }
+
+    .note {
+      text-align: center;
+      color: var(--color-mid);
+      font-size: var(--font-size-body);
+      line-height: 1.5;
+      max-width: 600px;
+    }
+
+    /* List Container */
+    #list-container {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    #list-container.active {
+      display: flex;
+    }
+
+    .list-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--color-white);
+      border: 1px solid var(--color-light);
+      border-radius: 8px;
+      transition: var(--transition-standard);
+      position: relative;
+      gap: 12px;
+      margin-bottom: 0;
+    }
+
+    .list-item:nth-child(even) {
+      background: var(--color-lightest);
+    }
+
+    .list-item-hand {
+      font-weight: var(--font-weight-semibold);
+      font-size: 16px;
+      color: var(--color-dark);
+    }
+
+    .list-item-position {
+      text-align: center;
+      color: var(--color-mid);
+      font-size: 14px;
+      font-weight: var(--font-weight-medium);
+    }
+
+    .list-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .action-button {
+      padding: 6px 12px;
+      border: 1px solid var(--color-light);
+      border-radius: 4px;
+      background: var(--color-white);
+      color: var(--color-dark);
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition-micro);
+      white-space: nowrap;
+    }
+
+    .action-button:hover {
+      background: var(--color-lighter);
+    }
+
+    .notes-button.toggle-active {
+      background: var(--color-mid-dark) !important;
+      color: var(--color-white) !important;
+      border-color: var(--color-mid-dark) !important;
+    }
+
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 28px;
+      background: #9CA3AF;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      padding: 0;
+      outline: none;
+    }
+
+    .toggle-switch:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .toggle-switch.played {
+      background: #10b981;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch::before {
+      content: '✕';
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 2;
+      left: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.2s ease;
+    }
+
+    .toggle-switch.played::after {
+      transform: translateX(32px);
+    }
+
+    .toggle-switch.played::before {
+      content: '▶';
+      left: 8px;
+      font-size: 12px;
+    }
+
+    .delete-button {
+      padding: 6px 10px;
+      border: 1px solid var(--danger);
+      border-radius: 4px;
+      background: var(--danger);
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-micro);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .delete-button:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .list-item-notes-container {
+      display: none;
+      flex-basis: 100%;
+      padding-top: 8px;
+    }
+
+    .list-item-notes-container.active {
+      display: block;
+    }
+
+    .list-item-notes {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      font-size: var(--font-size-body);
+      resize: vertical;
+      min-height: 60px;
+      background-color: var(--color-lightest);
+      color: var(--color-dark);
+    }
+
+    /* Magnify Overlay for Mobile */
+    /* Overlay only visible on mobile devices */
+    @media (hover: none) and (pointer: coarse) {
+      #magnify-overlay {
+        position: fixed;
+        width: var(--cell);
+        height: var(--cell);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 1px solid var(--color-light);
+        border-radius: var(--radius);
+        background: var(--color-white);
+        color: var(--color-dark);
+        font-size: var(--font-size-cell);
+        font-weight: var(--font-weight-normal);
+        line-height: 1.05;
+        white-space: nowrap;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1000;
+        transform: scale(2.0) translateY(-20px);
+        transform-origin: center center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: none;
+        will-change: transform;
+      }
+    }
+
+    /* Hide overlay on desktop */
+    @media (hover: hover) and (pointer: fine) {
+      #magnify-overlay {
+        display: none !important;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      :root {
+        --cell: 28px;
+        --gap: 2px;
+        --font-size-cell: 9px;
+      }
+
+      #grid {
+        max-width: 100vw;
+        padding: 0 16px;
+      }
+
+      #toggle-controls {
+        padding: 0 16px;
+      }
+
+      #toggle-controls button {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+
+      .note {
+        font-size: 12px;
+        padding: 0 16px;
+      }
+
+      .list-item {
+        padding: 16px;
+      }
+
+      .list-item-hand {
+        font-size: 16px;
+      }
+
+      .list-item-actions {
+        justify-content: space-between;
+        margin-left: 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --cell: 25px;
+        --gap: 1px;
+        --font-size-cell: 8px;
+      }
+
+      #view-tabs {
+        margin: 0 16px 20px;
+      }
+
+      .view-tab {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
     }
 
     input[type="range"]::-webkit-slider-thumb {
@@ -1539,4 +1784,200 @@
       .btn {
         width: 100%;
       }
+
+      /* Session inputs mobile scaling */
+      .session-inputs {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem !important;
+      }
+
+      .session-inputs > div {
+        width: 100% !important;
+      }
+
+      .session-inputs input,
+      .session-inputs select,
+      .session-inputs textarea {
+        width: 100% !important;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        box-sizing: border-box !important; /* Include padding in width calculation */
+      }
+
+      /* Session notes are already in their own div, so no grid changes needed */
+
+      /* Mobile button layout below grid */
+      .filters {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        gap: 0.5rem !important;
+        margin-top: 1rem !important;
+        flex-wrap: wrap !important;
+      }
+
+      .filters .btn-sm {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.75rem !important;
+        min-width: auto !important;
+        text-align: center !important;
+        white-space: nowrap !important;
+      }
+    }
+
+    /* List Item Styles - moved outside media queries for consistent styling */
+    .list-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      position: relative;
+      gap: 20px;
+      cursor: default;
+    }
+
+    .list-item:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: var(--primary);
+    }
+
+    .list-item:nth-child(even) {
+      background: var(--background);
+    }
+
+    .list-item-hand {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .list-item-position {
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .list-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .action-button {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .action-button:hover {
+      background: var(--background);
+    }
+
+    .notes-button.toggle-active {
+      background: var(--text-primary) !important;
+      color: var(--surface) !important;
+      border-color: var(--text-primary) !important;
+    }
+
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      position: relative;
+      width: 70px;
+      height: 32px;
+      background: #9CA3AF;
+      border-radius: 16px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      padding: 0;
+      outline: none;
+    }
+
+    .toggle-switch.played {
+      background: var(--success);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      background: white;
+      border-radius: 50%;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch::before {
+      content: '✕';
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 2;
+      left: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.2s ease;
+    }
+
+    .toggle-switch.played::after {
+      transform: translateX(38px);
+    }
+
+    .toggle-switch.played::before {
+      content: '▶';
+      left: 8px;
+      font-size: 12px;
+    }
+
+    .delete-button {
+      padding: 8px 12px;
+      border: 1px solid var(--danger);
+      border-radius: 4px;
+      background: var(--danger);
+      color: white;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .delete-button:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .list-item-notes-container {
+      display: none;
+      flex-basis: 100%;
+      padding-top: 8px;
+    }
+
+    .list-item-notes-container.active {
+      display: block;
+    }
+
+    .list-item-notes {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px;
+      min-height: 60px;
+      background-color: var(--background);
+      color: var(--text-primary);
     }

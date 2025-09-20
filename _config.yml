@@ -44,6 +44,7 @@ plugins:
 exclude:
   - specs/
   - "**/CLAUDE.md"
+  - "**/.claude"
 #   - .sass-cache/
 #   - .jekyll-cache/
 #   - gemfiles/

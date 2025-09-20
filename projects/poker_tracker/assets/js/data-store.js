@@ -15,7 +15,7 @@ PokerTracker.DataStore = {
     localStorage.setItem('poker-tracker-games', JSON.stringify(value));
   },
 
-  // Initialize sessions from localStorage
+  // Initialize sessions from localStorage (merged with session data)
   get sessions() {
     const stored = localStorage.getItem('poker-tracker-sessions');
     if (stored) {
@@ -26,6 +26,19 @@ PokerTracker.DataStore = {
 
   set sessions(value) {
     localStorage.setItem('poker-tracker-sessions', JSON.stringify(value));
+  },
+
+  // App state (including live session ID)
+  get appState() {
+    const stored = localStorage.getItem('poker-tracker-state');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return { liveSessionId: null };
+  },
+
+  set appState(value) {
+    localStorage.setItem('poker-tracker-state', JSON.stringify(value));
   },
 
   // Methods
@@ -165,7 +178,15 @@ PokerTracker.DataStore = {
       cashOut: buyIn,
       startTime: new Date().toISOString(),
       endTime: null,
-      status: 'active'
+      name: null,
+      // Session data (merged)
+      counts: {},
+      playedCounts: {},
+      handHistory: [],
+      total: 0,
+      totalPlayed: 0,
+      vpip: 0,
+      notes: ''
     };
 
     const sessions = this.sessions;
@@ -191,38 +212,120 @@ PokerTracker.DataStore = {
     const filteredSessions = sessions.filter(s => s.id !== sessionId);
     this.sessions = filteredSessions;
 
-    // Also clear the session data
-    this.clearSessionData(sessionId);
+    // Clear from live session if it was live
+    const state = this.appState;
+    if (state.liveSessionId === sessionId) {
+      state.liveSessionId = null;
+      this.appState = state;
+    }
   },
 
   getActiveSession: function() {
-    return this.sessions.find(s => s.status === 'active');
+    // Return the live session based on app state
+    const state = this.appState;
+    if (state.liveSessionId) {
+      return this.sessions.find(s => s.id === state.liveSessionId) || null;
+    }
+    return null;
+  },
+
+  createLiveSession: function(gameId = null, buyIn = 0) {
+    // End any existing live session first
+    this.endLiveSession();
+
+    const sessionId = 'session-' + Date.now();
+    const newSession = {
+      id: sessionId,
+      date: new Date().toISOString().split('T')[0],
+      gameId: gameId,
+      buyIn: buyIn,
+      cashOut: buyIn,
+      startTime: new Date().toISOString(),
+      endTime: null,
+      name: null,
+      // Session data (merged)
+      counts: {},
+      playedCounts: {},
+      handHistory: [],
+      total: 0,
+      totalPlayed: 0,
+      vpip: 0,
+      notes: ''
+    };
+
+    const sessions = this.sessions;
+    sessions.push(newSession);
+    this.sessions = sessions;
+
+    // Set as live session in app state
+    const state = this.appState;
+    state.liveSessionId = sessionId;
+    this.appState = state;
+
+    return newSession;
+  },
+
+  endLiveSession: function() {
+    const liveSession = this.getActiveSession();
+    if (liveSession) {
+      liveSession.endTime = new Date().toISOString();
+      this.sessions = this.sessions; // Trigger save
+
+      // Clear live session from app state
+      const state = this.appState;
+      state.liveSessionId = null;
+      this.appState = state;
+    }
+    return liveSession;
+  },
+
+  hasLiveSession: function() {
+    const state = this.appState;
+    return state.liveSessionId !== null;
   },
 
   getSessionData: function(sessionId) {
-    const key = `poker-tracker-session-${sessionId}`;
-    const stored = localStorage.getItem(key);
-    if (!stored) {
+    // Return session data directly from the session object
+    const session = this.getSession(sessionId);
+    if (!session) {
       return {
         sessionId: sessionId,
-        hands: [],
         counts: {},
         playedCounts: {},
         handHistory: [],
         total: 0,
         totalPlayed: 0,
         vpip: 0,
-        notes: '',
-        handNotes: {}
+        notes: ''
       };
     }
-    return JSON.parse(stored);
+
+    return {
+      sessionId: sessionId,
+      counts: session.counts || {},
+      playedCounts: session.playedCounts || {},
+      handHistory: session.handHistory || [],
+      total: session.total || 0,
+      totalPlayed: session.totalPlayed || 0,
+      vpip: session.vpip || 0,
+      notes: session.notes || ''
+    };
   },
 
   saveSessionData: function(sessionId, data) {
-    const key = `poker-tracker-session-${sessionId}`;
-    data.sessionId = sessionId;
-    localStorage.setItem(key, JSON.stringify(data));
+    // Update session object directly
+    const sessions = this.sessions;
+    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+    if (sessionIndex !== -1) {
+      sessions[sessionIndex].counts = data.counts;
+      sessions[sessionIndex].playedCounts = data.playedCounts;
+      sessions[sessionIndex].handHistory = data.handHistory;
+      sessions[sessionIndex].total = data.total;
+      sessions[sessionIndex].totalPlayed = data.totalPlayed;
+      sessions[sessionIndex].vpip = data.vpip;
+      sessions[sessionIndex].notes = data.notes;
+      this.sessions = sessions;
+    }
   },
 
   addHand: function(sessionId, handCode, played = false) {
@@ -370,8 +473,19 @@ PokerTracker.DataStore = {
   },
 
   clearSessionData: function(sessionId) {
-    const key = `poker-tracker-session-${sessionId}`;
-    localStorage.removeItem(key);
+    // Clear session data from session object
+    const sessions = this.sessions;
+    const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+    if (sessionIndex !== -1) {
+      sessions[sessionIndex].counts = {};
+      sessions[sessionIndex].playedCounts = {};
+      sessions[sessionIndex].handHistory = [];
+      sessions[sessionIndex].total = 0;
+      sessions[sessionIndex].totalPlayed = 0;
+      sessions[sessionIndex].vpip = 0;
+      sessions[sessionIndex].notes = '';
+      this.sessions = sessions;
+    }
     return this.getSessionData(sessionId);
   }
 };
