@@ -5,246 +5,225 @@ nav_id: dashboard
 
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>{{ page.title | default: "PokerTracker" }}</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-{% include_relative _includes/styles/main.css %}
-  </style>
-</head>
-<body>
-  {% include_relative _includes/components/nav-bar.html %}
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <title>{{ page.title | default: "PokerTracker" }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles/main.css">
+  </head>
+  <body>
+    {% include_relative components/nav-bar.html %}
+    <main>
+      <div class="container">
+      <h1>Dashboard</h1>
 
-  <main>
-    <div class="container">
-  <h1>Dashboard</h1>
-
-  <!-- Overall Stats -->
-  <div class="stats-grid" id="statsGrid">
-    <!-- Populated by JavaScript -->
-  </div>
-
-  <!-- Recent Sessions -->
-  <div class="card">
-    <div class="card-header">
-      <h2 class="card-title">Recent Sessions</h2>
-      <a href="/projects/poker_tracker/sessions" class="btn btn-outline btn-sm">View All</a>
-    </div>
-    <div class="card-content">
-      <div class="table-container">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Game</th>
-              <th>Duration</th>
-              <th>Hands</th>
-              <th>P&L</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="recentSessionsTableBody">
-            <!-- Populated by JavaScript -->
-          </tbody>
-        </table>
+      <!-- Overall Stats -->
+      <div class="stats-grid" id="statsGrid">
+        <!-- Populated by JavaScript -->
       </div>
-    </div>
-  </div>
 
-  <!-- Bankroll Chart -->
-  <div class="card" style="margin-top: 2rem;">
-    <div class="card-header">
-      <h2 class="card-title">Bankroll Progress</h2>
-    </div>
-    <div class="card-content">
-      <div class="chart-container">
-        <canvas id="bankrollChart"></canvas>
+      <!-- Recent Sessions -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Recent Sessions</h2>
+          <a href="/projects/poker_tracker/sessions" class="btn btn-outline btn-sm">View All</a>
+        </div>
+        <div class="card-content">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Game</th>
+                  <th>Duration</th>
+                  <th>Hands</th>
+                  <th>P&L</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="recentSessionsTableBody">
+                <!-- Populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    populateStats();
-    populateRecentSessions();
-    createBankrollChart();
-  });
-
-  function populateStats() {
-    const stats = PokerTracker.DataStore.getSessionStats();
-    const statsGrid = document.getElementById('statsGrid');
-
-    statsGrid.innerHTML = `
-      <div class="stat-card">
-        <div class="stat-value ${stats.totalProfit >= 0 ? 'positive' : 'negative'}">${stats.totalProfit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(stats.totalProfit)}</div>
-        <div class="stat-label">Total Profit</div>
+      <!-- Bankroll Chart -->
+      <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">
+          <h2 class="card-title">Bankroll Progress</h2>
+        </div>
+        <div class="card-content">
+          <div class="chart-container">
+            <canvas id="bankrollChart"></canvas>
+          </div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${stats.totalSessions}</div>
-        <div class="stat-label">Total Sessions</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${stats.totalHands.toLocaleString()}</div>
-        <div class="stat-label">Hands Played</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${stats.winRate}%</div>
-        <div class="stat-label">Win Rate</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value ${stats.hourlyRate >= 0 ? 'positive' : 'negative'}">${stats.hourlyRate >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(stats.hourlyRate)}</div>
-        <div class="stat-label">$ / Hour</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${stats.avgVpip}%</div>
-        <div class="stat-label">Avg VPIP</div>
-      </div>
-    `;
-  }
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          populateStats();
+          populateRecentSessions();
+          createBankrollChart();
+        });
 
-  function populateRecentSessions() {
-    const sessions = PokerTracker.DataStore.getSessions().slice(-5).reverse();
-    const tbody = document.getElementById('recentSessionsTableBody');
+        function populateStats() {
+          const stats = PokerTracker.DataStore.getSessionStats();
+          const statsGrid = document.getElementById('statsGrid');
 
-    tbody.innerHTML = sessions.map(session => {
-      const game = PokerTracker.DataStore.getGame(session.gameId);
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+          statsGrid.innerHTML = `
+            <div class="stat-card">
+              <div class="stat-value ${stats.totalProfit >= 0 ? 'positive' : 'negative'}">${stats.totalProfit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(stats.totalProfit)}</div>
+              <div class="stat-label">Total Profit</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${stats.totalSessions}</div>
+              <div class="stat-label">Total Sessions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${stats.totalHands.toLocaleString()}</div>
+              <div class="stat-label">Hands Played</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${stats.winRate}%</div>
+              <div class="stat-label">Win Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value ${stats.hourlyRate >= 0 ? 'positive' : 'negative'}">${stats.hourlyRate >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(stats.hourlyRate)}</div>
+              <div class="stat-label">$ / Hour</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${stats.avgVpip}%</div>
+              <div class="stat-label">Avg VPIP</div>
+            </div>
+          `;
+        }
 
-      // Get session data for hands count
-      const sessionData = PokerTracker.DataStore.getSessionData(session.id);
-      const handsCount = sessionData.total;
+        function populateRecentSessions() {
+          const sessions = PokerTracker.DataStore.getSessions().slice(-5).reverse();
+          const tbody = document.getElementById('recentSessionsTableBody');
 
-      // Calculate duration from start/end time or estimate
-      let duration = 0;
-      if (session.startTime && session.endTime) {
-        duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
-      } else if (session.startTime && session.status === 'active') {
-        duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
-      } else if (handsCount > 0) {
-        duration = handsCount * 2; // Estimate 2 minutes per hand
-      }
+          tbody.innerHTML = sessions.map(session => {
+            const game = PokerTracker.DataStore.getGame(session.gameId);
+            const profit = (session.cashOut || 0) - (session.buyIn || 0);
 
-      return `
-        <tr>
-          <td>${session.date}</td>
-          <td>${game?.name || 'Unknown'}</td>
-          <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
-          <td>${handsCount}</td>
-          <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
-          <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
-        </tr>
-      `;
-    }).join('');
-  }
+            // Get session data for hands count
+            const sessionData = PokerTracker.DataStore.getSessionData(session.id);
+            const handsCount = sessionData.total;
 
-  function createBankrollChart() {
-    const ctx = document.getElementById('bankrollChart').getContext('2d');
-    const sessions = PokerTracker.DataStore.getSessions();
+            // Calculate duration from start/end time or estimate
+            let duration = 0;
+            if (session.startTime && session.endTime) {
+              duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
+            } else if (session.startTime && session.status === 'active') {
+              duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
+            } else if (handsCount > 0) {
+              duration = handsCount * 2; // Estimate 2 minutes per hand
+            }
 
-    // Sort sessions by date
-    const sortedSessions = sessions.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+            return `
+              <tr>
+                <td>${session.date}</td>
+                <td>${game?.name || 'Unknown'}</td>
+                <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
+                <td>${handsCount}</td>
+                <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
+                <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
+              </tr>
+            `;
+          }).join('');
+        }
 
-    if (sortedSessions.length === 0) {
-      // Show empty chart
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Start'],
-          datasets: [{
-            label: 'Cumulative P&L',
-            data: [0],
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            fill: true,
-            tension: 0.1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value) {
-                  return '$' + value;
+        function createBankrollChart() {
+          const ctx = document.getElementById('bankrollChart').getContext('2d');
+          const sessions = PokerTracker.DataStore.getSessions();
+
+          // Sort sessions by date
+          const sortedSessions = sessions.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+
+          if (sortedSessions.length === 0) {
+            // Show empty chart
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: ['Start'],
+                datasets: [{
+                  label: 'Cumulative P&L',
+                  data: [0],
+                  borderColor: '#3b82f6',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  fill: true,
+                  tension: 0.1
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: function(value) {
+                        return '$' + value;
+                      }
+                    }
+                  }
+                }
+              }
+            });
+            return;
+          }
+
+          // Calculate cumulative P&L
+          let cumulative = 0;
+          const cumulativeData = [];
+          const labels = [];
+
+          cumulativeData.push(0); // Start at 0
+          labels.push('Start');
+
+          sortedSessions.forEach((session, index) => {
+            const profit = (session.cashOut || session.buyIn || 0) - (session.buyIn || 0);
+            cumulative += profit;
+            cumulativeData.push(cumulative);
+            labels.push(`Session ${index + 1}`);
+          });
+
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Cumulative P&L',
+                data: cumulativeData,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  ticks: {
+                    callback: function(value) {
+                      return '$' + value;
+                    }
+                  }
                 }
               }
             }
-          }
+          });
         }
-      });
-      return;
-    }
 
-    // Calculate cumulative P&L
-    let cumulative = 0;
-    const cumulativeData = [];
-    const labels = [];
-
-    cumulativeData.push(0); // Start at 0
-    labels.push('Start');
-
-    sortedSessions.forEach((session, index) => {
-      const profit = (session.cashOut || session.buyIn || 0) - (session.buyIn || 0);
-      cumulative += profit;
-      cumulativeData.push(cumulative);
-      labels.push(`Session ${index + 1}`);
-    });
-
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Cumulative P&L',
-          data: cumulativeData,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          fill: true,
-          tension: 0.1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            ticks: {
-              callback: function(value) {
-                return '$' + value;
-              }
-            }
-          }
-        }
-      }
-    });
-  }
-
-</script>
-
-<!-- Shared JavaScript -->
-<script>
-  {% include_relative _includes/scripts/data-store.js %}
-</script>
-<script>
-  {% include_relative _includes/scripts/app.js %}
-</script>
-
-<script>
-  function quickAction() {
-    alert('Quick Action - Could start new session, add hand, or quick access menu');
-  }
-
-  function viewSession(sessionId) {
-    window.location.href = `/projects/poker_tracker/session?session_id=${sessionId}`;
-  }
-</script>
-
-
-  </main>
-</body>
+      </script>
+      <!-- Shared JavaScript -->
+      <script src="assets/js/data-store.js"></script>
+      <script src="assets/js/app.js"></script>
+    </main>
+  </body>
 </html>
