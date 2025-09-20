@@ -10,7 +10,9 @@ nav_id: dashboard
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  {% include_relative _includes/styles/main.css %}
+  <style>
+{% include_relative _includes/styles/main.css %}
+  </style>
 </head>
 <body>
   {% include_relative _includes/components/nav-bar.html %}
@@ -51,7 +53,7 @@ nav_id: dashboard
     </div>
   </div>
 
-  <!-- Charts -->
+  <!-- Bankroll Chart -->
   <div class="card" style="margin-top: 2rem;">
     <div class="card-header">
       <h2 class="card-title">Bankroll Progress</h2>
@@ -104,19 +106,33 @@ nav_id: dashboard
   }
 
   function populateRecentSessions() {
-    const sessions = PokerTracker.DataStore.getSessions().slice(0, 5);
+    const sessions = PokerTracker.DataStore.getSessions().slice(-5).reverse();
     const tbody = document.getElementById('recentSessionsTableBody');
 
     tbody.innerHTML = sessions.map(session => {
       const game = PokerTracker.DataStore.getGame(session.gameId);
-      const profit = session.cashOut - session.buyIn;
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+
+      // Get session data for hands count
+      const sessionData = PokerTracker.DataStore.getSessionData(session.id);
+      const handsCount = sessionData.total;
+
+      // Calculate duration from start/end time or estimate
+      let duration = 0;
+      if (session.startTime && session.endTime) {
+        duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
+      } else if (session.startTime && session.status === 'active') {
+        duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
+      } else if (handsCount > 0) {
+        duration = handsCount * 2; // Estimate 2 minutes per hand
+      }
 
       return `
         <tr>
           <td>${session.date}</td>
           <td>${game?.name || 'Unknown'}</td>
-          <td>${PokerTracker.Utils.formatDuration(session.duration)}</td>
-          <td>${session.hands}</td>
+          <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
+          <td>${handsCount}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
           <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
         </tr>
@@ -126,14 +142,63 @@ nav_id: dashboard
 
   function createBankrollChart() {
     const ctx = document.getElementById('bankrollChart').getContext('2d');
-    const data = Array.from({length: 20}, (_, i) => Math.random() * 1000 - 200);
+    const sessions = PokerTracker.DataStore.getSessions();
+
+    // Sort sessions by date
+    const sortedSessions = sessions.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (sortedSessions.length === 0) {
+      // Show empty chart
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Start'],
+          datasets: [{
+            label: 'Cumulative P&L',
+            data: [0],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return '$' + value;
+                }
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
+
+    // Calculate cumulative P&L
     let cumulative = 0;
-    const cumulativeData = data.map(value => cumulative += value);
+    const cumulativeData = [];
+    const labels = [];
+
+    cumulativeData.push(0); // Start at 0
+    labels.push('Start');
+
+    sortedSessions.forEach((session, index) => {
+      const profit = (session.cashOut || session.buyIn || 0) - (session.buyIn || 0);
+      cumulative += profit;
+      cumulativeData.push(cumulative);
+      labels.push(`Session ${index + 1}`);
+    });
 
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: Array.from({length: 20}, (_, i) => i + 1),
+        labels: labels,
         datasets: [{
           label: 'Cumulative P&L',
           data: cumulativeData,
@@ -148,7 +213,6 @@ nav_id: dashboard
         maintainAspectRatio: false,
         scales: {
           y: {
-            beginAtZero: true,
             ticks: {
               callback: function(value) {
                 return '$' + value;
@@ -159,6 +223,7 @@ nav_id: dashboard
       }
     });
   }
+
 </script>
 
 <!-- Shared JavaScript -->
@@ -179,8 +244,6 @@ nav_id: dashboard
   }
 </script>
 
-  <!-- Floating Action Button -->
-  <button class="fab" onclick="quickAction()">+</button>
 
   </main>
 </body>

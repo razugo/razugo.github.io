@@ -9,7 +9,9 @@ nav_id: games
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
-  {% include_relative _includes/styles/main.css %}
+  <style>
+{% include_relative _includes/styles/main.css %}
+  </style>
 </head>
 <body>
   {% include_relative _includes/components/nav-bar.html %}
@@ -24,6 +26,42 @@ nav_id: games
   <div class="game-selector" id="gamesList">
     <!-- Populated by JavaScript -->
   </div>
+
+  <!-- Edit Game Modal -->
+  <div class="modal" id="editGameModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Game</h3>
+        <button class="modal-close" onclick="closeEditGameModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editGameForm">
+          <div class="form-group">
+            <label class="form-label" for="editGameName">Game Name</label>
+            <input type="text" class="form-input" id="editGameName" placeholder="e.g., Aria 1/3" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editGameLocation">Location</label>
+            <input type="text" class="form-input" id="editGameLocation" placeholder="e.g., Aria Casino">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="editSmallBlind">Small Blind ($)</label>
+              <input type="number" class="form-input" id="editSmallBlind" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editBigBlind">Big Blind ($)</label>
+              <input type="number" class="form-input" id="editBigBlind" step="0.01" min="0" required>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-cancel" onclick="closeEditGameModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveGameChanges()">Save Changes</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -32,15 +70,25 @@ nav_id: games
   });
 
   function populateGamesList() {
-    const games = PokerTracker.DataStore.games;
+    const games = PokerTracker.DataStore.getAllGames();
     const container = document.getElementById('gamesList');
+
+    if (games.length === 0) {
+      container.innerHTML = `
+        <div class="card" style="text-align: center; padding: 3rem;">
+          <h3>No Games Created</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Create your first game to start tracking poker sessions.</p>
+          <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewGameModal()">+ Create Your First Game</button>
+        </div>
+      `;
+      return;
+    }
 
     container.innerHTML = games.map(game => `
       <div class="game-card">
         <h3>${game.name}</h3>
         <p><strong>Location:</strong> ${game.location}</p>
         <p><strong>Stakes:</strong> ${PokerTracker.Utils.formatCurrency(game.stakes.smallBlind)}/${PokerTracker.Utils.formatCurrency(game.stakes.bigBlind)}</p>
-        <p><strong>Default Buy-in:</strong> ${PokerTracker.Utils.formatCurrency(game.defaultBuyIn)}</p>
         <div style="margin-top: 1rem;">
           <button class="btn btn-outline btn-sm" onclick="editGame('${game.id}')">Edit</button>
           <button class="btn btn-outline btn-sm" onclick="deleteGame('${game.id}')">Delete</button>
@@ -49,13 +97,92 @@ nav_id: games
     `).join('');
   }
 
+  let currentEditingGameId = null;
+
   function editGame(gameId) {
-    alert(`Edit game: ${gameId}`);
+    const game = PokerTracker.DataStore.getGame(gameId);
+    if (!game) {
+      alert('Game not found');
+      return;
+    }
+
+    currentEditingGameId = gameId;
+
+    // Populate form with current values
+    document.getElementById('editGameName').value = game.name;
+    document.getElementById('editGameLocation').value = game.location;
+    document.getElementById('editSmallBlind').value = game.stakes.smallBlind;
+    document.getElementById('editBigBlind').value = game.stakes.bigBlind;
+
+    // Show modal
+    document.getElementById('editGameModal').classList.add('show');
   }
 
+  function closeEditGameModal() {
+    document.getElementById('editGameModal').classList.remove('show');
+    currentEditingGameId = null;
+  }
+
+  function saveGameChanges() {
+    if (!currentEditingGameId) return;
+
+    const name = document.getElementById('editGameName').value.trim();
+    const location = document.getElementById('editGameLocation').value.trim();
+    const smallBlind = parseFloat(document.getElementById('editSmallBlind').value);
+    const bigBlind = parseFloat(document.getElementById('editBigBlind').value);
+
+    // Validation
+    if (!name) {
+      alert('Game name cannot be empty');
+      return;
+    }
+
+    if (isNaN(smallBlind) || smallBlind <= 0) {
+      alert('Invalid small blind amount');
+      return;
+    }
+
+    if (isNaN(bigBlind) || bigBlind <= smallBlind) {
+      alert('Big blind must be greater than small blind');
+      return;
+    }
+
+    // Update the game
+    const updates = {
+      name: name,
+      location: location || 'Unknown',
+      stakes: {
+        smallBlind: smallBlind,
+        bigBlind: bigBlind,
+        currency: 'USD'
+      }
+    };
+
+    PokerTracker.DataStore.updateGame(currentEditingGameId, updates);
+    alert('Game updated successfully!');
+    closeEditGameModal();
+    populateGamesList();
+  }
+
+  // Close modal when clicking outside
+  document.addEventListener('click', function(event) {
+    const modal = document.getElementById('editGameModal');
+    if (event.target === modal) {
+      closeEditGameModal();
+    }
+  });
+
   function deleteGame(gameId) {
-    if (confirm('Are you sure you want to delete this game?')) {
-      alert(`Delete game: ${gameId}`);
+    const game = PokerTracker.DataStore.getGame(gameId);
+    if (!game) {
+      alert('Game not found');
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete "${game.name}"? This action cannot be undone.`)) {
+      PokerTracker.DataStore.deleteGame(gameId);
+      alert('Game deleted successfully!');
+      populateGamesList();
     }
   }
 </script>
@@ -74,8 +201,6 @@ nav_id: games
   }
 </script>
 
-  <!-- Floating Action Button -->
-  <button class="fab" onclick="quickAction()">+</button>
 
     </div>
   </main>

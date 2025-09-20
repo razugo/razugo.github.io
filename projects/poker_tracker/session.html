@@ -9,7 +9,9 @@ nav_id: session
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
-  {% include_relative _includes/styles/main.css %}
+  <style>
+{% include_relative _includes/styles/main.css %}
+  </style>
 </head>
 <body>
   {% include_relative _includes/components/nav-bar.html %}
@@ -39,18 +41,47 @@ nav_id: session
   <div class="session-controls">
     <div>
       <h3 id="sessionTitle">Session Details</h3>
-      <p><small id="sessionDetails">Loading...</small></p>
     </div>
     <div>
       <button class="btn btn-outline btn-sm" onclick="endSession()">End Session</button>
     </div>
   </div>
 
-  <div class="filters">
-    <button class="btn btn-outline btn-sm" id="toggleCounts">Show Counts</button>
-    <button class="btn btn-outline btn-sm" id="toggleList">Show List</button>
-    <button class="btn btn-outline btn-sm" id="togglePlayed">Show Played</button>
-    <button class="btn btn-outline btn-sm" onclick="undoLastHand()">Undo Last</button>
+  <!-- Session Data Inputs -->
+  <div class="session-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+    <div>
+      <label class="filter-label">Buy In ($)</label>
+      <input type="number" id="buyInInput" placeholder="0.00" step="0.01" min="0"
+             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
+    </div>
+    <div>
+      <label class="filter-label">Cash Out ($)</label>
+      <input type="number" id="cashOutInput" placeholder="0.00" step="0.01" min="0"
+             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
+    </div>
+    <div>
+      <label class="filter-label">Game</label>
+      <select id="gameSelect" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
+        <option value="">Select Game</option>
+      </select>
+    </div>
+    <div>
+      <label class="filter-label">Status</label>
+      <select id="statusSelect" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+    <div>
+      <label class="filter-label">Start Time</label>
+      <input type="datetime-local" id="startTimeInput"
+             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
+    </div>
+    <div>
+      <label class="filter-label">End Time</label>
+      <input type="datetime-local" id="endTimeInput"
+             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
+    </div>
   </div>
 
   <!-- Session Notes -->
@@ -70,6 +101,13 @@ nav_id: session
 
   <div class="poker-grid" id="pokerGrid">
     <!-- Populated by JavaScript -->
+  </div>
+
+  <!-- Grid Controls -->
+  <div class="filters" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+    <button class="btn btn-outline btn-sm" id="toggleCounts">Show Counts</button>
+    <button class="btn btn-outline btn-sm" id="togglePlayed">Show Played</button>
+    <button class="btn btn-outline btn-sm" onclick="undoLastHand()">Undo Last</button>
   </div>
 
   <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
@@ -105,6 +143,13 @@ nav_id: session
         <!-- Populated by JavaScript -->
       </div>
     </div>
+  </div>
+
+  <!-- List Controls -->
+  <div class="filters" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+    <button class="btn btn-outline btn-sm" id="toggleCounts2">Show Counts</button>
+    <button class="btn btn-outline btn-sm" id="togglePlayed2">Show Played</button>
+    <button class="btn btn-outline btn-sm" onclick="undoLastHand()">Undo Last</button>
   </div>
 </div>
 
@@ -154,12 +199,22 @@ nav_id: session
     document.getElementById('handsStat').textContent = sessionData.total;
 
     // Update session overlay
-    document.getElementById('sessionTitle').textContent = `Session: ${game.name}`;
-    document.getElementById('sessionDetails').innerHTML =
-      `Buy-in: $${session.buyIn} | Current Stack: $${session.cashOut} | Status: ${session.status}`;
+    document.getElementById('sessionTitle').textContent = `Session: ${game ? game.name : 'Unknown Game'}`;
 
-    // Update session notes
+    // Update session inputs
+    document.getElementById('buyInInput').value = session.buyIn || '';
+    document.getElementById('cashOutInput').value = session.cashOut || '';
+    document.getElementById('gameSelect').value = session.gameId || '';
+    document.getElementById('statusSelect').value = session.status || 'active';
     document.getElementById('sessionNotes').value = sessionData.notes || '';
+
+    // Update date inputs if available
+    if (session.startTime) {
+      document.getElementById('startTimeInput').value = new Date(session.startTime).toISOString().slice(0, 16);
+    }
+    if (session.endTime) {
+      document.getElementById('endTimeInput').value = new Date(session.endTime).toISOString().slice(0, 16);
+    }
 
     // Update hand count
     document.getElementById('handCount').textContent = `${sessionData.total} hands`;
@@ -404,23 +459,48 @@ nav_id: session
   function switchView(view) {
     currentView = view;
 
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+
     if (view === 'grid') {
-      document.getElementById('gridView').style.display = 'block';
-      document.getElementById('listView').style.display = 'none';
+      // Fade out list view
+      listView.classList.add('fade-out');
+
+      setTimeout(() => {
+        listView.style.display = 'none';
+        listView.classList.remove('fade-out');
+
+        gridView.style.display = 'block';
+        gridView.classList.add('fade-in');
+
+        setTimeout(() => gridView.classList.remove('fade-in'), 300);
+      }, 150);
+
       // Update both sets of tabs
       document.getElementById('gridTab').classList.add('active');
       document.getElementById('listTab').classList.remove('active');
       document.getElementById('gridTab2').classList.add('active');
       document.getElementById('listTab2').classList.remove('active');
     } else {
-      document.getElementById('gridView').style.display = 'none';
-      document.getElementById('listView').style.display = 'block';
+      // Fade out grid view
+      gridView.classList.add('fade-out');
+
+      setTimeout(() => {
+        gridView.style.display = 'none';
+        gridView.classList.remove('fade-out');
+
+        listView.style.display = 'block';
+        listView.classList.add('fade-in');
+        renderHandsList();
+
+        setTimeout(() => listView.classList.remove('fade-in'), 300);
+      }, 150);
+
       // Update both sets of tabs
       document.getElementById('gridTab').classList.remove('active');
       document.getElementById('listTab').classList.add('active');
       document.getElementById('gridTab2').classList.remove('active');
       document.getElementById('listTab2').classList.add('active');
-      renderHandsList();
     }
   }
 
@@ -450,25 +530,74 @@ nav_id: session
     // Get session data
     const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
 
+    // Populate games dropdown
+    const gameSelect = document.getElementById('gameSelect');
+    const games = PokerTracker.DataStore.getAllGames();
+    games.forEach(game => {
+      const option = document.createElement('option');
+      option.value = game.id;
+      option.textContent = `${game.name} (${game.stakes.smallBlind}/${game.stakes.bigBlind})`;
+      gameSelect.appendChild(option);
+    });
+
     generatePokerGrid();
     updateSessionStats();
 
-    // Setup overlay toggle buttons
+    // Setup session input handlers
+    document.getElementById('buyInInput').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSession(currentSessionId, { buyIn: parseFloat(this.value) || 0 });
+      updateSessionStats();
+    });
+
+    document.getElementById('cashOutInput').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSession(currentSessionId, { cashOut: parseFloat(this.value) || 0 });
+      updateSessionStats();
+    });
+
+    document.getElementById('gameSelect').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSession(currentSessionId, { gameId: this.value });
+      updateSessionStats();
+    });
+
+    document.getElementById('statusSelect').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSession(currentSessionId, { status: this.value });
+      updateSessionStats();
+    });
+
+    document.getElementById('startTimeInput').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSession(currentSessionId, { startTime: new Date(this.value).toISOString() });
+    });
+
+    document.getElementById('endTimeInput').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSession(currentSessionId, { endTime: new Date(this.value).toISOString() });
+    });
+
+    // Setup control buttons (below grid/list)
     document.getElementById('toggleCounts').addEventListener('click', function() {
       sessionState.showCounts = !sessionState.showCounts;
       this.textContent = sessionState.showCounts ? 'Hide Counts' : 'Show Counts';
+      document.getElementById('toggleCounts2').textContent = this.textContent;
       renderGrid();
     });
 
-    document.getElementById('toggleList').addEventListener('click', function() {
-      const showingList = currentView === 'list';
-      switchView(showingList ? 'grid' : 'list');
-      this.textContent = showingList ? 'Show List' : 'Show Grid';
+    document.getElementById('toggleCounts2').addEventListener('click', function() {
+      sessionState.showCounts = !sessionState.showCounts;
+      this.textContent = sessionState.showCounts ? 'Hide Counts' : 'Show Counts';
+      document.getElementById('toggleCounts').textContent = this.textContent;
+      renderGrid();
     });
 
     document.getElementById('togglePlayed').addEventListener('click', function() {
       sessionState.showPlayedOnly = !sessionState.showPlayedOnly;
       this.textContent = sessionState.showPlayedOnly ? 'Show All' : 'Show Played';
+      document.getElementById('togglePlayed2').textContent = this.textContent;
+      renderGrid();
+    });
+
+    document.getElementById('togglePlayed2').addEventListener('click', function() {
+      sessionState.showPlayedOnly = !sessionState.showPlayedOnly;
+      this.textContent = sessionState.showPlayedOnly ? 'Show All' : 'Show Played';
+      document.getElementById('togglePlayed').textContent = this.textContent;
       renderGrid();
     });
 

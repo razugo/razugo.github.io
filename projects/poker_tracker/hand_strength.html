@@ -9,7 +9,9 @@ nav_id: tools
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
-  {% include_relative _includes/styles/main.css %}
+  <style>
+{% include_relative _includes/styles/main.css %}
+  </style>
 </head>
 <body>
   {% include_relative _includes/components/nav-bar.html %}
@@ -240,9 +242,6 @@ nav_id: tools
     // Initialize with default range
     updateRange(20);
 
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navMenu').classList.toggle('open');
-    });
   });
 </script>
 

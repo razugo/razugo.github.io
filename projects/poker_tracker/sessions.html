@@ -9,7 +9,9 @@ nav_id: sessions
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
-  {% include_relative _includes/styles/main.css %}
+  <style>
+{% include_relative _includes/styles/main.css %}
+  </style>
 </head>
 <body>
   {% include_relative _includes/components/nav-bar.html %}
@@ -91,23 +93,59 @@ nav_id: sessions
 
     tbody.innerHTML = sessions.map(session => {
       const game = PokerTracker.DataStore.getGame(session.gameId);
-      const profit = session.cashOut - session.buyIn;
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+
+      // Get session data for hands count and VPIP
+      const sessionData = PokerTracker.DataStore.getSessionData(session.id);
+      const handsCount = sessionData.total;
+      const vpip = sessionData.vpip.toFixed(1);
+
+      // Calculate duration from start/end time or estimate
+      let duration = 0;
+      if (session.startTime && session.endTime) {
+        duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
+      } else if (session.startTime && session.status === 'active') {
+        duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
+      } else if (handsCount > 0) {
+        duration = handsCount * 2; // Estimate 2 minutes per hand
+      }
 
       return `
         <tr>
           <td>${session.date}</td>
           <td>${game?.name || 'Unknown'}</td>
-          <td>${PokerTracker.Utils.formatDuration(session.duration)}</td>
-          <td>${PokerTracker.Utils.formatCurrency(session.buyIn)}</td>
-          <td>${PokerTracker.Utils.formatCurrency(session.cashOut)}</td>
+          <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
+          <td>${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
+          <td>${PokerTracker.Utils.formatCurrency(session.cashOut || 0)}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
-          <td>${session.hands}</td>
-          <td>${session.vpip}%</td>
+          <td>${handsCount}</td>
+          <td>${vpip}%</td>
           <td><span class="badge ${session.status === 'active' ? 'warning' : 'success'}">${session.status}</span></td>
-          <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
+          <td>
+            <button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button>
+            <button class="btn btn-outline btn-sm" onclick="deleteSession('${session.id}')" style="margin-left: 0.5rem;">Delete</button>
+          </td>
         </tr>
       `;
     }).join('');
+  }
+
+  function deleteSession(sessionId) {
+    const session = PokerTracker.DataStore.getSession(sessionId);
+    if (!session) {
+      alert('Session not found');
+      return;
+    }
+
+    const sessionData = PokerTracker.DataStore.getSessionData(sessionId);
+    const handsCount = sessionData.total;
+
+    if (confirm(`Are you sure you want to delete this session? This will permanently delete ${handsCount} hands and cannot be undone.`)) {
+      PokerTracker.DataStore.deleteSession(sessionId);
+      alert('Session deleted successfully!');
+      populateSessionsTable();
+      checkActiveSession();
+    }
   }
 
   function setupFilters() {
@@ -162,8 +200,6 @@ nav_id: sessions
   }
 </script>
 
-  <!-- Floating Action Button -->
-  <button class="fab" onclick="quickAction()">+</button>
 
     </div>
   </main>
