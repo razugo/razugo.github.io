@@ -30,10 +30,6 @@ nav_id: session
       <span class="stat-label">Hands</span>
       <span class="stat-value" id="handsStat">0</span>
     </div>
-    <div class="stat-group">
-      <span class="stat-label">Time</span>
-      <span class="stat-value" id="timeStat">0h 0m</span>
-    </div>
   </div>
   <button class="live-stats-toggle" onclick="toggleSessionOverlay()">⚙</button>
 </div>
@@ -64,14 +60,14 @@ nav_id: session
   </div>
 </div>
 
-<!-- View Tabs -->
-<div class="view-tabs" id="viewTabs" style="display: none;">
-  <button id="gridTab" class="view-tab active">Grid</button>
-  <button id="listTab" class="view-tab">List</button>
-</div>
-
 <!-- Grid View -->
-<div class="container" id="gridView" style="padding-top: 8rem;">
+<div class="container" id="gridView" style="padding-top: 5rem;">
+  <!-- View Tabs -->
+  <div class="view-tabs" id="viewTabs">
+    <button id="gridTab" class="view-tab active">Grid</button>
+    <button id="listTab" class="view-tab">List</button>
+  </div>
+
   <div class="poker-grid" id="pokerGrid">
     <!-- Populated by JavaScript -->
   </div>
@@ -92,7 +88,13 @@ nav_id: session
 </div>
 
 <!-- List View -->
-<div class="container" id="listView" style="padding-top: 8rem; display: none;">
+<div class="container" id="listView" style="padding-top: 5rem; display: none;">
+  <!-- View Tabs (duplicate for list view) -->
+  <div class="view-tabs">
+    <button id="gridTab2" class="view-tab" onclick="switchView('grid')">Grid</button>
+    <button id="listTab2" class="view-tab active" onclick="switchView('list')">List</button>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <h2 class="card-title">Hand History</h2>
@@ -150,7 +152,6 @@ nav_id: session
     profitElement.className = 'stat-value ' + (profit >= 0 ? 'positive' : 'negative');
 
     document.getElementById('handsStat').textContent = sessionData.total;
-    document.getElementById('timeStat').textContent = `${hours}h ${minutes}m`;
 
     // Update session overlay
     document.getElementById('sessionTitle').textContent = `Session: ${game.name}`;
@@ -219,24 +220,16 @@ nav_id: session
       .slice()
       .reverse()
       .map(hand => `
-        <div class="hand-item" data-hand-id="${hand.id}">
-          <div class="hand-item-main">
-            <div class="hand-info">
-              <span class="hand-code">${hand.key}</span>
-              <span class="hand-position">#${hand.position}</span>
-            </div>
-            <div class="hand-actions">
-              <button class="hand-status-btn ${hand.played ? 'played' : 'folded'}"
-                      onclick="toggleHandStatus('${hand.id}')">
-                ${hand.played ? '● Played' : '○ Folded'}
-              </button>
-              <button class="hand-delete-btn" onclick="deleteHand('${hand.id}')">×</button>
-            </div>
+        <div class="list-item" data-hand-id="${hand.id}">
+          <div class="list-item-hand">${hand.key}</div>
+          <div class="list-item-position">#${hand.position}</div>
+          <div class="list-item-actions">
+            <button class="action-button notes-button" onclick="toggleNotes('${hand.id}')">Notes</button>
+            <button class="toggle-switch ${hand.played ? 'played' : ''}" onclick="toggleHandStatus('${hand.id}')"></button>
+            <button class="delete-button" onclick="deleteHand('${hand.id}')">🗑️</button>
           </div>
-          <div class="hand-notes">
-            <input type="text" placeholder="Hand notes..." value="${hand.notes || ''}"
-                   onchange="updateHandNotes('${hand.id}', this.value)"
-                   style="width: 100%; padding: 0.25rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem;">
+          <div class="list-item-notes-container ${hand.notes ? 'active' : ''}">
+            <textarea class="list-item-notes" placeholder="Add notes..." onchange="updateHandNotes('${hand.id}', this.value)">${hand.notes || ''}</textarea>
           </div>
         </div>
       `).join('');
@@ -390,6 +383,15 @@ nav_id: session
     PokerTracker.DataStore.updateHandNotes(currentSessionId, handId, notes);
   }
 
+  function toggleNotes(handId) {
+    const handItem = document.querySelector(`[data-hand-id="${handId}"]`);
+    const notesContainer = handItem.querySelector('.list-item-notes-container');
+    const notesButton = handItem.querySelector('.notes-button');
+
+    notesContainer.classList.toggle('active');
+    notesButton.classList.toggle('toggle-active');
+  }
+
   function undoLastHand() {
     PokerTracker.DataStore.undoLastHand(currentSessionId);
     updateSessionStats();
@@ -405,13 +407,19 @@ nav_id: session
     if (view === 'grid') {
       document.getElementById('gridView').style.display = 'block';
       document.getElementById('listView').style.display = 'none';
+      // Update both sets of tabs
       document.getElementById('gridTab').classList.add('active');
       document.getElementById('listTab').classList.remove('active');
+      document.getElementById('gridTab2').classList.add('active');
+      document.getElementById('listTab2').classList.remove('active');
     } else {
       document.getElementById('gridView').style.display = 'none';
       document.getElementById('listView').style.display = 'block';
+      // Update both sets of tabs
       document.getElementById('gridTab').classList.remove('active');
       document.getElementById('listTab').classList.add('active');
+      document.getElementById('gridTab2').classList.remove('active');
+      document.getElementById('listTab2').classList.add('active');
       renderHandsList();
     }
   }
@@ -439,11 +447,8 @@ nav_id: session
       return;
     }
 
-    // Show view tabs for sessions with existing hands
+    // Get session data
     const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
-    if (sessionData.total > 0) {
-      document.getElementById('viewTabs').style.display = 'flex';
-    }
 
     generatePokerGrid();
     updateSessionStats();
@@ -457,11 +462,8 @@ nav_id: session
 
     document.getElementById('toggleList').addEventListener('click', function() {
       const showingList = currentView === 'list';
-      if (sessionData.total > 0) {
-        document.getElementById('viewTabs').style.display = 'flex';
-        switchView(showingList ? 'grid' : 'list');
-        this.textContent = showingList ? 'Show List' : 'Show Grid';
-      }
+      switchView(showingList ? 'grid' : 'list');
+      this.textContent = showingList ? 'Show List' : 'Show Grid';
     });
 
     document.getElementById('togglePlayed').addEventListener('click', function() {
@@ -501,8 +503,6 @@ nav_id: session
   }
 </script>
 
-  <!-- Floating Action Button -->
-  <button class="fab" onclick="quickAction()">+</button>
 
   </main>
 </body>

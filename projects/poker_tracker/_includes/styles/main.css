@@ -365,23 +365,26 @@
     /* Live Session UI */
     .live-stats-bar {
       position: fixed;
-      top: 70px;
+      top: 2rem;
       left: 0;
       right: 0;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1rem;
-      z-index: 95;
+      border-top: none;
+      padding: 2.5rem 1rem 0.75rem 1rem;
+      z-index: 99;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: var(--shadow);
+      box-shadow: none;
     }
 
     .live-stats-content {
       display: flex;
       gap: 1.5rem;
       flex-wrap: wrap;
+      justify-content: center;
+      flex: 1;
     }
 
     .stat-group {
@@ -430,15 +433,16 @@
 
     .session-overlay {
       position: fixed;
-      top: 70px;
+      top: 130px;
       left: 0;
       right: 0;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       padding: 1rem;
-      z-index: 90;
+      z-index: 98;
       transform: translateY(-100%);
       transition: transform 0.3s ease;
+      box-shadow: var(--shadow);
     }
 
     .session-overlay.expanded {
@@ -454,16 +458,16 @@
 
     /* View Tabs */
     .view-tabs {
-      position: fixed;
-      top: 130px;
-      left: 50%;
-      transform: translateX(-50%);
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       display: flex;
-      z-index: 85;
+      justify-content: center;
+      margin-bottom: 1rem;
       box-shadow: var(--shadow);
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .view-tab {
@@ -724,7 +728,6 @@
       /* Mobile view tabs */
       .view-tabs {
         top: 120px;
-        transform: translateX(-50%) scale(0.9);
       }
 
       .view-tab {
@@ -732,7 +735,165 @@
         font-size: 0.8rem;
       }
 
-      /* Mobile hand list */
+      /* List Item Styles (poker_clicker inspired) */
+    .list-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 8px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      position: relative;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .list-item:nth-child(even) {
+      background: var(--background);
+    }
+
+    .list-item-hand {
+      font-weight: 600;
+      font-size: 16px;
+      min-width: 60px;
+      color: var(--text-primary);
+    }
+
+    .list-item-position {
+      flex: 1;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .list-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .action-button {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .action-button:hover {
+      background: var(--background);
+    }
+
+    .notes-button.toggle-active {
+      background: var(--text-primary) !important;
+      color: var(--surface) !important;
+      border-color: var(--text-primary) !important;
+    }
+
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 28px;
+      background: #9CA3AF;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      padding: 0;
+      outline: none;
+    }
+
+    .toggle-switch.played {
+      background: var(--success);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch::before {
+      content: '✕';
+      position: absolute;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 2;
+      left: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.2s ease;
+    }
+
+    .toggle-switch.played::after {
+      transform: translateX(32px);
+    }
+
+    .toggle-switch.played::before {
+      content: '▶';
+      left: 8px;
+      font-size: 12px;
+    }
+
+    .delete-button {
+      padding: 6px 8px;
+      border: 1px solid var(--danger);
+      border-radius: 4px;
+      background: var(--danger);
+      color: white;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .delete-button:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+    }
+
+    .list-item-notes-container {
+      display: none;
+      flex-basis: 100%;
+      padding-top: 8px;
+    }
+
+    .list-item-notes-container.active {
+      display: block;
+    }
+
+    .list-item-notes {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+      background-color: var(--background);
+      color: var(--text-primary);
+    }
+
+    /* Mobile hand list */
       .hand-item {
         padding: 0.5rem;
       }
