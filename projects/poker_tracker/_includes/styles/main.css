@@ -45,6 +45,12 @@
       font-weight: 700;
       font-size: 1.25rem;
       color: var(--primary);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-brand:hover {
+      color: var(--primary-dark);
     }
 
     .nav-menu {
@@ -178,9 +184,15 @@
     }
 
     /* Table */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 600px;
     }
 
     .table th,
@@ -188,12 +200,16 @@
       padding: 0.75rem;
       text-align: left;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     .table th {
       font-weight: 600;
       color: var(--text-secondary);
       background: var(--background);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .table tr:hover {
@@ -213,6 +229,20 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       font-size: 0.875rem;
+    }
+
+    .date-filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .filter-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     /* Grid (from original) */
@@ -366,6 +396,44 @@
 
       .container {
         padding: 1rem 0.5rem;
+      }
+
+      /* Mobile table improvements */
+      .table {
+        font-size: 0.875rem;
+      }
+
+      .table th,
+      .table td {
+        padding: 0.5rem 0.375rem;
+      }
+
+      .card-content {
+        padding: 1rem 0.5rem;
+      }
+
+      /* Show scroll indicator on mobile */
+      .table-container {
+        position: relative;
+      }
+
+      .table-container::after {
+        content: '← Scroll →';
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        pointer-events: none;
+        opacity: 0.8;
+      }
+
+      /* Hide scroll indicator if table fits */
+      .table-container:not([data-scrollable])::after {
+        display: none;
       }
     }
 

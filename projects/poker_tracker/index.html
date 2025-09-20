@@ -13,17 +13,7 @@ nav_id: dashboard
   {% include_relative _includes/styles/main.css %}
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="nav">
-    <div class="nav-brand">PokerTracker</div>
-    <ul class="nav-menu" id="navMenu">
-      <li><a href="/projects/poker_tracker/" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
-      <li><a href="/projects/poker_tracker/sessions" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
-      <li><a href="/projects/poker_tracker/live" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
-      <li><a href="/projects/poker_tracker/games" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
-    </ul>
-    <button class="nav-toggle" id="navToggle">☰</button>
-  </nav>
+  {% include_relative _includes/components/nav-bar.html %}
 
   <main>
     <div class="container">
@@ -41,21 +31,23 @@ nav_id: dashboard
       <a href="/projects/poker_tracker/sessions" class="btn btn-outline btn-sm">View All</a>
     </div>
     <div class="card-content">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Game</th>
-            <th>Duration</th>
-            <th>Hands</th>
-            <th>P&L</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="recentSessionsTableBody">
-          <!-- Populated by JavaScript -->
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Game</th>
+              <th>Duration</th>
+              <th>Hands</th>
+              <th>P&L</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recentSessionsTableBody">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -178,13 +170,6 @@ nav_id: dashboard
 </script>
 
 <script>
-  // Navigation and FAB
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navMenu').classList.toggle('open');
-    });
-  });
-
   function quickAction() {
     alert('Quick Action - Could start new session, add hand, or quick access menu');
   }

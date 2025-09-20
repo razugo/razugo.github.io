@@ -12,17 +12,7 @@ nav_id: sessions
   {% include_relative _includes/styles/main.css %}
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="nav">
-    <div class="nav-brand">PokerTracker</div>
-    <ul class="nav-menu" id="navMenu">
-      <li><a href="/projects/poker_tracker/" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
-      <li><a href="/projects/poker_tracker/sessions" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
-      <li><a href="/projects/poker_tracker/live" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
-      <li><a href="/projects/poker_tracker/games" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
-    </ul>
-    <button class="nav-toggle" id="navToggle">☰</button>
-  </nav>
+  {% include_relative _includes/components/nav-bar.html %}
 
   <main>
     <div class="container">
@@ -42,8 +32,14 @@ nav_id: sessions
       <option value="wynn-5-10">Wynn 5/10</option>
       <option value="commerce-3-5">Commerce 3/5</option>
     </select>
-    <input type="date" class="filter-input" id="dateFrom">
-    <input type="date" class="filter-input" id="dateTo">
+    <div class="date-filter-group">
+      <label class="filter-label">From Date</label>
+      <input type="date" class="filter-input" id="dateFrom">
+    </div>
+    <div class="date-filter-group">
+      <label class="filter-label">To Date</label>
+      <input type="date" class="filter-input" id="dateTo">
+    </div>
     <select class="filter-input" id="profitFilter">
       <option value="">All Results</option>
       <option value="positive">Winning Sessions</option>
@@ -54,7 +50,8 @@ nav_id: sessions
   <!-- Sessions Table -->
   <div class="card">
     <div class="card-content">
-      <table class="table">
+      <div class="table-container">
+        <table class="table">
         <thead>
           <tr>
             <th>Date</th>
@@ -72,7 +69,8 @@ nav_id: sessions
         <tbody id="sessionsTableBody">
           <!-- Populated by JavaScript -->
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -132,13 +130,6 @@ nav_id: sessions
 </script>
 
 <script>
-  // Navigation and FAB
-  document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('navToggle').addEventListener('click', () => {
-      document.getElementById('navMenu').classList.toggle('open');
-    });
-  });
-
   function quickAction() {
     alert('Quick Action - Could start new session, add hand, or quick access menu');
   }
