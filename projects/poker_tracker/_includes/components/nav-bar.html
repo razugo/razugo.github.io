@@ -4,8 +4,9 @@
   <ul class="nav-menu" id="navMenu">
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/index.html %}" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/sessions.html %}" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
-    <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/live.html %}" class="nav-link {% if page.nav_id == 'live' %}active{% endif %}">Live Session</a></li>
+    <li><a href="#" class="nav-link {% if page.nav_id == 'session' %}active{% endif %}" id="liveSessionNavLink">Live Session</a></li>
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/games.html %}" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
+    <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/tools.html %}" class="nav-link {% if page.nav_id == 'tools' %}active{% endif %}">Tools</a></li>
   </ul>
   <button class="nav-toggle" id="navToggle">☰</button>
 </nav>
@@ -16,5 +17,50 @@
     document.getElementById('navToggle').addEventListener('click', () => {
       document.getElementById('navMenu').classList.toggle('open');
     });
+
+    // Setup Live Session nav link
+    setupLiveSessionNavLink();
   });
+
+  function setupLiveSessionNavLink() {
+    const liveSessionLink = document.getElementById('liveSessionNavLink');
+    if (!liveSessionLink) return;
+
+    // Check if PokerTracker.DataStore is available
+    if (typeof PokerTracker !== 'undefined' && PokerTracker.DataStore) {
+      const activeSession = PokerTracker.DataStore.getActiveSession();
+
+      if (activeSession) {
+        // Enable link and set destination
+        liveSessionLink.href = `/projects/poker_tracker/session?session_id=${activeSession.id}`;
+        liveSessionLink.classList.remove('nav-link-disabled');
+        liveSessionLink.style.opacity = '1';
+        liveSessionLink.style.pointerEvents = 'auto';
+      } else {
+        // Disable link
+        liveSessionLink.href = '#';
+        liveSessionLink.classList.add('nav-link-disabled');
+        liveSessionLink.style.opacity = '0.5';
+        liveSessionLink.style.pointerEvents = 'none';
+        liveSessionLink.title = 'No active session';
+      }
+
+      // Add click handler
+      liveSessionLink.addEventListener('click', function(e) {
+        if (!activeSession) {
+          e.preventDefault();
+          // Optional: Show tooltip or redirect to sessions page
+          window.location.href = '/projects/poker_tracker/sessions';
+        }
+      });
+    } else {
+      // DataStore not available, disable link
+      liveSessionLink.href = '#';
+      liveSessionLink.style.opacity = '0.5';
+      liveSessionLink.style.pointerEvents = 'none';
+    }
+  }
+
+  // Global function to update live session link (can be called from other pages)
+  window.updateLiveSessionNavLink = setupLiveSessionNavLink;
 </script>

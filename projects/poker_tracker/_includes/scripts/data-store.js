@@ -62,5 +62,190 @@ PokerTracker.DataStore = {
       avgVpip,
       hourlyRate
     };
+  },
+
+  // Session Management
+  getSession: function(sessionId) {
+    return this.sessions.find(s => s.id === sessionId);
+  },
+
+  getActiveSession: function() {
+    return this.sessions.find(s => s.status === 'active');
+  },
+
+  getSessionData: function(sessionId) {
+    const key = `poker-tracker-session-${sessionId}`;
+    const stored = localStorage.getItem(key);
+    if (!stored) {
+      return {
+        sessionId: sessionId,
+        hands: [],
+        counts: {},
+        playedCounts: {},
+        handHistory: [],
+        total: 0,
+        totalPlayed: 0,
+        vpip: 0,
+        notes: '',
+        handNotes: {}
+      };
+    }
+    return JSON.parse(stored);
+  },
+
+  saveSessionData: function(sessionId, data) {
+    const key = `poker-tracker-session-${sessionId}`;
+    data.sessionId = sessionId;
+    localStorage.setItem(key, JSON.stringify(data));
+  },
+
+  addHand: function(sessionId, handCode, played = false) {
+    const sessionData = this.getSessionData(sessionId);
+
+    // Generate unique hand ID
+    const handId = `hand-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Add to hand history
+    const handEntry = {
+      id: handId,
+      key: handCode,
+      timestamp: Date.now(),
+      played: played,
+      position: sessionData.handHistory.length + 1,
+      notes: ''
+    };
+
+    sessionData.handHistory.push(handEntry);
+
+    // Update counts
+    sessionData.counts[handCode] = (sessionData.counts[handCode] || 0) + 1;
+    if (played) {
+      sessionData.playedCounts[handCode] = (sessionData.playedCounts[handCode] || 0) + 1;
+      sessionData.totalPlayed++;
+    }
+    sessionData.total++;
+
+    // Recalculate VPIP
+    sessionData.vpip = sessionData.total > 0 ? ((sessionData.totalPlayed / sessionData.total) * 100) : 0;
+
+    this.saveSessionData(sessionId, sessionData);
+    return sessionData;
+  },
+
+  updateHandStatus: function(sessionId, handId, played) {
+    const sessionData = this.getSessionData(sessionId);
+    const hand = sessionData.handHistory.find(h => h.id === handId);
+
+    if (!hand) return sessionData;
+
+    const wasPlayed = hand.played;
+    hand.played = played;
+
+    // Update counts
+    if (wasPlayed && !played) {
+      // Was played, now folded
+      sessionData.playedCounts[hand.key]--;
+      if (sessionData.playedCounts[hand.key] <= 0) {
+        delete sessionData.playedCounts[hand.key];
+      }
+      sessionData.totalPlayed--;
+    } else if (!wasPlayed && played) {
+      // Was folded, now played
+      sessionData.playedCounts[hand.key] = (sessionData.playedCounts[hand.key] || 0) + 1;
+      sessionData.totalPlayed++;
+    }
+
+    // Recalculate VPIP
+    sessionData.vpip = sessionData.total > 0 ? ((sessionData.totalPlayed / sessionData.total) * 100) : 0;
+
+    this.saveSessionData(sessionId, sessionData);
+    return sessionData;
+  },
+
+  updateHandNotes: function(sessionId, handId, notes) {
+    const sessionData = this.getSessionData(sessionId);
+    const hand = sessionData.handHistory.find(h => h.id === handId);
+
+    if (hand) {
+      hand.notes = notes;
+      this.saveSessionData(sessionId, sessionData);
+    }
+
+    return sessionData;
+  },
+
+  updateSessionNotes: function(sessionId, notes) {
+    const sessionData = this.getSessionData(sessionId);
+    sessionData.notes = notes;
+    this.saveSessionData(sessionId, sessionData);
+    return sessionData;
+  },
+
+  undoLastHand: function(sessionId) {
+    const sessionData = this.getSessionData(sessionId);
+    if (sessionData.handHistory.length === 0) return sessionData;
+
+    const lastHand = sessionData.handHistory.pop();
+
+    // Update counts
+    sessionData.counts[lastHand.key]--;
+    if (sessionData.counts[lastHand.key] <= 0) {
+      delete sessionData.counts[lastHand.key];
+    }
+
+    if (lastHand.played) {
+      sessionData.playedCounts[lastHand.key]--;
+      if (sessionData.playedCounts[lastHand.key] <= 0) {
+        delete sessionData.playedCounts[lastHand.key];
+      }
+      sessionData.totalPlayed--;
+    }
+    sessionData.total--;
+
+    // Recalculate VPIP
+    sessionData.vpip = sessionData.total > 0 ? ((sessionData.totalPlayed / sessionData.total) * 100) : 0;
+
+    this.saveSessionData(sessionId, sessionData);
+    return sessionData;
+  },
+
+  deleteHand: function(sessionId, handId) {
+    const sessionData = this.getSessionData(sessionId);
+    const handIndex = sessionData.handHistory.findIndex(h => h.id === handId);
+
+    if (handIndex === -1) return sessionData;
+
+    const hand = sessionData.handHistory[handIndex];
+    sessionData.handHistory.splice(handIndex, 1);
+
+    // Update counts
+    sessionData.counts[hand.key]--;
+    if (sessionData.counts[hand.key] <= 0) {
+      delete sessionData.counts[hand.key];
+    }
+
+    if (hand.played) {
+      sessionData.playedCounts[hand.key]--;
+      if (sessionData.playedCounts[hand.key] <= 0) {
+        delete sessionData.playedCounts[hand.key];
+      }
+      sessionData.totalPlayed--;
+    }
+    sessionData.total--;
+
+    // Recalculate VPIP and reorder positions
+    sessionData.vpip = sessionData.total > 0 ? ((sessionData.totalPlayed / sessionData.total) * 100) : 0;
+    sessionData.handHistory.forEach((h, index) => {
+      h.position = index + 1;
+    });
+
+    this.saveSessionData(sessionId, sessionData);
+    return sessionData;
+  },
+
+  clearSessionData: function(sessionId) {
+    const key = `poker-tracker-session-${sessionId}`;
+    localStorage.removeItem(key);
+    return this.getSessionData(sessionId);
   }
 };

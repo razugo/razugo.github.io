@@ -18,7 +18,10 @@ nav_id: sessions
     <div class="container">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Sessions</h1>
-    <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewSessionModal()">+ New Session</button>
+    <div style="display: flex; gap: 1rem;">
+      <button class="btn btn-outline" onclick="goToActiveSession()" id="liveSessionBtn" style="display: none;">Live Session</button>
+      <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewSessionModal()">+ New Session</button>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -79,6 +82,7 @@ nav_id: sessions
   document.addEventListener('DOMContentLoaded', function() {
     populateSessionsTable();
     setupFilters();
+    checkActiveSession();
   });
 
   function populateSessionsTable() {
@@ -100,7 +104,7 @@ nav_id: sessions
           <td>${session.hands}</td>
           <td>${session.vpip}%</td>
           <td><span class="badge ${session.status === 'active' ? 'warning' : 'success'}">${session.status}</span></td>
-          <td><button class="btn btn-outline btn-sm">View</button></td>
+          <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
         </tr>
       `;
     }).join('');
@@ -118,6 +122,29 @@ nav_id: sessions
   function applyFilters() {
     // Filter implementation would go here
     console.log('Applying filters...');
+  }
+
+  function viewSession(sessionId) {
+    window.location.href = `/projects/poker_tracker/session?session_id=${sessionId}`;
+  }
+
+  function goToActiveSession() {
+    const activeSession = PokerTracker.DataStore.getActiveSession();
+    if (activeSession) {
+      window.location.href = `/projects/poker_tracker/session?session_id=${activeSession.id}`;
+    }
+  }
+
+  function checkActiveSession() {
+    const activeSession = PokerTracker.DataStore.getActiveSession();
+    const liveSessionBtn = document.getElementById('liveSessionBtn');
+
+    if (activeSession) {
+      liveSessionBtn.style.display = 'block';
+      liveSessionBtn.textContent = `Live Session (${PokerTracker.DataStore.getGame(activeSession.gameId)?.name || 'Unknown'})`;
+    } else {
+      liveSessionBtn.style.display = 'none';
+    }
   }
 </script>
 

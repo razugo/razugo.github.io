@@ -118,7 +118,7 @@ nav_id: dashboard
           <td>${PokerTracker.Utils.formatDuration(session.duration)}</td>
           <td>${session.hands}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
-          <td><button class="btn btn-outline btn-sm">View</button></td>
+          <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
         </tr>
       `;
     }).join('');
@@ -172,6 +172,10 @@ nav_id: dashboard
 <script>
   function quickAction() {
     alert('Quick Action - Could start new session, add hand, or quick access menu');
+  }
+
+  function viewSession(sessionId) {
+    window.location.href = `/projects/poker_tracker/session?session_id=${sessionId}`;
   }
 </script>
 

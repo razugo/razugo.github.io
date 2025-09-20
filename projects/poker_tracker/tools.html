@@ -1,0 +1,97 @@
+---
+title: PokerTracker - Tools
+nav_id: tools
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  {% include_relative _includes/styles/main.css %}
+</head>
+<body>
+  {% include_relative _includes/components/nav-bar.html %}
+
+  <main>
+    <div class="container">
+      <h1>Poker Tools</h1>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Essential poker utilities and calculators</p>
+
+      <!-- Tools Grid -->
+      <div class="tools-grid">
+
+        <!-- Hand Strength Tool -->
+        <div class="tool-card" onclick="openTool('hand_strength')">
+          <div class="tool-icon">🎯</div>
+          <div class="tool-content">
+            <h3 class="tool-title">Starting Hand Strength</h3>
+            <p class="tool-description">View the relative strength of all 169 Texas Hold'em starting hands with percentile rankings and color-coded visualization.</p>
+            <div class="tool-tags">
+              <span class="tool-tag">Preflop</span>
+              <span class="tool-tag">Strategy</span>
+            </div>
+          </div>
+          <div class="tool-arrow">→</div>
+        </div>
+
+        <!-- Equity Calculator Tool (Coming Soon) -->
+        <div class="tool-card coming-soon">
+          <div class="tool-icon">🧮</div>
+          <div class="tool-content">
+            <h3 class="tool-title">Equity Calculator</h3>
+            <p class="tool-description">Calculate hand equity against opponent ranges and board textures for optimal decision making.</p>
+            <div class="tool-tags">
+              <span class="tool-tag">Math</span>
+              <span class="tool-tag">Analysis</span>
+            </div>
+          </div>
+          <div class="tool-badge">Coming Soon</div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+  function openTool(toolName) {
+    window.location.href = `/projects/poker_tracker/${toolName}`;
+  }
+
+  // Add hover effects for available tools
+  document.addEventListener('DOMContentLoaded', function() {
+    const availableTools = document.querySelectorAll('.tool-card:not(.coming-soon)');
+
+    availableTools.forEach(tool => {
+      tool.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-4px)';
+      });
+
+      tool.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+  });
+</script>
+
+<!-- Shared JavaScript -->
+<script>
+  {% include_relative _includes/scripts/data-store.js %}
+</script>
+<script>
+  {% include_relative _includes/scripts/app.js %}
+</script>
+
+<script>
+  function quickAction() {
+    // Quick access to most used tool
+    openTool('hand_strength');
+  }
+</script>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="quickAction()">🎯</button>
+
+</body>
+</html>

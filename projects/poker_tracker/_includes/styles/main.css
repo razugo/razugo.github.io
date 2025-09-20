@@ -12,6 +12,11 @@
       --border: #e5e7eb;
       --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
       --radius: 8px;
+
+      /* Hand Strength Tool - Grid sizing (responsive) */
+      --cell-size: 54px;
+      --cell-gap: 4px;
+      --cell-font-size: 11px;
     }
 
     * {
@@ -285,21 +290,147 @@
     .cell.played {
       background: rgba(16, 185, 129, 0.2);
       border-color: var(--success);
+      position: relative;
+    }
+
+    .cell.played::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
     }
 
     .cell.folded {
       background: rgba(239, 68, 68, 0.1);
       color: var(--text-secondary);
+      position: relative;
     }
 
-    /* Live Session Collapsible UI */
-    .live-session {
-      position: relative;
+    .cell.folded::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    .cell.long-pressing {
+      animation: longPressGlow 0.3s ease-in-out;
+      transform: scale(1.1);
+      background: rgba(16, 185, 129, 0.4) !important;
+      border-color: var(--success) !important;
+    }
+
+    @keyframes longPressGlow {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.2);
+        transform: scale(1.05);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        transform: scale(1.1);
+      }
+    }
+
+    .cell.count-display {
+      font-size: 0.65rem;
+      line-height: 1.2;
+    }
+
+    .cell.count-display .hand-code {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .cell.count-display .hand-count {
+      display: block;
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Live Session UI */
+    .live-stats-bar {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      z-index: 95;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .live-stats-content {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .stat-value.positive {
+      color: var(--success);
+    }
+
+    .stat-value.negative {
+      color: var(--danger);
+    }
+
+    .live-stats-toggle {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+
+    .live-stats-toggle:hover {
+      background: var(--background);
+      color: var(--text-primary);
     }
 
     .session-overlay {
       position: fixed;
-      top: 0;
+      top: 70px;
       left: 0;
       right: 0;
       background: var(--surface);
@@ -321,20 +452,152 @@
       margin-bottom: 1rem;
     }
 
-    .toggle-overlay-btn {
+    /* View Tabs */
+    .view-tabs {
       position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 110;
+      top: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      z-index: 85;
+      box-shadow: var(--shadow);
+    }
+
+    .view-tab {
+      background: none;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: var(--radius);
+    }
+
+    .view-tab:first-child {
+      border-right: 1px solid var(--border);
+      border-radius: var(--radius) 0 0 var(--radius);
+    }
+
+    .view-tab:last-child {
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+
+    .view-tab.active {
       background: var(--primary);
       color: white;
-      border: none;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      font-size: 1.25rem;
+    }
+
+    .view-tab:not(.active):hover {
+      background: var(--background);
+      color: var(--text-primary);
+    }
+
+    /* Hand List */
+    .hands-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .hand-item {
+      background: var(--background);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .hand-item:hover {
+      background: rgba(59, 130, 246, 0.05);
+      border-color: var(--primary);
+    }
+
+    .hand-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .hand-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .hand-code {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .hand-position {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      background: var(--surface);
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .hand-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .hand-status-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius);
+      font-size: 0.8rem;
       cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s;
+    }
+
+    .hand-status-btn.played {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .hand-status-btn.folded {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .hand-status-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .hand-delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .hand-delete-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .hand-notes {
+      margin-top: 0.5rem;
     }
 
     /* Floating Action Button */
@@ -435,6 +698,60 @@
       .table-container:not([data-scrollable])::after {
         display: none;
       }
+
+      /* Mobile live session adjustments */
+      .live-stats-content {
+        gap: 1rem;
+      }
+
+      .stat-group {
+        min-width: 60px;
+      }
+
+      .stat-label {
+        font-size: 0.7rem;
+      }
+
+      .stat-value {
+        font-size: 0.85rem;
+      }
+
+      .live-stats-toggle {
+        font-size: 1rem;
+        padding: 0.25rem;
+      }
+
+      /* Mobile view tabs */
+      .view-tabs {
+        top: 120px;
+        transform: translateX(-50%) scale(0.9);
+      }
+
+      .view-tab {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+      }
+
+      /* Mobile hand list */
+      .hand-item {
+        padding: 0.5rem;
+      }
+
+      .hand-item-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .hand-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .hand-status-btn {
+        flex: 1;
+        margin-right: 0.5rem;
+      }
     }
 
     /* Status badges */
@@ -472,5 +789,314 @@
     .game-card.selected {
       border-color: var(--primary);
       background: rgba(59, 130, 246, 0.05);
+    }
+
+    /* Tools Page */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card:not(.coming-soon):hover {
+      border-color: var(--primary);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    }
+
+    .tool-card.coming-soon {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .tool-card.coming-soon:hover {
+      border-color: var(--border);
+      box-shadow: none;
+    }
+
+    .tool-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .tool-content {
+      margin-bottom: 1rem;
+    }
+
+    .tool-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .tool-description {
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .tool-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tool-tag {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .tool-arrow {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+    }
+
+    .tool-card:not(.coming-soon):hover .tool-arrow {
+      color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .tool-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--warning);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Hand Strength Visualization */
+    .strength-legend {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+
+    .strength-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .strength-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .strength-premium { background: linear-gradient(135deg, #059669, #10b981); }
+    .strength-strong { background: linear-gradient(135deg, #0891b2, #06b6d4); }
+    .strength-decent { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+    .strength-marginal { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .strength-weak { background: linear-gradient(135deg, #9ca3af, #d1d5db); }
+
+    .cell.strength-premium {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+      font-weight: 700;
+    }
+
+    .cell.strength-strong {
+      background: linear-gradient(135deg, #0891b2, #06b6d4);
+      color: white;
+      font-weight: 600;
+    }
+
+    .cell.strength-decent {
+      background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+      color: white;
+      font-weight: 600;
+    }
+
+    .cell.strength-marginal {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+      font-weight: 500;
+    }
+
+    .cell.strength-weak {
+      background: linear-gradient(135deg, #9ca3af, #d1d5db);
+      color: var(--text-primary);
+      font-weight: 400;
+    }
+
+    /* Mobile tools adjustments */
+    @media (max-width: 768px) {
+      .tools-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .tool-card {
+        padding: 1rem;
+      }
+
+      .tool-icon {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .tool-title {
+        font-size: 1.1rem;
+      }
+
+      .strength-legend {
+        gap: 1rem;
+      }
+
+      .strength-legend-item {
+        font-size: 0.8rem;
+      }
+
+      .strength-color {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    /* Hand Strength Tool Specific Styles */
+
+    /* Grid */
+    .poker-grid {
+      display: grid;
+      grid-template-columns: repeat(13, var(--cell-size));
+      grid-auto-rows: max(var(--cell-size), 30px);
+      gap: var(--cell-gap);
+      justify-content: center;
+      margin: 0 auto;
+      min-width: 0;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: white;
+      color: var(--text-primary);
+      font-size: var(--cell-font-size);
+      font-weight: 600;
+      cursor: default;
+      transition: all 0.2s;
+      user-select: none;
+      padding: 0;
+      line-height: 1.05;
+      min-width: var(--cell-size);
+      min-height: max(var(--cell-size), 30px);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .cell.pair {
+      background: #f3f4f6;
+    }
+
+    /* Hand Highlighting */
+    .cell.highlighted {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+      font-weight: 600;
+      border: 2px solid var(--primary);
+    }
+
+    /* Slider Styling */
+    input[type="range"] {
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* Hand Strength Tool Mobile Responsive */
+    @media (max-width: 767px) {
+      :root {
+        --cell-size: calc((100vw - 3rem) / 13 - 2px);
+        --cell-gap: 2px;
+        --cell-font-size: 8px;
+      }
+
+      .poker-grid {
+        width: 100%;
+      }
+
+      .cell {
+        font-weight: 500;
+      }
+    }
+
+    @media (max-width: 479px) {
+      :root {
+        --cell-size: calc((100vw - 1rem) / 13 - 1px);
+        --cell-gap: 1px;
+        --cell-font-size: 7px;
+      }
+
+      .poker-grid {
+        gap: 1px;
+        width: 100%;
+      }
+
+      .cell {
+        border-radius: 2px;
+        font-weight: 400;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      :root {
+        --cell-size: 42px;
+        --cell-gap: 3px;
+        --cell-font-size: 10px;
+      }
     }
   </style>

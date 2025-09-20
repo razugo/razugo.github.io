@@ -1,0 +1,509 @@
+---
+title: PokerTracker - Session
+nav_id: session
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  {% include_relative _includes/styles/main.css %}
+</head>
+<body>
+  {% include_relative _includes/components/nav-bar.html %}
+
+  <main>
+    <!-- Live Stats Bar (always visible) -->
+<div class="live-stats-bar" id="liveStatsBar">
+  <div class="live-stats-content">
+    <div class="stat-group">
+      <span class="stat-label">VPIP</span>
+      <span class="stat-value" id="vpipStat">0% (0/0)</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">P&L</span>
+      <span class="stat-value" id="profitStat">$0</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">Hands</span>
+      <span class="stat-value" id="handsStat">0</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">Time</span>
+      <span class="stat-value" id="timeStat">0h 0m</span>
+    </div>
+  </div>
+  <button class="live-stats-toggle" onclick="toggleSessionOverlay()">⚙</button>
+</div>
+
+<!-- Collapsible Overlay -->
+<div class="session-overlay" id="sessionOverlay">
+  <div class="session-controls">
+    <div>
+      <h3 id="sessionTitle">Session Details</h3>
+      <p><small id="sessionDetails">Loading...</small></p>
+    </div>
+    <div>
+      <button class="btn btn-outline btn-sm" onclick="endSession()">End Session</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="btn btn-outline btn-sm" id="toggleCounts">Show Counts</button>
+    <button class="btn btn-outline btn-sm" id="toggleList">Show List</button>
+    <button class="btn btn-outline btn-sm" id="togglePlayed">Show Played</button>
+    <button class="btn btn-outline btn-sm" onclick="undoLastHand()">Undo Last</button>
+  </div>
+
+  <!-- Session Notes -->
+  <div style="margin-top: 1rem;">
+    <label class="filter-label">Session Notes</label>
+    <textarea id="sessionNotes" placeholder="Session notes..." style="width: 100%; min-height: 60px; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); resize: vertical;"></textarea>
+  </div>
+</div>
+
+<!-- View Tabs -->
+<div class="view-tabs" id="viewTabs" style="display: none;">
+  <button id="gridTab" class="view-tab active">Grid</button>
+  <button id="listTab" class="view-tab">List</button>
+</div>
+
+<!-- Grid View -->
+<div class="container" id="gridView" style="padding-top: 8rem;">
+  <div class="poker-grid" id="pokerGrid">
+    <!-- Populated by JavaScript -->
+  </div>
+
+  <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary);">
+    <p>Quick tap: dealt (folded) | Long press: dealt & played</p>
+    <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 12px; height: 12px; background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; border-radius: 2px;"></div>
+        Played hands
+      </span>
+      <span style="display: flex; align-items: center; gap: 0.5rem;">
+        <div style="width: 12px; height: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 2px;"></div>
+        Folded hands
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- List View -->
+<div class="container" id="listView" style="padding-top: 8rem; display: none;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Hand History</h2>
+      <span id="handCount">0 hands</span>
+    </div>
+    <div class="card-content">
+      <div id="handsList" class="hands-list">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentSessionId = null;
+  let currentView = 'grid';
+  let sessionState = {
+    showCounts: false,
+    showStrength: false,
+    showPlayedOnly: false,
+    longPressTimer: null,
+    isLongPress: false
+  };
+
+  // Get session ID from URL parameters
+  function getSessionIdFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('session_id');
+  }
+
+  function toggleSessionOverlay() {
+    document.getElementById('sessionOverlay').classList.toggle('expanded');
+  }
+
+  function updateSessionStats() {
+    if (!currentSessionId) return;
+
+    const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
+    const session = PokerTracker.DataStore.getSession(currentSessionId);
+
+    if (!session) return;
+
+    const game = PokerTracker.DataStore.getGame(session.gameId);
+    const vpipPercent = sessionData.vpip.toFixed(1);
+    const profit = session.cashOut - session.buyIn;
+    const duration = Math.floor(Date.now() / 60000) - Math.floor(new Date(session.date).getTime() / 60000);
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+
+    // Update live stats bar
+    document.getElementById('vpipStat').textContent = `${vpipPercent}% (${sessionData.totalPlayed}/${sessionData.total})`;
+
+    const profitElement = document.getElementById('profitStat');
+    profitElement.textContent = `${profit >= 0 ? '+' : ''}$${profit}`;
+    profitElement.className = 'stat-value ' + (profit >= 0 ? 'positive' : 'negative');
+
+    document.getElementById('handsStat').textContent = sessionData.total;
+    document.getElementById('timeStat').textContent = `${hours}h ${minutes}m`;
+
+    // Update session overlay
+    document.getElementById('sessionTitle').textContent = `Session: ${game.name}`;
+    document.getElementById('sessionDetails').innerHTML =
+      `Buy-in: $${session.buyIn} | Current Stack: $${session.cashOut} | Status: ${session.status}`;
+
+    // Update session notes
+    document.getElementById('sessionNotes').value = sessionData.notes || '';
+
+    // Update hand count
+    document.getElementById('handCount').textContent = `${sessionData.total} hands`;
+  }
+
+  function renderGrid() {
+    if (!currentSessionId) return;
+
+    const grid = document.getElementById('pokerGrid');
+    if (!grid) return;
+
+    const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
+    const cells = grid.querySelectorAll('.cell');
+
+    cells.forEach(cell => {
+      const handCode = cell.dataset.hand;
+      const count = sessionData.counts[handCode] || 0;
+      const playedCount = sessionData.playedCounts[handCode] || 0;
+
+      // Reset classes
+      cell.className = cell.dataset.baseClass;
+
+      // Apply visual state
+      if (count > 0) {
+        if (playedCount > 0) {
+          cell.classList.add('played');
+        } else {
+          cell.classList.add('folded');
+        }
+      }
+
+      // Update content based on display mode
+      if (sessionState.showCounts && count > 0) {
+        cell.innerHTML = `<span class="hand-code">${handCode}</span><span class="hand-count">${playedCount}/${count}</span>`;
+        cell.classList.add('count-display');
+      } else {
+        cell.textContent = handCode;
+      }
+
+      // Hide if showing played only and not played
+      if (sessionState.showPlayedOnly && playedCount === 0) {
+        cell.style.opacity = '0.3';
+      } else {
+        cell.style.opacity = '1';
+      }
+    });
+  }
+
+  function renderHandsList() {
+    if (!currentSessionId) return;
+
+    const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
+    const handsList = document.getElementById('handsList');
+
+    if (!handsList) return;
+
+    handsList.innerHTML = sessionData.handHistory
+      .slice()
+      .reverse()
+      .map(hand => `
+        <div class="hand-item" data-hand-id="${hand.id}">
+          <div class="hand-item-main">
+            <div class="hand-info">
+              <span class="hand-code">${hand.key}</span>
+              <span class="hand-position">#${hand.position}</span>
+            </div>
+            <div class="hand-actions">
+              <button class="hand-status-btn ${hand.played ? 'played' : 'folded'}"
+                      onclick="toggleHandStatus('${hand.id}')">
+                ${hand.played ? '● Played' : '○ Folded'}
+              </button>
+              <button class="hand-delete-btn" onclick="deleteHand('${hand.id}')">×</button>
+            </div>
+          </div>
+          <div class="hand-notes">
+            <input type="text" placeholder="Hand notes..." value="${hand.notes || ''}"
+                   onchange="updateHandNotes('${hand.id}', this.value)"
+                   style="width: 100%; padding: 0.25rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.85rem;">
+          </div>
+        </div>
+      `).join('');
+  }
+
+  function handleCellInteraction(cell, handCode) {
+    // Quick tap - dealt (folded)
+    function quickTap() {
+      if (sessionState.isLongPress) return;
+
+      PokerTracker.DataStore.addHand(currentSessionId, handCode, false);
+      updateSessionStats();
+      renderGrid();
+      if (currentView === 'list') {
+        renderHandsList();
+      }
+
+      // Haptic feedback if available
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }
+
+    // Long press - dealt & played
+    function longPress() {
+      sessionState.isLongPress = true;
+      cell.classList.remove('long-pressing');
+
+      PokerTracker.DataStore.addHand(currentSessionId, handCode, true);
+      updateSessionStats();
+      renderGrid();
+      if (currentView === 'list') {
+        renderHandsList();
+      }
+
+      // Stronger haptic feedback
+      if (navigator.vibrate) {
+        navigator.vibrate([100, 50, 100]);
+      }
+    }
+
+    // Mouse/touch events
+    cell.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      sessionState.isLongPress = false;
+      cell.classList.add('long-pressing');
+
+      sessionState.longPressTimer = setTimeout(() => {
+        longPress();
+      }, 300);
+    });
+
+    cell.addEventListener('mouseup', (e) => {
+      e.preventDefault();
+      clearTimeout(sessionState.longPressTimer);
+      cell.classList.remove('long-pressing');
+
+      if (!sessionState.isLongPress) {
+        setTimeout(quickTap, 50);
+      }
+    });
+
+    cell.addEventListener('mouseleave', (e) => {
+      clearTimeout(sessionState.longPressTimer);
+      cell.classList.remove('long-pressing');
+    });
+
+    // Touch events for mobile
+    cell.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      sessionState.isLongPress = false;
+      cell.classList.add('long-pressing');
+
+      sessionState.longPressTimer = setTimeout(() => {
+        longPress();
+      }, 300);
+    });
+
+    cell.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      clearTimeout(sessionState.longPressTimer);
+      cell.classList.remove('long-pressing');
+
+      if (!sessionState.isLongPress) {
+        setTimeout(quickTap, 50);
+      }
+    });
+
+    cell.addEventListener('touchcancel', (e) => {
+      clearTimeout(sessionState.longPressTimer);
+      cell.classList.remove('long-pressing');
+    });
+  }
+
+  function generatePokerGrid() {
+    const grid = document.getElementById('pokerGrid');
+    if (!grid) return;
+
+    const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+    grid.innerHTML = '';
+    for (let i = 0; i < 13; i++) {
+      for (let j = 0; j < 13; j++) {
+        const cell = document.createElement('div');
+        const baseClass = 'cell' + (i === j ? ' pair' : '');
+        cell.className = baseClass;
+        cell.dataset.baseClass = baseClass;
+
+        let handCode;
+        if (i === j) {
+          handCode = ranks[i] + ranks[i];
+        } else if (i < j) {
+          handCode = ranks[i] + ranks[j] + 's';
+        } else {
+          handCode = ranks[j] + ranks[i] + 'o';
+        }
+
+        cell.textContent = handCode;
+        cell.dataset.hand = handCode;
+
+        handleCellInteraction(cell, handCode);
+        grid.appendChild(cell);
+      }
+    }
+
+    renderGrid();
+  }
+
+  function toggleHandStatus(handId) {
+    const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
+    const hand = sessionData.handHistory.find(h => h.id === handId);
+
+    if (hand) {
+      PokerTracker.DataStore.updateHandStatus(currentSessionId, handId, !hand.played);
+      updateSessionStats();
+      renderGrid();
+      renderHandsList();
+    }
+  }
+
+  function deleteHand(handId) {
+    if (confirm('Delete this hand?')) {
+      PokerTracker.DataStore.deleteHand(currentSessionId, handId);
+      updateSessionStats();
+      renderGrid();
+      renderHandsList();
+    }
+  }
+
+  function updateHandNotes(handId, notes) {
+    PokerTracker.DataStore.updateHandNotes(currentSessionId, handId, notes);
+  }
+
+  function undoLastHand() {
+    PokerTracker.DataStore.undoLastHand(currentSessionId);
+    updateSessionStats();
+    renderGrid();
+    if (currentView === 'list') {
+      renderHandsList();
+    }
+  }
+
+  function switchView(view) {
+    currentView = view;
+
+    if (view === 'grid') {
+      document.getElementById('gridView').style.display = 'block';
+      document.getElementById('listView').style.display = 'none';
+      document.getElementById('gridTab').classList.add('active');
+      document.getElementById('listTab').classList.remove('active');
+    } else {
+      document.getElementById('gridView').style.display = 'none';
+      document.getElementById('listView').style.display = 'block';
+      document.getElementById('gridTab').classList.remove('active');
+      document.getElementById('listTab').classList.add('active');
+      renderHandsList();
+    }
+  }
+
+  function endSession() {
+    if (confirm('End this session?')) {
+      // Logic to end session would go here
+      window.location.href = '/projects/poker_tracker/sessions';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    currentSessionId = getSessionIdFromURL();
+
+    if (!currentSessionId) {
+      alert('No session ID provided');
+      window.location.href = '/projects/poker_tracker/sessions';
+      return;
+    }
+
+    const session = PokerTracker.DataStore.getSession(currentSessionId);
+    if (!session) {
+      alert('Session not found');
+      window.location.href = '/projects/poker_tracker/sessions';
+      return;
+    }
+
+    // Show view tabs for sessions with existing hands
+    const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
+    if (sessionData.total > 0) {
+      document.getElementById('viewTabs').style.display = 'flex';
+    }
+
+    generatePokerGrid();
+    updateSessionStats();
+
+    // Setup overlay toggle buttons
+    document.getElementById('toggleCounts').addEventListener('click', function() {
+      sessionState.showCounts = !sessionState.showCounts;
+      this.textContent = sessionState.showCounts ? 'Hide Counts' : 'Show Counts';
+      renderGrid();
+    });
+
+    document.getElementById('toggleList').addEventListener('click', function() {
+      const showingList = currentView === 'list';
+      if (sessionData.total > 0) {
+        document.getElementById('viewTabs').style.display = 'flex';
+        switchView(showingList ? 'grid' : 'list');
+        this.textContent = showingList ? 'Show List' : 'Show Grid';
+      }
+    });
+
+    document.getElementById('togglePlayed').addEventListener('click', function() {
+      sessionState.showPlayedOnly = !sessionState.showPlayedOnly;
+      this.textContent = sessionState.showPlayedOnly ? 'Show All' : 'Show Played';
+      renderGrid();
+    });
+
+    // View tab handlers
+    document.getElementById('gridTab').addEventListener('click', () => switchView('grid'));
+    document.getElementById('listTab').addEventListener('click', () => switchView('list'));
+
+    // Session notes handler
+    document.getElementById('sessionNotes').addEventListener('change', function() {
+      PokerTracker.DataStore.updateSessionNotes(currentSessionId, this.value);
+    });
+  });
+</script>
+
+<!-- Shared JavaScript -->
+<script>
+  {% include_relative _includes/scripts/data-store.js %}
+</script>
+<script>
+  {% include_relative _includes/scripts/app.js %}
+</script>
+
+<script>
+  function quickAction() {
+    if (currentSessionId) {
+      const sessionData = PokerTracker.DataStore.getSessionData(currentSessionId);
+      if (sessionData.total > 0) {
+        document.getElementById('viewTabs').style.display = 'flex';
+        switchView(currentView === 'grid' ? 'list' : 'grid');
+      }
+    }
+  }
+</script>
+
+  <!-- Floating Action Button -->
+  <button class="fab" onclick="quickAction()">+</button>
+
+  </main>
+</body>
+</html>

@@ -10,7 +10,7 @@ This is a poker hand tracking application built using Jekyll with modular compon
 
 ### Jekyll Multi-Page Application
 - **Modular Structure**: Separate Jekyll pages for each section with shared layout and components
-- **URL Routing**: Each page has its own URL path (/, /sessions, /live, /games)
+- **URL Routing**: Each page has its own URL path (/, /sessions, /session, /games, /tools, /hand_strength)
 - **Shared Components**: Reusable components in `_includes/components/`
 - **Shared Data Layer**: Centralized data management in `_includes/scripts/data-store.js`
 
@@ -25,6 +25,7 @@ This is a poker hand tracking application built using Jekyll with modular compon
 - **Multi-Game Support**: Configurable poker games with different stakes and locations
 - **Session Management**: Track buy-ins, cash-outs, hands played, and VPIP statistics
 - **Live Session Mode**: Interactive poker grid for real-time hand tracking during play
+- **Tools Suite**: Hand strength analyzer and other poker utilities
 - **Data Visualization**: Bankroll progress charts and statistical analysis
 - **Responsive UI**: Works on both desktop and mobile devices
 
@@ -62,8 +63,10 @@ This is a poker hand tracking application built using Jekyll with modular compon
 poker_tracker/
 ├── index.html                    # Dashboard page (main entry)
 ├── sessions.html                 # Sessions management page
-├── live.html                     # Live session tracking page
+├── session.html                  # Individual session tracking page
 ├── games.html                    # Games management page
+├── tools.html                    # Tools overview page
+├── hand_strength.html            # Hand strength analysis tool
 ├── _layouts/
 │   └── poker-app.html           # Shared layout template
 ├── _includes/
@@ -75,7 +78,7 @@ poker_tracker/
 │   │   ├── data-store.js        # Centralized data management
 │   │   └── app.js               # Shared utilities
 │   └── styles/
-│       └── main.css             # All CSS styles
+│       └── main.css             # All CSS styles (includes tool-specific styles)
 └── assets/
     └── js/                      # Additional JS files if needed
 ```
@@ -126,3 +129,16 @@ poker_tracker/
 1. Modify CSS custom properties in `:root` for theme changes
 2. Add new component styles following existing patterns
 3. Test responsive behavior across all pages
+
+### Adding New Tools
+1. Create tool page as Jekyll page with front matter (`nav_id: tools`)
+2. Add tool card to `tools.html` with appropriate `onclick="openTool('tool-name')"`
+3. Add tool-specific styles to `_includes/styles/main.css`
+4. Use shared nav-bar component with `{% include_relative _includes/components/nav-bar.html %}`
+5. Include shared CSS with `{% include_relative _includes/styles/main.css %}`
+
+### Tool Architecture Notes
+- **Hand Strength Tool**: Uses responsive poker grid with percentage-based range selection
+- **Grid Sizing**: CSS custom properties (`--cell-size`, `--cell-gap`, `--cell-font-size`) for responsive design
+- **Mobile Optimization**: Viewport-width calculations for full-screen grid on mobile devices
+- **Range Selection**: Slider + editable input for precise percentage control with real-time highlighting
