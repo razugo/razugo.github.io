@@ -19,7 +19,7 @@ nav_id: sessions
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Sessions</h1>
     <div style="display: flex; gap: 1rem;">
-      <button class="btn btn-outline" onclick="goToActiveSession()" id="liveSessionBtn" style="display: none;">Live Session</button>
+      <button class="btn" onclick="goToActiveSession()" id="liveSessionBtn">Live</button>
       <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewSessionModal()">+ New Session</button>
     </div>
   </div>
@@ -172,11 +172,13 @@ nav_id: sessions
     const liveSessionBtn = document.getElementById('liveSessionBtn');
 
     if (activeSession) {
-      liveSessionBtn.style.display = 'block';
-      const game = PokerTracker.DataStore.getGame(activeSession.gameId);
-      liveSessionBtn.textContent = `${game?.name || 'Unknown'} (Live)`;
+      liveSessionBtn.className = 'btn btn-live-active';
+      liveSessionBtn.disabled = false;
+      liveSessionBtn.textContent = 'Live';
     } else {
-      liveSessionBtn.style.display = 'none';
+      liveSessionBtn.className = 'btn btn-live-disabled';
+      liveSessionBtn.disabled = true;
+      liveSessionBtn.textContent = 'Live';
     }
   }
 </script>

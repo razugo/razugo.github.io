@@ -105,6 +105,58 @@
       background: rgba(59, 130, 246, 0.1);
     }
 
+    /* Live Session Button States */
+    .nav-link.live-session-start {
+      border: 2px solid var(--primary) !important;
+      color: var(--primary);
+      font-weight: 600;
+      background: transparent;
+    }
+
+    .nav-link.live-session-start:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .nav-link.live-session-active {
+      background: var(--success);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .nav-link.live-session-active:hover {
+      background: #059669;
+    }
+
+    /* Live Session Button in Sessions Page */
+    .btn-live-active {
+      background: var(--success) !important;
+      color: white !important;
+      border-color: var(--success) !important;
+      font-weight: 600;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-live-active:hover {
+      background: #059669 !important;
+      border-color: #059669 !important;
+    }
+
+    .btn-live-disabled {
+      background: var(--border) !important;
+      color: var(--text-secondary) !important;
+      border-color: var(--border) !important;
+      cursor: not-allowed !important;
+      opacity: 0.6;
+    }
+
+    .btn-live-disabled:hover {
+      background: var(--border) !important;
+      color: var(--text-secondary) !important;
+      border-color: var(--border) !important;
+    }
+
     .nav-toggle {
       display: none;
       background: none;
@@ -750,6 +802,7 @@
         right: 0;
         background: var(--surface);
         border-top: 1px solid var(--border);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         flex-direction: column;
         padding: 1rem;
         align-items: center;

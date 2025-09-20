@@ -2,9 +2,9 @@
 <nav class="nav">
   <a href="{{ site.baseurl }}{% link projects/poker_tracker/index.html %}" class="nav-brand">PokerTracker</a>
   <ul class="nav-menu" id="navMenu">
+    <li><a href="#" class="nav-link live-session-btn {% if page.nav_id == 'session' %}active{% endif %}" id="liveSessionNavLink">Live Session</a></li>
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/index.html %}" class="nav-link {% if page.nav_id == 'dashboard' %}active{% endif %}">Dashboard</a></li>
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/sessions.html %}" class="nav-link {% if page.nav_id == 'sessions' %}active{% endif %}">Sessions</a></li>
-    <li><a href="#" class="nav-link {% if page.nav_id == 'session' %}active{% endif %}" id="liveSessionNavLink">Live Session</a></li>
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/games.html %}" class="nav-link {% if page.nav_id == 'games' %}active{% endif %}">Games</a></li>
     <li><a href="{{ site.baseurl }}{% link projects/poker_tracker/tools.html %}" class="nav-link {% if page.nav_id == 'tools' %}active{% endif %}">Tools</a></li>
   </ul>
@@ -31,33 +31,62 @@
       const activeSession = PokerTracker.DataStore.getActiveSession();
 
       if (activeSession) {
-        // Enable link and set destination
-        liveSessionLink.href = `/projects/poker_tracker/session?session_id=${activeSession.id}`;
+        // Live session is active - show "Goto Live Session" with active styling
+        liveSessionLink.textContent = 'Goto Live Session';
+        liveSessionLink.href = `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}?session_id=${activeSession.id}`;
         liveSessionLink.classList.remove('nav-link-disabled');
+        liveSessionLink.classList.add('live-session-active');
         liveSessionLink.style.opacity = '1';
         liveSessionLink.style.pointerEvents = 'auto';
+        liveSessionLink.title = `Active session: ${activeSession.name || 'Unnamed'}`;
       } else {
-        // Disable link
+        // No live session - show "Start Live Session" with border
+        liveSessionLink.textContent = 'Start Live Session';
         liveSessionLink.href = '#';
-        liveSessionLink.classList.add('nav-link-disabled');
-        liveSessionLink.style.opacity = '0.5';
-        liveSessionLink.style.pointerEvents = 'none';
-        liveSessionLink.title = 'No active session';
+        liveSessionLink.classList.remove('nav-link-disabled', 'live-session-active');
+        liveSessionLink.classList.add('live-session-start');
+        liveSessionLink.style.opacity = '1';
+        liveSessionLink.style.pointerEvents = 'auto';
+        liveSessionLink.title = 'Start a new live session';
       }
 
       // Add click handler
-      liveSessionLink.addEventListener('click', function(e) {
+      liveSessionLink.onclick = function(e) {
         if (!activeSession) {
           e.preventDefault();
-          // Optional: Show tooltip or redirect to sessions page
-          window.location.href = '/projects/poker_tracker/sessions';
+          startNewLiveSession();
         }
-      });
+        // If active session exists, the href will handle navigation
+      };
     } else {
       // DataStore not available, disable link
+      liveSessionLink.textContent = 'Live Session';
       liveSessionLink.href = '#';
       liveSessionLink.style.opacity = '0.5';
       liveSessionLink.style.pointerEvents = 'none';
+    }
+  }
+
+  function startNewLiveSession() {
+    // Prompt for session name
+    const sessionName = prompt('Enter a name for this live session:');
+    if (!sessionName) return; // User cancelled
+
+    try {
+      // Create new live session with the provided name
+      const newSession = PokerTracker.DataStore.createLiveSession();
+
+      // Update session with the name
+      PokerTracker.DataStore.updateSession(newSession.id, { name: sessionName });
+
+      // Update the nav link to reflect the new live session
+      setupLiveSessionNavLink();
+
+      // Redirect to the session page
+      window.location.href = `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}?session_id=${newSession.id}`;
+    } catch (error) {
+      console.error('Error creating live session:', error);
+      alert('Failed to create live session. Please try again.');
     }
   }
 
