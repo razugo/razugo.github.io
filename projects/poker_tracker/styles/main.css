@@ -2114,7 +2114,6 @@
 
       /* Session inputs mobile optimization */
       .session-inputs {
-        grid-template-columns: 1fr 1fr !important;
         gap: 0.75rem !important;
       }
 
@@ -2152,7 +2151,6 @@
 
       /* Session inputs mobile scaling */
       .session-inputs {
-        grid-template-columns: 1fr 1fr !important;
         gap: 0.75rem !important;
       }
 
