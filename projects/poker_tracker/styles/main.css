@@ -97,17 +97,14 @@
       color: var(--text-secondary);
       padding: 0.5rem 1rem;
       border-radius: var(--radius);
-      transition: all 0.2s;
     }
 
     .nav-link:hover, .nav-link.active {
-      color: var(--primary);
       background: rgba(59, 130, 246, 0.1);
     }
 
     /* Live Session Button States */
     .nav-link.live-session-start {
-      border: 2px solid var(--primary) !important;
       color: var(--primary);
       font-weight: 600;
       background: transparent;
@@ -119,7 +116,7 @@
     }
 
     .nav-link.live-session-active {
-      background: var(--success);
+      background: var(--primary);
       color: white;
       font-weight: 600;
       box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
@@ -155,6 +152,242 @@
       background: var(--border) !important;
       color: var(--text-secondary) !important;
       border-color: var(--border) !important;
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      max-width: 400px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input.error {
+      border-color: var(--danger);
+      background-color: rgba(239, 68, 68, 0.05);
+    }
+
+    .form-input.error:focus {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    .form-group.error label {
+      color: var(--danger);
+    }
+
+    /* Toggle Switch */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      margin-bottom: 0;
+      width: fit-content;
+    }
+
+    .toggle-input {
+      display: none;
+    }
+
+    .toggle-slider {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      transition: background 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .toggle-input:checked + .toggle-slider {
+      background: var(--primary);
+    }
+
+    .toggle-input:checked + .toggle-slider::before {
+      transform: translateX(26px);
+    }
+
+    .toggle-label {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .toggle-container.form-group label,
+    .form-group .toggle-container {
+      display: flex;
+      margin-bottom: 0;
+    }
+
+    /* Mobile Action Menu */
+    .session-actions {
+      position: relative;
+    }
+
+    .desktop-action {
+      display: inline-block;
+    }
+
+    .mobile-action {
+      display: none;
+      position: relative;
+    }
+
+    .action-menu-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .action-menu-btn:hover {
+      background: var(--background);
+      color: var(--text-primary);
+    }
+
+    .action-menu {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 0.25rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      z-index: 9999;
+      min-width: 100px;
+      display: none;
+    }
+
+    .action-menu button {
+      display: block;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      color: var(--text-primary);
+      transition: background 0.2s;
+    }
+
+    .action-menu button:hover {
+      background: var(--background);
+    }
+
+    .action-menu button:first-child {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .action-menu button:last-child {
+      border-radius: 0 0 var(--radius) var(--radius);
     }
 
     .nav-toggle {
@@ -293,8 +526,10 @@
     /* Table */
     .table-container {
       overflow-x: auto;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
     }
+
 
     .table {
       width: 100%;
@@ -798,8 +1033,9 @@
       .nav-menu {
         position: absolute;
         top: 100%;
-        left: 0;
         right: 0;
+        left: auto;
+        width: 200px;
         background: var(--surface);
         border-top: 1px solid var(--border);
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -812,6 +1048,7 @@
         transition: max-height 0.3s ease, opacity 0.3s ease;
         opacity: 0;
         display: flex;
+        z-index: 1000;
       }
 
       .nav-link {
@@ -819,7 +1056,6 @@
         text-align: center;
         margin: 0;
         display: block;
-        padding: 1rem;
         border-bottom: 1px solid var(--border);
       }
 
@@ -834,6 +1070,15 @@
 
       .nav-toggle {
         display: block;
+      }
+
+      /* Mobile Actions */
+      .desktop-action {
+        display: none;
+      }
+
+      .mobile-action {
+        display: block !important;
       }
 
       .filters {
@@ -1186,7 +1431,7 @@
 
     /* Hand Highlighting */
     .cell.highlighted {
-      background: #3b82f6;
+      background: #3b82f6 !important;
       color: white;
       font-weight: 600;
       border: 2px solid var(--primary);
@@ -1831,11 +2076,46 @@
       }
 
       .modal-footer {
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: space-between;
       }
 
-      .btn {
-        width: 100%;
+      /* Mobile Modal Optimizations */
+      .modal-content {
+        margin: 0.5rem;
+        max-height: 95vh;
+      }
+
+      .modal-header {
+        padding: 1rem;
+      }
+
+      .modal-body {
+        padding: 1rem;
+      }
+
+      .modal-footer {
+        padding: 1rem;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      /* Session inputs mobile optimization */
+      .session-inputs {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem !important;
+      }
+
+      /* Stack time inputs vertically on mobile */
+      .time-inputs-mobile {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Compact textarea on mobile */
+      .form-input[style*="min-height"] {
+        min-height: 40px !important;
       }
 
       /* Session inputs mobile scaling */

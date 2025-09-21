@@ -18,7 +18,7 @@ nav_id: games
     <div class="container">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Games</h1>
-    <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewGameModal()">+ New Game</button>
+    <button class="btn btn-primary" onclick="PokerTracker.GameModal.showNewGameModal()">+ New Game</button>
   </div>
 
   <div class="game-selector" id="gamesList">
@@ -198,5 +198,8 @@ nav_id: games
 
     </div>
   </main>
+
+  {% include_relative components/new-session-modal.html %}
+  {% include_relative components/new-game-modal.html %}
 </body>
 </html>

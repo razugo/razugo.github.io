@@ -20,7 +20,7 @@ nav_id: sessions
     <h1>Sessions</h1>
     <div style="display: flex; gap: 1rem;">
       <button class="btn" onclick="goToActiveSession()" id="liveSessionBtn">Live</button>
-      <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewSessionModal()">+ New Session</button>
+      <button class="btn btn-primary" onclick="PokerTracker.Modal.showNewSessionModal()">+ New Session</button>
     </div>
   </div>
 
@@ -117,8 +117,19 @@ nav_id: sessions
           <td>${handsCount}</td>
           <td>${vpip}%</td>
           <td>
-            <button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button>
-            <button class="btn btn-outline btn-sm" onclick="deleteSession('${session.id}')" style="margin-left: 0.5rem;">Delete</button>
+            <div class="session-actions">
+              <button class="btn btn-outline btn-sm desktop-action" onclick="viewSession('${session.id}')">View</button>
+              <button class="btn btn-outline btn-sm desktop-action" onclick="editSession('${session.id}')" style="margin-left: 0.5rem;">Edit</button>
+              <button class="btn btn-outline btn-sm desktop-action" onclick="deleteSession('${session.id}')" style="margin-left: 0.5rem;">Delete</button>
+              <div class="mobile-action">
+                <button class="action-menu-btn" onclick="toggleActionMenu(this, '${session.id}')">⋮</button>
+                <div class="action-menu">
+                  <button onclick="viewSession('${session.id}')">View</button>
+                  <button onclick="editSession('${session.id}')">Edit</button>
+                  <button onclick="deleteSession('${session.id}')">Delete</button>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
       `;
@@ -160,6 +171,10 @@ nav_id: sessions
     window.location.href = `/projects/poker_tracker/session?session_id=${sessionId}`;
   }
 
+  function editSession(sessionId) {
+    PokerTracker.SessionModal.showSessionSettingsModal(sessionId);
+  }
+
   function goToActiveSession() {
     const activeSession = PokerTracker.DataStore.getActiveSession();
     if (activeSession) {
@@ -191,8 +206,73 @@ nav_id: sessions
   function quickAction() {
     alert('Quick Action - Could start new session, add hand, or quick access menu');
   }
+
+
+  function toggleActionMenu(button, sessionId) {
+    const menu = button.nextElementSibling;
+    const isOpen = menu.style.display === 'block';
+
+    // Close all other action menus
+    document.querySelectorAll('.action-menu').forEach(m => {
+      m.style.display = 'none';
+      // Reset positioning
+      m.style.position = 'absolute';
+      m.style.bottom = '100%';
+      m.style.top = 'auto';
+      m.style.right = '0';
+      m.style.left = 'auto';
+      m.style.marginBottom = '0.25rem';
+      m.style.marginTop = '0';
+    });
+
+    if (!isOpen) {
+
+      // Use fixed positioning to ensure menu is always visible
+      menu.style.position = 'fixed';
+      menu.style.display = 'block';
+
+      // Get button position
+      const buttonRect = button.getBoundingClientRect();
+      const menuWidth = 100; // Approximate menu width
+      const menuHeight = 90; // Approximate menu height (3 buttons * 30px each)
+
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+
+      // Calculate optimal position
+      let top, left;
+
+      // Try to position above the button first
+      if (buttonRect.top - menuHeight - 10 > 0) {
+        top = buttonRect.top - menuHeight - 5;
+      } else {
+        // Position below the button
+        top = buttonRect.bottom + 5;
+      }
+
+      // Position to the right of the button, but ensure it stays in viewport
+      left = Math.min(buttonRect.right - menuWidth, viewportWidth - menuWidth - 10);
+      left = Math.max(10, left); // Ensure at least 10px from left edge
+
+      menu.style.top = `${top}px`;
+      menu.style.left = `${left}px`;
+      menu.style.right = 'auto';
+      menu.style.bottom = 'auto';
+      menu.style.margin = '0';
+    }
+  }
+
+  // Close action menus when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.mobile-action')) {
+      document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
+    }
+  });
 </script>
 
+{% include_relative components/new-session-modal.html %}
+{% include_relative components/new-game-modal.html %}
+{% include_relative components/session-settings-modal.html %}
 
     </div>
   </main>

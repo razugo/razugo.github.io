@@ -1,0 +1,131 @@
+<!-- New Session Modal -->
+<div id="newSessionModal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Session</h3>
+      <button class="modal-close" onclick="PokerTracker.Modal.closeNewSessionModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="sessionNameInput">Session Name *</label>
+        <input type="text" id="sessionNameInput" class="form-input" placeholder="Enter session name" required>
+      </div>
+      <div class="form-group">
+        <label class="toggle-container">
+          <input type="checkbox" id="liveToggle" class="toggle-input">
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Live Session</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="PokerTracker.Modal.closeNewSessionModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="PokerTracker.Modal.createNewSession()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Add modal functionality to PokerTracker namespace
+window.PokerTracker = window.PokerTracker || {};
+PokerTracker.Modal = {
+  showNewSessionModal: function(preToggleLive = false) {
+    const modal = document.getElementById('newSessionModal');
+    const liveToggle = document.getElementById('liveToggle');
+
+    // Pre-toggle live session if requested
+    if (preToggleLive) {
+      liveToggle.checked = true;
+    }
+
+    modal.style.display = 'flex';
+  },
+
+  closeNewSessionModal: function() {
+    const modal = document.getElementById('newSessionModal');
+    modal.style.display = 'none';
+
+    // Reset form and clear error states
+    const sessionNameInput = document.getElementById('sessionNameInput');
+    const sessionNameGroup = sessionNameInput.closest('.form-group');
+
+    sessionNameInput.value = '';
+    sessionNameInput.classList.remove('error');
+    sessionNameGroup.classList.remove('error');
+    document.getElementById('liveToggle').checked = false;
+  },
+
+  createNewSession: function() {
+    const sessionNameInput = document.getElementById('sessionNameInput');
+    const sessionNameGroup = sessionNameInput.closest('.form-group');
+    const sessionName = sessionNameInput.value.trim();
+    const isLive = document.getElementById('liveToggle').checked;
+
+    // Clear any previous error state
+    sessionNameInput.classList.remove('error');
+    sessionNameGroup.classList.remove('error');
+
+    if (!sessionName) {
+      // Highlight the field instead of showing alert
+      sessionNameInput.classList.add('error');
+      sessionNameGroup.classList.add('error');
+      sessionNameInput.focus();
+      return;
+    }
+
+    let newSession;
+    if (isLive) {
+      newSession = PokerTracker.DataStore.createLiveSession(null, 0);
+    } else {
+      newSession = PokerTracker.DataStore.createSession(null, 0);
+    }
+
+    // Update session with the name
+    PokerTracker.DataStore.updateSession(newSession.id, { name: sessionName });
+
+    // Update nav link globally if live session was created
+    if (isLive && window.updateLiveSessionNavLink) {
+      window.updateLiveSessionNavLink();
+    }
+
+    this.closeNewSessionModal();
+
+    // Redirect to the session page
+    window.location.href = `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}?session_id=${newSession.id}`;
+  }
+};
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+  const modal = document.getElementById('newSessionModal');
+  if (e.target === modal) {
+    PokerTracker.Modal.closeNewSessionModal();
+  }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('newSessionModal');
+    if (modal.style.display === 'flex') {
+      PokerTracker.Modal.closeNewSessionModal();
+    }
+  }
+});
+
+// Clear error state when user starts typing
+document.addEventListener('DOMContentLoaded', function() {
+  const sessionNameInput = document.getElementById('sessionNameInput');
+  if (sessionNameInput) {
+    sessionNameInput.addEventListener('input', function() {
+      if (this.classList.contains('error')) {
+        this.classList.remove('error');
+        const formGroup = this.closest('.form-group');
+        if (formGroup) {
+          formGroup.classList.remove('error');
+        }
+      }
+    });
+  }
+});
+</script>

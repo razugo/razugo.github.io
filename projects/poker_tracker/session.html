@@ -19,6 +19,10 @@ nav_id: session
 <div class="live-stats-bar" id="liveStatsBar">
   <div class="live-stats-content">
     <div class="stat-group">
+      <span class="stat-label">Session</span>
+      <span class="stat-value" id="sessionNameStat">Unnamed Session</span>
+    </div>
+    <div class="stat-group">
       <span class="stat-label">VPIP</span>
       <span class="stat-value" id="vpipStat">0% (0/0)</span>
     </div>
@@ -26,61 +30,10 @@ nav_id: session
       <span class="stat-label">P&L</span>
       <span class="stat-value" id="profitStat">$0</span>
     </div>
-    <div class="stat-group">
-      <span class="stat-label">Hands</span>
-      <span class="stat-value" id="handsStat">0</span>
-    </div>
   </div>
-  <button class="live-stats-toggle" onclick="toggleSessionOverlay()">⚙</button>
+  <button class="live-stats-toggle" onclick="showSessionSettingsModal()">⚙</button>
 </div>
 
-<!-- Collapsible Overlay -->
-<div class="session-overlay" id="sessionOverlay">
-  <div class="session-controls">
-    <div>
-      <h3 id="sessionTitle" onclick="editSessionName()" style="cursor: pointer;">Session Details</h3>
-      <input type="text" id="sessionNameInput" style="display: none; font-size: 1.25rem; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius); padding: 0.25rem;" onblur="saveSessionName()" onkeypress="handleSessionNameKeypress(event)">
-    </div>
-    <div>
-      <button class="btn btn-outline btn-sm" onclick="endSession()" id="endSessionBtn">End Session</button>
-    </div>
-  </div>
-
-  <!-- Session Data Inputs -->
-  <div class="session-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-    <div>
-      <label class="filter-label">Buy In ($)</label>
-      <input type="number" id="buyInInput" placeholder="0.00" step="0.01" min="0"
-             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
-    </div>
-    <div>
-      <label class="filter-label">Cash Out ($)</label>
-      <input type="number" id="cashOutInput" placeholder="0.00" step="0.01" min="0"
-             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
-    </div>
-    <div>
-      <label class="filter-label">Game</label>
-      <select id="gameSelect" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
-        <option value="">Select Game</option>
-      </select>
-    </div>
-  </div>
-
-  <div>
-    <div>
-      <label class="filter-label">Start Time</label>
-      <input type="datetime-local" id="startTimeInput"
-             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
-    </div>
-    <div>
-      <label class="filter-label">End Time</label>
-      <input type="datetime-local" id="endTimeInput"
-             style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius);">
-    </div>
-    <label class="filter-label">Session Notes</label>
-    <textarea id="sessionNotes" placeholder="Session notes..." style="width: 100%; min-height: 60px; padding: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); resize: vertical;"></textarea>
-  </div>
-</div>
 
 <!-- Main Content with View Tabs -->
 <div class="container" style="padding-top: 5rem;">
@@ -165,46 +118,17 @@ nav_id: session
     const profit = (session.cashOut || 0) - (session.buyIn || 0);
 
     // Update live stats bar
+    const sessionName = session.name || (game ? game.name : 'Unnamed Session');
+    document.getElementById('sessionNameStat').textContent = sessionName;
+
     document.getElementById('vpipStat').textContent = `${vpipPercent}% (${sessionData.totalPlayed}/${sessionData.total})`;
 
     const profitElement = document.getElementById('profitStat');
     profitElement.textContent = `${profit >= 0 ? '+' : ''}$${profit}`;
     profitElement.className = 'stat-value ' + (profit >= 0 ? 'positive' : 'negative');
 
-    document.getElementById('handsStat').textContent = sessionData.total;
 
-    // Update session overlay
-    const sessionName = session.name || (game ? game.name : 'Unknown Game');
-    document.getElementById('sessionTitle').textContent = `Session: ${sessionName}`;
 
-    // Update session inputs
-    document.getElementById('buyInInput').value = session.buyIn || '';
-    document.getElementById('cashOutInput').value = session.cashOut || '';
-    document.getElementById('gameSelect').value = session.gameId || '';
-    document.getElementById('sessionNotes').value = sessionData.notes || '';
-
-    // Update date inputs if available
-    if (session.startTime) {
-      document.getElementById('startTimeInput').value = new Date(session.startTime).toISOString().slice(0, 16);
-    }
-    if (session.endTime) {
-      document.getElementById('endTimeInput').value = new Date(session.endTime).toISOString().slice(0, 16);
-    }
-
-    // Update end session button based on whether this is the live session
-    const endSessionBtn = document.getElementById('endSessionBtn');
-    const activeSession = PokerTracker.DataStore.getActiveSession();
-    const isLiveSession = activeSession && activeSession.id === session.id;
-
-    if (isLiveSession) {
-      endSessionBtn.disabled = false;
-      endSessionBtn.textContent = 'End Live Session';
-      endSessionBtn.style.opacity = '1';
-    } else {
-      endSessionBtn.disabled = true;
-      endSessionBtn.textContent = 'Session Ended';
-      endSessionBtn.style.opacity = '0.5';
-    }
   }
 
   function keyFor(i, j) {
@@ -823,5 +747,9 @@ nav_id: session
 
 
   </main>
+
+  {% include_relative components/new-session-modal.html %}
+  {% include_relative components/new-game-modal.html %}
+  {% include_relative components/session-settings-modal.html %}
 </body>
 </html>
