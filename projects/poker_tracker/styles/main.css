@@ -233,7 +233,6 @@
 
     .form-group label {
       display: block;
-      margin-bottom: 0.5rem;
       font-weight: 500;
       color: var(--text-primary);
     }
@@ -318,6 +317,18 @@
     .toggle-container.form-group label,
     .form-group .toggle-container {
       display: flex;
+      margin-bottom: 0;
+    }
+
+    /* Toggle controls in session viewer */
+    #toggle-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin: 1rem 0;
+    }
+
+    #toggle-controls .toggle-container {
       margin-bottom: 0;
     }
 
@@ -1976,7 +1987,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
       padding-bottom: 1rem;
       border-bottom: 1px solid var(--border);
     }
@@ -2116,6 +2126,28 @@
       /* Compact textarea on mobile */
       .form-input[style*="min-height"] {
         min-height: 40px !important;
+      }
+
+      /* Bottom Sheet for Session Settings Modal */
+      #sessionSettingsModal .modal-content {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        margin: 0;
+        border-radius: 1rem 1rem 0 0;
+        max-height: 90vh;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-out;
+      }
+
+      #sessionSettingsModal[style*="flex"] .modal-content {
+        transform: translateY(0);
+      }
+
+      #sessionSettingsModal .modal-overlay {
+        align-items: flex-end;
       }
 
       /* Session inputs mobile scaling */

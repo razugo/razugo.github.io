@@ -31,7 +31,7 @@ nav_id: session
       <span class="stat-value" id="profitStat">$0</span>
     </div>
   </div>
-  <button class="live-stats-toggle" onclick="showSessionSettingsModal()">⚙</button>
+  <button class="live-stats-toggle" onclick="showSessionSettingsModal()">✏️</button>
 </div>
 
 
@@ -48,8 +48,16 @@ nav_id: session
     <div id="grid" aria-label="13 by 13 poker starting-hand grid"></div>
 
     <div id="toggle-controls">
-      <button id="toggleCounts">Counts</button>
-      <button id="togglePlayed">Played</button>
+      <label class="toggle-container">
+        <input type="checkbox" id="toggleCounts" class="toggle-input" checked>
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">Counts</span>
+      </label>
+      <label class="toggle-container">
+        <input type="checkbox" id="togglePlayed" class="toggle-input">
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">Played</span>
+      </label>
       <button id="undo">Undo</button>
     </div>
 
@@ -504,14 +512,14 @@ nav_id: session
   }
 
   function toggleCounts() {
-    showCounts = !showCounts;
-    document.getElementById('toggleCounts').classList.toggle('toggle-active', showCounts);
+    const checkbox = document.getElementById('toggleCounts');
+    showCounts = checkbox.checked;
     render();
   }
 
   function togglePlayedFilter() {
-    showPlayed = !showPlayed;
-    document.getElementById('togglePlayed').classList.toggle('toggle-active', showPlayed);
+    const checkbox = document.getElementById('togglePlayed');
+    showPlayed = checkbox.checked;
     render();
   }
 
@@ -608,8 +616,8 @@ nav_id: session
     listTab.addEventListener('click', () => switchView('list'));
 
     // Control button handlers
-    document.getElementById('toggleCounts').addEventListener('click', toggleCounts);
-    document.getElementById('togglePlayed').addEventListener('click', togglePlayedFilter);
+    document.getElementById('toggleCounts').addEventListener('change', toggleCounts);
+    document.getElementById('togglePlayed').addEventListener('change', togglePlayedFilter);
     document.getElementById('undo').addEventListener('click', undo);
 
     // Session input handlers

@@ -212,7 +212,7 @@ nav_id: sessions
     const menu = button.nextElementSibling;
     const isOpen = menu.style.display === 'block';
 
-    // Close all other action menus
+    // Close all other action menus and restore them to their original parents
     document.querySelectorAll('.action-menu').forEach(m => {
       m.style.display = 'none';
       // Reset positioning
@@ -223,12 +223,30 @@ nav_id: sessions
       m.style.left = 'auto';
       m.style.marginBottom = '0.25rem';
       m.style.marginTop = '0';
+      m.style.zIndex = '1000';
+
+      // Move back to original parent if it was moved to body
+      if (m.parentElement === document.body) {
+        const mobileAction = document.querySelector(`[data-menu-id="${m.dataset.menuId}"]`);
+        if (mobileAction) {
+          mobileAction.appendChild(m);
+        }
+      }
     });
 
     if (!isOpen) {
+      // Store reference to original parent and add identifier
+      if (!menu.dataset.menuId) {
+        menu.dataset.menuId = 'menu-' + Date.now();
+        button.parentElement.dataset.menuId = menu.dataset.menuId;
+      }
+
+      // Move menu to body to escape all container constraints
+      document.body.appendChild(menu);
 
       // Use fixed positioning to ensure menu is always visible
       menu.style.position = 'fixed';
+      menu.style.zIndex = '99999';
       menu.style.display = 'block';
 
       // Get button position
@@ -239,20 +257,25 @@ nav_id: sessions
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
 
-      // Calculate optimal position
+      // Calculate optimal position with iOS safe area considerations
       let top, left;
 
       // Try to position above the button first
-      if (buttonRect.top - menuHeight - 10 > 0) {
-        top = buttonRect.top - menuHeight - 5;
+      if (buttonRect.top - menuHeight - 20 > 0) {
+        top = buttonRect.top - menuHeight - 10;
       } else {
         // Position below the button
-        top = buttonRect.bottom + 5;
+        top = buttonRect.bottom + 10;
       }
 
       // Position to the right of the button, but ensure it stays in viewport
-      left = Math.min(buttonRect.right - menuWidth, viewportWidth - menuWidth - 10);
-      left = Math.max(10, left); // Ensure at least 10px from left edge
+      left = Math.min(buttonRect.right - menuWidth, viewportWidth - menuWidth - 20);
+      left = Math.max(20, left); // Ensure at least 20px from edges for iOS
+
+      // Ensure menu doesn't go below viewport
+      if (top + menuHeight > viewportHeight - 20) {
+        top = viewportHeight - menuHeight - 20;
+      }
 
       menu.style.top = `${top}px`;
       menu.style.left = `${left}px`;
