@@ -50,8 +50,8 @@ nav_id: sessions
     </select>
   </div>
 
-  <!-- Sessions Table -->
-  <div class="card">
+  <!-- Sessions Table (Desktop) -->
+  <div class="card desktop-view">
     <div class="card-content">
       <div class="table-container">
         <table class="table">
@@ -75,6 +75,13 @@ nav_id: sessions
       </div>
     </div>
   </div>
+
+  <!-- Sessions Cards (Mobile) -->
+  <div class="mobile-view">
+    <div id="sessionsCardContainer">
+      <!-- Populated by JavaScript -->
+    </div>
+  </div>
 </div>
 
 <script>
@@ -87,7 +94,9 @@ nav_id: sessions
   function populateSessionsTable() {
     const sessions = PokerTracker.DataStore.getSessions();
     const tbody = document.getElementById('sessionsTableBody');
+    const cardContainer = document.getElementById('sessionsCardContainer');
 
+    // Populate table (desktop)
     tbody.innerHTML = sessions.map(session => {
       const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
@@ -118,20 +127,40 @@ nav_id: sessions
           <td>${vpip}%</td>
           <td>
             <div class="session-actions">
-              <button class="btn btn-outline btn-sm desktop-action" onclick="viewSession('${session.id}')">View</button>
-              <button class="btn btn-outline btn-sm desktop-action" onclick="editSession('${session.id}')" style="margin-left: 0.5rem;">Edit</button>
-              <button class="btn btn-outline btn-sm desktop-action" onclick="deleteSession('${session.id}')" style="margin-left: 0.5rem;">Delete</button>
-              <div class="mobile-action">
-                <button class="action-menu-btn" onclick="toggleActionMenu(this, '${session.id}')">⋮</button>
-                <div class="action-menu">
-                  <button onclick="viewSession('${session.id}')">View</button>
-                  <button onclick="editSession('${session.id}')">Edit</button>
-                  <button onclick="deleteSession('${session.id}')">Delete</button>
-                </div>
-              </div>
+              <button class="action-menu-btn" onclick="console.log('Button clicked!'); showActionMenu(this, '${session.id}')">⋮</button>
             </div>
           </td>
         </tr>
+      `;
+    }).join('');
+
+    // Populate cards (mobile)
+    cardContainer.innerHTML = sessions.map(session => {
+      const game = PokerTracker.DataStore.getGame(session.gameId);
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+
+      // Get hands count and VPIP directly from session
+      const handsCount = session.total || 0;
+      const vpip = (session.vpip || 0).toFixed(1);
+
+      return `
+        <div class="session-card">
+          <div class="session-card-content">
+            <div class="session-card-info">
+              <span class="session-card-title">${game?.name || 'Unknown'}</span>
+              <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
+                ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
+              </span>
+            </div>
+            <div class="session-card-info">
+              <span class="session-card-date">${session.date}</span>
+              <span class="session-card-vpip">VPIP: ${vpip}%</span>
+            </div>
+          </div>
+          <div class="session-card-actions">
+            <button class="action-menu-btn" onclick="showActionMenu(this, '${session.id}')">⋮</button>
+          </div>
+        </div>
       `;
     }).join('');
   }
@@ -208,94 +237,141 @@ nav_id: sessions
   }
 
 
-  function toggleActionMenu(button, sessionId) {
-    const menu = button.nextElementSibling;
-    const isOpen = menu.style.display === 'block';
+  let currentActionSessionId = null;
+  let menuShowTime = 0;
 
-    // Close all other action menus and restore them to their original parents
-    document.querySelectorAll('.action-menu').forEach(m => {
-      m.style.display = 'none';
-      // Reset positioning
-      m.style.position = 'absolute';
-      m.style.bottom = '100%';
-      m.style.top = 'auto';
-      m.style.right = '0';
-      m.style.left = 'auto';
-      m.style.marginBottom = '0.25rem';
-      m.style.marginTop = '0';
-      m.style.zIndex = '1000';
+  function showActionMenu(button, sessionId) {
+    console.log('showActionMenu called', sessionId);
+    const menu = document.getElementById('actionMenu');
 
-      // Move back to original parent if it was moved to body
-      if (m.parentElement === document.body) {
-        const mobileAction = document.querySelector(`[data-menu-id="${m.dataset.menuId}"]`);
-        if (mobileAction) {
-          mobileAction.appendChild(m);
-        }
-      }
-    });
+    if (!menu) {
+      console.error('Menu element not found');
+      return;
+    }
 
-    if (!isOpen) {
-      // Store reference to original parent and add identifier
-      if (!menu.dataset.menuId) {
-        menu.dataset.menuId = 'menu-' + Date.now();
-        button.parentElement.dataset.menuId = menu.dataset.menuId;
-      }
+    // Check if menu is already open for the same session
+    if (currentActionSessionId === sessionId && menu.classList.contains('show')) {
+      console.log('Menu already open for this session, hiding it');
+      hideActionMenu();
+      return;
+    }
 
-      // Move menu to body to escape all container constraints
-      document.body.appendChild(menu);
+    // Close any existing menu first
+    menu.classList.remove('show');
 
-      // Use fixed positioning to ensure menu is always visible
-      menu.style.position = 'fixed';
-      menu.style.zIndex = '99999';
-      menu.style.display = 'block';
+    menuShowTime = Date.now(); // Record when menu was shown
+    currentActionSessionId = sessionId;
 
-      // Get button position
-      const buttonRect = button.getBoundingClientRect();
-      const menuWidth = 100; // Approximate menu width
-      const menuHeight = 90; // Approximate menu height (3 buttons * 30px each)
+    // Position menu above the button
+    const buttonRect = button.getBoundingClientRect();
+    console.log('Button rect:', buttonRect);
+    console.log('Window size:', window.innerWidth, window.innerHeight);
 
-      const viewportHeight = window.innerHeight;
-      const viewportWidth = window.innerWidth;
+    // Reset any previous styles
+    menu.style.position = 'fixed';
+    menu.style.top = 'auto';
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+    menu.style.transform = 'none';
 
-      // Calculate optimal position with iOS safe area considerations
-      let top, left;
+    // Calculate position above the button
+    const menuHeight = 140; // Approximate height of menu with 3 items
+    const spaceAbove = buttonRect.top;
+    const spaceBelow = window.innerHeight - buttonRect.bottom;
 
-      // Try to position above the button first
-      if (buttonRect.top - menuHeight - 20 > 0) {
-        top = buttonRect.top - menuHeight - 10;
-      } else {
-        // Position below the button
-        top = buttonRect.bottom + 10;
-      }
+    if (spaceAbove >= menuHeight + 8) {
+      // Position above button
+      menu.style.bottom = (window.innerHeight - buttonRect.top + 8) + 'px';
+      console.log('Positioning above, bottom:', menu.style.bottom);
+    } else {
+      // Position below button if not enough space above
+      menu.style.top = (buttonRect.bottom + 8) + 'px';
+      console.log('Positioning below, top:', menu.style.top);
+    }
 
-      // Position to the right of the button, but ensure it stays in viewport
-      left = Math.min(buttonRect.right - menuWidth, viewportWidth - menuWidth - 20);
-      left = Math.max(20, left); // Ensure at least 20px from edges for iOS
+    // Horizontal positioning - keep menu within viewport
+    let leftPos = buttonRect.left - 60;
+    const menuWidth = 140;
 
-      // Ensure menu doesn't go below viewport
-      if (top + menuHeight > viewportHeight - 20) {
-        top = viewportHeight - menuHeight - 20;
-      }
+    // Ensure menu doesn't go off the right edge
+    if (leftPos + menuWidth > window.innerWidth - 16) {
+      leftPos = window.innerWidth - menuWidth - 16;
+    }
 
-      menu.style.top = `${top}px`;
-      menu.style.left = `${left}px`;
-      menu.style.right = 'auto';
-      menu.style.bottom = 'auto';
-      menu.style.margin = '0';
+    // Ensure menu doesn't go off the left edge
+    if (leftPos < 16) {
+      leftPos = 16;
+    }
+
+    menu.style.left = leftPos + 'px';
+    console.log('Final position - left:', leftPos, 'menu width:', menuWidth);
+
+    // Show the menu
+    menu.classList.add('show');
+    console.log('Menu should be visible now, has show class:', menu.classList.contains('show'));
+  }
+
+  function hideActionMenu() {
+    console.log("hide action menu called")
+    const menu = document.getElementById('actionMenu');
+
+    menu.classList.remove('show');
+    currentActionSessionId = null;
+    menuShowTime = 0; // Reset the show time
+  }
+
+  function executeAction(action) {
+    if (!currentActionSessionId) return;
+
+    hideActionMenu();
+
+    switch(action) {
+      case 'view':
+        viewSession(currentActionSessionId);
+        break;
+      case 'edit':
+        editSession(currentActionSessionId);
+        break;
+      case 'delete':
+        deleteSession(currentActionSessionId);
+        break;
     }
   }
 
-  // Close action menus when clicking outside
+  // Close action menu when clicking outside
   document.addEventListener('click', function(e) {
-    if (!e.target.closest('.mobile-action')) {
-      document.querySelectorAll('.action-menu').forEach(m => m.style.display = 'none');
+    console.log("clicked outside")
+
+    // Debounce: don't hide menu if it was just shown (within 300ms)
+    const timeSinceShow = Date.now() - menuShowTime;
+    if (timeSinceShow < 10) {
+      console.log("Ignoring click outside - menu was just shown", timeSinceShow + "ms ago");
+      return;
+    }
+
+    if (!e.target.closest('.session-actions') && !e.target.closest('.action-menu-popup')) {
+      hideActionMenu();
     }
   });
+
 </script>
 
 {% include_relative components/new-session-modal.html %}
 {% include_relative components/new-game-modal.html %}
 {% include_relative components/session-settings-modal.html %}
+
+<!-- Action Menu -->
+<div id="actionMenu" class="action-menu-popup">
+  <button class="action-menu-item" onclick="executeAction('view')">
+    <span>View</span>
+  </button>
+  <button class="action-menu-item" onclick="executeAction('edit')">
+    <span>Edit</span>
+  </button>
+  <button class="action-menu-item delete" onclick="executeAction('delete')">
+    <span>Delete</span>
+  </button>
+</div>
 
     </div>
   </main>

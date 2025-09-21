@@ -337,69 +337,90 @@
       position: relative;
     }
 
-    .desktop-action {
-      display: inline-block;
-    }
-
-    .mobile-action {
-      display: none;
-      position: relative;
-    }
-
     .action-menu-btn {
       background: none;
       border: none;
       font-size: 1.2rem;
       font-weight: bold;
       cursor: pointer;
-      padding: 0.5rem;
+      padding: 0.75rem;
       border-radius: var(--radius);
       color: var(--text-secondary);
       transition: all 0.2s;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .action-menu-btn:hover {
+    .action-menu-btn:hover,
+    .action-menu-btn:active {
       background: var(--background);
       color: var(--text-primary);
     }
 
-    .action-menu {
-      position: absolute;
-      bottom: 100%;
-      right: 0;
-      margin-bottom: 0.25rem;
+    /* Action Menu Popup */
+    .action-menu-popup {
+      position: fixed;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
       z-index: 9999;
-      min-width: 100px;
-      display: none;
+      min-width: 140px;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.15s ease;
+      pointer-events: none;
     }
 
-    .action-menu button {
-      display: block;
+    .action-menu-popup.show {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .action-menu-item {
+      display: flex;
+      align-items: center;
       width: 100%;
-      padding: 0.75rem 1rem;
+      padding: 0.875rem 1rem;
       border: none;
       background: none;
       text-align: left;
       cursor: pointer;
       color: var(--text-primary);
-      transition: background 0.2s;
+      transition: background 0.15s;
+      font-size: 0.9rem;
+      border-radius: 0;
     }
 
-    .action-menu button:hover {
-      background: var(--background);
-    }
-
-    .action-menu button:first-child {
+    .action-menu-item:first-child {
       border-radius: var(--radius) var(--radius) 0 0;
     }
 
-    .action-menu button:last-child {
+    .action-menu-item:last-child {
       border-radius: 0 0 var(--radius) var(--radius);
     }
+
+    .action-menu-item:only-child {
+      border-radius: var(--radius);
+    }
+
+    .action-menu-item:hover {
+      background: var(--background);
+    }
+
+    .action-menu-item.delete {
+      color: var(--danger);
+    }
+
+    .action-menu-item.delete:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
 
     .nav-toggle {
       display: none;
@@ -462,6 +483,88 @@
 
     .card-content {
       padding: 1.5rem;
+    }
+
+    /* Desktop/Mobile View Toggle */
+    .desktop-view {
+      display: block;
+    }
+
+    .mobile-view {
+      display: none;
+    }
+
+    /* Session Cards (Mobile) */
+    .session-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+      padding: 1rem;
+      position: relative;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .session-card-content {
+      flex: 1;
+    }
+
+    .session-card-actions {
+      display: flex;
+      align-items: flex-start;
+      flex-shrink: 0;
+    }
+
+    .session-card-header {
+      margin-bottom: 0.75rem;
+    }
+
+    .session-card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 0.25rem 0;
+    }
+
+    .session-card-pnl {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .session-card-pnl.positive {
+      color: var(--success);
+    }
+
+    .session-card-pnl.negative {
+      color: var(--danger);
+    }
+
+    .session-card-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .session-card-game {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .session-card-vpip {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      background: var(--background);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .session-card-date {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 0;
     }
 
     /* Stats Grid */
@@ -1083,13 +1186,17 @@
         display: block;
       }
 
-      /* Mobile Actions */
-      .desktop-action {
-        display: none;
+      /* Mobile Action Menu */
+      .action-menu-btn {
+        padding: 1rem;
+        min-width: 48px;
+        min-height: 48px;
       }
 
-      .mobile-action {
-        display: block !important;
+      .action-menu-item {
+        padding: 1rem 1.25rem;
+        min-height: 48px;
+        font-size: 0.95rem;
       }
 
       .filters {
@@ -1116,6 +1223,15 @@
 
       .card-content {
         padding: 1rem 0.5rem;
+      }
+
+      /* Desktop/Mobile View Toggle */
+      .desktop-view {
+        display: none;
+      }
+
+      .mobile-view {
+        display: block;
       }
 
       /* Show scroll indicator on mobile */
