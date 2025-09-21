@@ -38,7 +38,7 @@ PokerTracker.Utils = {
       PokerTracker.DataStore.updateSession(newSession.id, { name: sessionName.trim() });
     }
 
-    alert(`${startLive ? 'Live ' : ''}Session created successfully!`);
+    console.error(`${startLive ? 'Live ' : ''}Session created successfully!`);
 
     // Update nav link globally if live session was created
     if (startLive && window.updateLiveSessionNavLink) {
@@ -60,7 +60,7 @@ PokerTracker.Utils = {
     if (smallBlind === null) return;
     const smallBlindAmount = parseFloat(smallBlind);
     if (isNaN(smallBlindAmount) || smallBlindAmount <= 0) {
-      alert('Invalid small blind amount');
+    console.error('Invalid small blind amount');
       return;
     }
 
@@ -68,14 +68,14 @@ PokerTracker.Utils = {
     if (bigBlind === null) return;
     const bigBlindAmount = parseFloat(bigBlind);
     if (isNaN(bigBlindAmount) || bigBlindAmount <= smallBlindAmount) {
-      alert('Invalid big blind amount');
+    console.error('Invalid big blind amount');
       return;
     }
 
     // Create the game
     PokerTracker.DataStore.createGame(gameName.trim(), location.trim() || 'Unknown', smallBlindAmount, bigBlindAmount);
 
-    alert('Game created successfully!');
+    console.error('Game created successfully!');
 
     // Refresh the page if we're on games page
     if (window.location.pathname.includes('games')) {

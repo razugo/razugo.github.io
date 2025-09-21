@@ -12,26 +12,26 @@
         <input type="text" id="modalSessionNameInput" class="form-input" placeholder="Enter session name">
       </div>
 
-      <!-- Session Data Inputs -->
-      <div class="session-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <!-- Financial + Game Inputs -->
+      <div class="session-form-grid session-form-grid-finance">
         <div class="form-group">
-          <label for="modalBuyInInput">Buy In ($)</label>
+          <label for="modalBuyInInput">Buy In</label>
           <input type="number" id="modalBuyInInput" class="form-input" placeholder="0.00" step="0.01" min="0">
         </div>
         <div class="form-group">
-          <label for="modalCashOutInput">Cash Out ($)</label>
+          <label for="modalCashOutInput">Cash Out</label>
           <input type="number" id="modalCashOutInput" class="form-input" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label for="modalGameSelect">Game</label>
+          <select id="modalGameSelect" class="form-input">
+            <option value="">Select Game</option>
+          </select>
         </div>
       </div>
 
-      <div class="form-group">
-        <label for="modalGameSelect">Game</label>
-        <select id="modalGameSelect" class="form-input">
-          <option value="">Select Game</option>
-        </select>
-      </div>
-
-      <div class="session-inputs time-inputs-mobile" style="display: grid;">
+      <!-- Timing Inputs -->
+      <div class="session-form-grid session-form-grid-time">
         <div class="form-group">
           <label for="modalStartTimeInput">Start Time</label>
           <input type="datetime-local" id="modalStartTimeInput" class="form-input">
@@ -47,10 +47,8 @@
         <textarea id="modalSessionNotes" class="form-input" placeholder="Session notes..." style="min-height: 60px; resize: vertical;"></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="PokerTracker.SessionModal.closeSessionSettingsModal()">Cancel</button>
+    <div class="modal-footer session-modal-footer">
       <button class="btn btn-danger" onclick="PokerTracker.SessionModal.endSession()" id="modalEndSessionBtn">End Session</button>
-      <button class="btn btn-primary" onclick="PokerTracker.SessionModal.saveSessionSettings()">Save</button>
     </div>
   </div>
 </div>
@@ -60,6 +58,7 @@
 window.PokerTracker = window.PokerTracker || {};
 PokerTracker.SessionModal = {
   currentSessionId: null,
+  autoSaveListenersBound: false,
 
   showSessionSettingsModal: function(sessionId = null) {
     this.currentSessionId = sessionId || this.getCurrentSessionId();
@@ -67,6 +66,7 @@ PokerTracker.SessionModal = {
 
     const modal = document.getElementById('sessionSettingsModal');
     this.loadSessionData();
+    this.ensureAutoSaveListeners();
     modal.style.display = 'flex';
   },
 
@@ -103,14 +103,10 @@ PokerTracker.SessionModal = {
     document.getElementById('modalSessionNotes').value = session.notes || '';
 
     // Set times
-    if (session.startTime) {
-      const startTime = new Date(session.startTime);
-      document.getElementById('modalStartTimeInput').value = this.formatDateTimeLocal(startTime);
-    }
-    if (session.endTime) {
-      const endTime = new Date(session.endTime);
-      document.getElementById('modalEndTimeInput').value = this.formatDateTimeLocal(endTime);
-    }
+    const startTimeInput = document.getElementById('modalStartTimeInput');
+    const endTimeInput = document.getElementById('modalEndTimeInput');
+    startTimeInput.value = session.startTime ? this.formatDateTimeLocal(new Date(session.startTime)) : '';
+    endTimeInput.value = session.endTime ? this.formatDateTimeLocal(new Date(session.endTime)) : '';
 
     // Populate games dropdown
     this.populateGameSelect();
@@ -150,43 +146,145 @@ PokerTracker.SessionModal = {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   },
 
+  parseNumericInput: function(value) {
+    if (value === '' || value === null || typeof value === 'undefined') return 0;
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  },
+
+  ensureAutoSaveListeners: function() {
+    if (this.autoSaveListenersBound) return;
+
+    const fieldConfigs = [
+      {
+        id: 'modalSessionNameInput',
+        event: 'input',
+        getUpdates: element => ({ name: element.value.trim() })
+      },
+      {
+        id: 'modalBuyInInput',
+        event: 'input',
+        getUpdates: element => ({ buyIn: this.parseNumericInput(element.value) })
+      },
+      {
+        id: 'modalCashOutInput',
+        event: 'input',
+        getUpdates: element => ({ cashOut: this.parseNumericInput(element.value) })
+      },
+      {
+        id: 'modalGameSelect',
+        event: 'change',
+        getUpdates: element => ({ gameId: element.value || null })
+      },
+      {
+        id: 'modalStartTimeInput',
+        event: 'change',
+        getUpdates: element => {
+          const value = element.value;
+          return value ? { startTime: new Date(value).toISOString() } : { startTime: null };
+        }
+      },
+      {
+        id: 'modalEndTimeInput',
+        event: 'change',
+        getUpdates: element => {
+          const value = element.value;
+          return value ? { endTime: new Date(value).toISOString() } : { endTime: null };
+        }
+      },
+      {
+        id: 'modalSessionNotes',
+        event: 'input',
+        getUpdates: element => ({ notes: element.value })
+      }
+    ];
+
+    fieldConfigs.forEach(config => {
+      const element = document.getElementById(config.id);
+      if (!element) return;
+
+      element.addEventListener(config.event || 'input', () => {
+        const updates = config.getUpdates(element) || {};
+        this.handleFieldUpdates(updates);
+      });
+    });
+
+    this.autoSaveListenersBound = true;
+  },
+
+  filterUnchangedUpdates: function(updates = {}) {
+    if (!this.currentSessionId) return updates;
+    const session = PokerTracker.DataStore.getSession(this.currentSessionId);
+    if (!session) return updates;
+
+    const filtered = {};
+    Object.keys(updates).forEach(key => {
+      const incoming = updates[key];
+      const existing = session[key];
+
+      const bothNumbers = typeof incoming === 'number' && typeof existing === 'number';
+      if (bothNumbers && incoming === existing) return;
+
+      if ((incoming === null || incoming === '') && (existing === null || typeof existing === 'undefined' || existing === '')) {
+        return;
+      }
+
+      if (incoming === existing) return;
+
+      filtered[key] = incoming;
+    });
+
+    return filtered;
+  },
+
+  handleFieldUpdates: function(updates = {}) {
+    if (!this.currentSessionId) return;
+
+    const filtered = this.filterUnchangedUpdates(updates);
+    if (Object.keys(filtered).length === 0) {
+      return;
+    }
+
+    PokerTracker.DataStore.updateSession(this.currentSessionId, filtered);
+    this.refreshDependentViews();
+  },
+
+  refreshDependentViews: function() {
+    if (typeof window.updateSessionStats === 'function') {
+      window.updateSessionStats();
+    }
+    if (typeof window.updateLiveStats === 'function') {
+      window.updateLiveStats();
+    }
+    if (typeof window.populateSessionsTable === 'function') {
+      window.populateSessionsTable();
+    }
+    if (typeof window.checkActiveSession === 'function') {
+      window.checkActiveSession();
+    }
+    if (typeof window.updateLiveSessionNavLink === 'function') {
+      window.updateLiveSessionNavLink();
+    }
+  },
+
   saveSessionSettings: function() {
     if (!this.currentSessionId) return;
 
     const updates = {
       name: document.getElementById('modalSessionNameInput').value.trim(),
-      buyIn: parseFloat(document.getElementById('modalBuyInInput').value) || 0,
-      cashOut: parseFloat(document.getElementById('modalCashOutInput').value) || 0,
+      buyIn: this.parseNumericInput(document.getElementById('modalBuyInInput').value),
+      cashOut: this.parseNumericInput(document.getElementById('modalCashOutInput').value),
       gameId: document.getElementById('modalGameSelect').value || null,
-      notes: document.getElementById('modalSessionNotes').value.trim()
+      notes: document.getElementById('modalSessionNotes').value
     };
 
     const startTimeValue = document.getElementById('modalStartTimeInput').value;
     const endTimeValue = document.getElementById('modalEndTimeInput').value;
 
-    if (startTimeValue) {
-      updates.startTime = new Date(startTimeValue).toISOString();
-    }
-    if (endTimeValue) {
-      updates.endTime = new Date(endTimeValue).toISOString();
-    }
+    updates.startTime = startTimeValue ? new Date(startTimeValue).toISOString() : null;
+    updates.endTime = endTimeValue ? new Date(endTimeValue).toISOString() : null;
 
-    // Update session
-    PokerTracker.DataStore.updateSession(this.currentSessionId, updates);
-
-    this.closeSessionSettingsModal();
-
-    // Refresh the page or update UI
-    if (typeof updateSessionDisplay === 'function') {
-      updateSessionDisplay();
-    } else if (window.location.pathname.includes('sessions')) {
-      window.location.reload();
-    } else {
-      // Update live stats if on session page
-      if (typeof updateLiveStats === 'function') {
-        updateLiveStats();
-      }
-    }
+    this.handleFieldUpdates(updates);
   },
 
   endSession: function() {
@@ -195,12 +293,17 @@ PokerTracker.SessionModal = {
     if (confirm('Are you sure you want to end this session?')) {
       // Set end time if not already set
       const endTimeInput = document.getElementById('modalEndTimeInput');
-      if (!endTimeInput.value) {
-        endTimeInput.value = this.formatDateTimeLocal(new Date());
+      let endTimeIso;
+      if (endTimeInput.value) {
+        endTimeIso = new Date(endTimeInput.value).toISOString();
+      } else {
+        const now = new Date();
+        endTimeIso = now.toISOString();
+        endTimeInput.value = this.formatDateTimeLocal(now);
       }
 
-      // Save current settings first
-      this.saveSessionSettings();
+      this.handleFieldUpdates({ endTime: endTimeIso });
+      this.closeSessionSettingsModal();
 
       // End the live session if this is the active one
       const activeSession = PokerTracker.DataStore.getActiveSession();

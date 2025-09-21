@@ -182,7 +182,7 @@ nav_id: sessions
 
     if (!session) {
       console.error('Session not found for ID:', sessionId);
-      alert('Session not found');
+      console.error('Session not found');
       return;
     }
 
@@ -190,7 +190,7 @@ nav_id: sessions
 
     if (confirm(`Are you sure you want to delete this session? This will permanently delete ${handsCount} hands and cannot be undone.`)) {
       PokerTracker.DataStore.deleteSession(sessionId);
-      alert('Session deleted successfully!');
+      console.error('Session deleted successfully!');
       populateSessionsTable();
       checkActiveSession();
     }
@@ -247,7 +247,7 @@ nav_id: sessions
 
 <script>
   function quickAction() {
-    alert('Quick Action - Could start new session, add hand, or quick access menu');
+    console.error('Quick Action - Could start new session, add hand, or quick access menu');
   }
 
 

@@ -95,7 +95,7 @@
         window.location.href = `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}?session_id=${newSession.id}`;
       } catch (error) {
         console.error('Error creating live session:', error);
-        alert('Failed to create live session. Please try again.');
+        console.error('Failed to create live session. Please try again.');
       }
     }
   }

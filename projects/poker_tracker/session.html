@@ -599,7 +599,7 @@ nav_id: session
     console.log('Session ID from URL:', currentSessionId);
 
     if (!currentSessionId) {
-      alert('No session ID provided');
+      console.error('No session ID provided');
       window.location.href = '/projects/poker_tracker/sessions';
       return;
     }
@@ -613,7 +613,7 @@ nav_id: session
     console.log('Found session:', session);
 
     if (!session) {
-      alert(`Session not found for ID: ${currentSessionId}`);
+      console.error(`Session not found for ID: ${currentSessionId}`);
       window.location.href = '/projects/poker_tracker/sessions';
       return;
     }

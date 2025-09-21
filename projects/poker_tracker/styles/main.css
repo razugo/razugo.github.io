@@ -2256,7 +2256,7 @@
     @media (max-width: 768px) {
       .modal-content {
         margin: 0.5rem;
-        padding: 1.5rem;
+        padding: 0.5rem;
       }
 
       .form-row {
@@ -2267,6 +2267,10 @@
       .modal-footer {
         flex-direction: row;
         justify-content: space-between;
+      }
+
+      #sessionSettingsModal .modal-footer {
+        justify-content: flex-end;
       }
 
       /* Mobile Modal Optimizations */
@@ -2306,28 +2310,6 @@
         min-height: 40px !important;
       }
 
-      /* Bottom Sheet for Session Settings Modal */
-      #sessionSettingsModal .modal-content {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        margin: 0;
-        border-radius: 1rem 1rem 0 0;
-        max-height: 90vh;
-        transform: translateY(100%);
-        transition: transform 0.3s ease-out;
-      }
-
-      #sessionSettingsModal[style*="flex"] .modal-content {
-        transform: translateY(0);
-      }
-
-      #sessionSettingsModal .modal-overlay {
-        align-items: flex-end;
-      }
-
       /* Session inputs mobile scaling */
       .session-inputs {
         gap: 0.75rem !important;
@@ -2343,6 +2325,55 @@
         width: 100% !important;
         font-size: 16px !important; /* Prevents zoom on iOS */
         box-sizing: border-box !important; /* Include padding in width calculation */
+      }
+
+      .session-form-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+      }
+
+      .session-form-grid .form-group {
+        margin-bottom: 0;
+      }
+
+      .session-form-grid-finance {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.2fr);
+        align-items: end;
+      }
+
+      .session-form-grid-time {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: end;
+      }
+
+      .session-form-grid .form-input {
+        font-size: 0.9rem;
+        padding: 0.45rem 0.55rem;
+        width: 100%;
+      }
+
+      .session-autosave-note {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+      }
+
+      @media (max-width: 360px) {
+        .session-form-grid-finance {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .session-form-grid-finance > .form-group:last-child {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .session-form-grid .form-input {
+          font-size: 1rem;
+          padding: 0.6rem 0.75rem;
+        }
       }
 
       /* Session notes are already in their own div, so no grid changes needed */

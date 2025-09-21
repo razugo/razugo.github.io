@@ -100,7 +100,7 @@ nav_id: games
   function editGame(gameId) {
     const game = PokerTracker.DataStore.getGame(gameId);
     if (!game) {
-      alert('Game not found');
+      console.error('Game not found');
       return;
     }
 
@@ -131,17 +131,17 @@ nav_id: games
 
     // Validation
     if (!name) {
-      alert('Game name cannot be empty');
+      console.error('Game name cannot be empty');
       return;
     }
 
     if (isNaN(smallBlind) || smallBlind <= 0) {
-      alert('Invalid small blind amount');
+      console.error('Invalid small blind amount');
       return;
     }
 
     if (isNaN(bigBlind) || bigBlind <= smallBlind) {
-      alert('Big blind must be greater than small blind');
+      console.error('Big blind must be greater than small blind');
       return;
     }
 
@@ -157,7 +157,7 @@ nav_id: games
     };
 
     PokerTracker.DataStore.updateGame(currentEditingGameId, updates);
-    alert('Game updated successfully!');
+    console.error('Game updated successfully!');
     closeEditGameModal();
     populateGamesList();
   }
@@ -173,13 +173,13 @@ nav_id: games
   function deleteGame(gameId) {
     const game = PokerTracker.DataStore.getGame(gameId);
     if (!game) {
-      alert('Game not found');
+      console.error('Game not found');
       return;
     }
 
     if (confirm(`Are you sure you want to delete "${game.name}"? This action cannot be undone.`)) {
       PokerTracker.DataStore.deleteGame(gameId);
-      alert('Game deleted successfully!');
+      console.error('Game deleted successfully!');
       populateGamesList();
     }
   }
@@ -191,7 +191,7 @@ nav_id: games
 
 <script>
   function quickAction() {
-    alert('Quick Action - Could start new session, add hand, or quick access menu');
+    console.error('Quick Action - Could start new session, add hand, or quick access menu');
   }
 </script>
 
