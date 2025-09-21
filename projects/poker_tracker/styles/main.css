@@ -966,6 +966,13 @@
       justify-content: center;
     }
 
+    .live-stats-toggle-icon {
+      width: 24px;
+      height: 24px;
+      display: block;
+      fill: currentColor;
+    }
+
     .live-stats-toggle:hover {
       background: var(--background);
       color: var(--text-primary);
