@@ -18,9 +18,9 @@ nav_id: session
     <!-- Live Stats Bar (always visible) -->
 <div class="live-stats-bar" id="liveStatsBar">
   <div class="live-stats-content">
-    <div class="stat-group">
+    <div class="stat-group stat-session">
       <span class="stat-label">Session</span>
-      <span class="stat-value" id="sessionNameStat">Unnamed Session</span>
+      <span class="stat-value session-name" id="sessionNameStat">Unnamed Session</span>
     </div>
     <div class="stat-group">
       <span class="stat-label">VPIP</span>
@@ -36,7 +36,7 @@ nav_id: session
 
 
 <!-- Main Content with View Tabs -->
-<div class="container" style="padding-top: 5rem;">
+<div class="container" style="padding-top: 1.5rem;">
   <!-- View Tabs -->
   <div id="view-tabs">
     <button id="grid-tab" class="view-tab active">Grid</button>
@@ -49,7 +49,7 @@ nav_id: session
 
     <div id="toggle-controls">
       <label class="toggle-container">
-        <input type="checkbox" id="toggleCounts" class="toggle-input" checked>
+        <input type="checkbox" id="toggleCounts" class="toggle-input">
         <span class="toggle-slider"></span>
         <span class="toggle-label">Counts</span>
       </label>
@@ -80,6 +80,13 @@ nav_id: session
   let showCounts = false;
   let showPlayed = false;
 
+  function syncToggleState() {
+    const countsToggle = document.getElementById('toggleCounts');
+    const playedToggle = document.getElementById('togglePlayed');
+    if (countsToggle) countsToggle.checked = showCounts;
+    if (playedToggle) playedToggle.checked = showPlayed;
+  }
+
   // Interaction state
   let activeCell = null;
   let isMouseDown = false;
@@ -109,14 +116,28 @@ nav_id: session
   }
 
   function getSessionData() {
-    if (!currentSessionId) return null;
-    return PokerTracker.DataStore.getSessionData(currentSessionId);
+    if (!currentSessionId) {
+      console.error('getSessionData: No currentSessionId');
+      return null;
+    }
+    const data = PokerTracker.DataStore.getSessionData(currentSessionId);
+    console.log('getSessionData result:', data);
+    return data;
   }
 
   function updateSessionStats() {
-    if (!currentSessionId) return;
+    if (!currentSessionId) {
+      console.error('updateSessionStats: No currentSessionId');
+      return;
+    }
 
+    console.log('updateSessionStats: Getting session data for ID:', currentSessionId);
     const sessionData = getSessionData();
+
+    if (!sessionData) {
+      console.error('updateSessionStats: No session data returned');
+      return;
+    }
     const session = getCurrentSession();
 
     if (!session || !sessionData) return;
@@ -575,6 +596,7 @@ nav_id: session
   // Event Listeners and Initialization
   document.addEventListener('DOMContentLoaded', function() {
     currentSessionId = getSessionIdFromURL();
+    console.log('Session ID from URL:', currentSessionId);
 
     if (!currentSessionId) {
       alert('No session ID provided');
@@ -582,25 +604,42 @@ nav_id: session
       return;
     }
 
+    // Debug: Check all available sessions
+    const allSessions = PokerTracker.DataStore.getSessions();
+    console.log('All available sessions:', allSessions);
+    console.log('Looking for session ID:', currentSessionId);
+
     const session = getCurrentSession();
+    console.log('Found session:', session);
+
     if (!session) {
-      alert('Session not found');
+      alert(`Session not found for ID: ${currentSessionId}`);
       window.location.href = '/projects/poker_tracker/sessions';
       return;
     }
 
-    // Populate games dropdown
+    // Populate games dropdown (if it exists)
     const gameSelect = document.getElementById('gameSelect');
-    const games = PokerTracker.DataStore.getAllGames();
-    games.forEach(game => {
-      const option = document.createElement('option');
-      option.value = game.id;
-      option.textContent = `${game.name} (${game.stakes.smallBlind}/${game.stakes.bigBlind})`;
-      gameSelect.appendChild(option);
-    });
+    if (gameSelect) {
+      const games = PokerTracker.DataStore.getAllGames();
+      console.log('Available games:', games);
+      console.log('Session gameId:', session.gameId);
+
+      games.forEach(game => {
+        if (game && game.stakes) {
+          const option = document.createElement('option');
+          option.value = game.id;
+          option.textContent = `${game.name} (${game.stakes.smallBlind}/${game.stakes.bigBlind})`;
+          gameSelect.appendChild(option);
+        }
+      });
+    } else {
+      console.log('gameSelect element not found - skipping game dropdown population');
+    }
 
     buildGrid();
     updateSessionStats();
+    syncToggleState();
 
     // Setup interaction handlers
     grid.addEventListener('mousedown', handleInteractionStart);
@@ -621,33 +660,50 @@ nav_id: session
     document.getElementById('undo').addEventListener('click', undo);
 
     // Session input handlers
-    document.getElementById('buyInInput').addEventListener('change', function() {
-      PokerTracker.DataStore.updateSession(currentSessionId, { buyIn: parseFloat(this.value) || 0 });
-      updateSessionStats();
-    });
+    const buyInInput = document.getElementById('buyInInput');
+    if (buyInInput) {
+      buyInInput.addEventListener('change', function() {
+        PokerTracker.DataStore.updateSession(currentSessionId, { buyIn: parseFloat(this.value) || 0 });
+        updateSessionStats();
+      });
+    }
 
-    document.getElementById('cashOutInput').addEventListener('change', function() {
-      PokerTracker.DataStore.updateSession(currentSessionId, { cashOut: parseFloat(this.value) || 0 });
-      updateSessionStats();
-    });
+    const cashOutInput = document.getElementById('cashOutInput');
+    if (cashOutInput) {
+      cashOutInput.addEventListener('change', function() {
+        PokerTracker.DataStore.updateSession(currentSessionId, { cashOut: parseFloat(this.value) || 0 });
+        updateSessionStats();
+      });
+    }
 
-    document.getElementById('gameSelect').addEventListener('change', function() {
-      PokerTracker.DataStore.updateSession(currentSessionId, { gameId: this.value });
-      updateSessionStats();
-    });
+    const gameSelectForListener = document.getElementById('gameSelect');
+    if (gameSelectForListener) {
+      gameSelectForListener.addEventListener('change', function() {
+        PokerTracker.DataStore.updateSession(currentSessionId, { gameId: this.value });
+        updateSessionStats();
+      });
+    }
 
+    const startTimeInput = document.getElementById('startTimeInput');
+    if (startTimeInput) {
+      startTimeInput.addEventListener('change', function() {
+        PokerTracker.DataStore.updateSession(currentSessionId, { startTime: new Date(this.value).toISOString() });
+      });
+    }
 
-    document.getElementById('startTimeInput').addEventListener('change', function() {
-      PokerTracker.DataStore.updateSession(currentSessionId, { startTime: new Date(this.value).toISOString() });
-    });
+    const endTimeInput = document.getElementById('endTimeInput');
+    if (endTimeInput) {
+      endTimeInput.addEventListener('change', function() {
+        PokerTracker.DataStore.updateSession(currentSessionId, { endTime: new Date(this.value).toISOString() });
+      });
+    }
 
-    document.getElementById('endTimeInput').addEventListener('change', function() {
-      PokerTracker.DataStore.updateSession(currentSessionId, { endTime: new Date(this.value).toISOString() });
-    });
-
-    document.getElementById('sessionNotes').addEventListener('change', function() {
-      PokerTracker.DataStore.updateSessionNotes(currentSessionId, this.value);
-    });
+    const sessionNotes = document.getElementById('sessionNotes');
+    if (sessionNotes) {
+      sessionNotes.addEventListener('change', function() {
+        PokerTracker.DataStore.updateSessionNotes(currentSessionId, this.value);
+      });
+    }
 
     // Responsive events
     let resizeTimeout;

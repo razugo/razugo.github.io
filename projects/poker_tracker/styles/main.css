@@ -11,6 +11,7 @@
       --border: #e5e7eb;
       --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
       --radius: 8px;
+      --nav-height: 64px;
 
       /* Poker Grid Variables (from poker_clicker) */
       --cell: 54px;
@@ -64,14 +65,15 @@
     .nav {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 1rem;
+      padding: 0.85rem 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: var(--shadow);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 120;
+      min-height: var(--nav-height);
     }
 
     .nav-brand {
@@ -268,12 +270,17 @@
 
     /* Toggle Switch */
     .toggle-container {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
       cursor: pointer;
       margin-bottom: 0;
-      width: fit-content;
+      padding: 0.25rem 0;
+      border-radius: 999px;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     .toggle-input {
@@ -284,9 +291,10 @@
       position: relative;
       width: 50px;
       height: 24px;
-      background: var(--border);
+      background: rgba(148, 163, 184, 0.35);
       border-radius: 12px;
-      transition: background 0.3s;
+      transition: background var(--transition-standard);
+      overflow: hidden;
     }
 
     .toggle-slider::before {
@@ -298,7 +306,8 @@
       height: 20px;
       background: white;
       border-radius: 50%;
-      transition: transform 0.3s;
+      transition: transform var(--transition-standard), box-shadow var(--transition-standard);
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
     }
 
     .toggle-input:checked + .toggle-slider {
@@ -307,11 +316,22 @@
 
     .toggle-input:checked + .toggle-slider::before {
       transform: translateX(26px);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.35);
     }
 
     .toggle-label {
       font-weight: 500;
       color: var(--text-primary);
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .toggle-container:focus-within .toggle-slider::before {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .toggle-container:focus-within .toggle-label {
+      color: var(--primary);
     }
 
     .toggle-container.form-group label,
@@ -516,15 +536,38 @@
       flex-shrink: 0;
     }
 
-    .session-card-header {
-      margin-bottom: 0.75rem;
+    .session-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
 
     .session-card-title {
       font-size: 1.1rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin: 0 0 0.25rem 0;
+      margin: 0;
+      text-align: left;
+    }
+
+    .session-card-game {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0;
+      text-align: right;
+    }
+
+    .session-card-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .session-card-date {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0;
     }
 
     .session-card-pnl {
@@ -539,32 +582,6 @@
 
     .session-card-pnl.negative {
       color: var(--danger);
-    }
-
-    .session-card-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .session-card-game {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .session-card-vpip {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      background: var(--background);
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .session-card-date {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 0;
     }
 
     /* Stats Grid */
@@ -866,33 +883,49 @@
 
     /* Live Session UI */
     .live-stats-bar {
-      position: fixed;
-      top: 2rem;
+      position: sticky;
+      top: var(--nav-height);
       left: 0;
       right: 0;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      border-top: none;
-      padding: 2.5rem 1rem 0.75rem 1rem;
-      z-index: 99;
+      padding: 0.75rem 1rem;
+      z-index: 110;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: none;
+      gap: 0.75rem;
+      box-shadow: var(--shadow);
     }
 
     .live-stats-content {
       display: flex;
-      gap: 1.5rem;
+      align-items: center;
       flex-wrap: wrap;
-      justify-content: center;
+      gap: 0.75rem 1.5rem;
+      justify-content: space-between;
       flex: 1;
     }
 
     .stat-group {
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+
+    .stat-group.stat-session {
+      flex: 1 1 160px;
+      min-width: 120px;
+      max-width: 260px;
+    }
+
+    .stat-group.stat-session .session-name {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .stat-label {
@@ -936,6 +969,20 @@
     .live-stats-toggle:hover {
       background: var(--background);
       color: var(--text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .stat-group.stat-session {
+        flex: 0 0 auto;
+        min-width: 0;
+        max-width: none;
+      }
+
+      .stat-group.stat-session .session-name {
+        overflow: visible;
+        text-overflow: initial;
+        white-space: normal;
+      }
     }
 
     .session-overlay {
@@ -1259,12 +1306,28 @@
       }
 
       /* Mobile live session adjustments */
+      .live-stats-bar {
+        padding: 0.6rem 0.75rem;
+        gap: 0.5rem;
+      }
+
       .live-stats-content {
-        gap: 1rem;
+        gap: 0.4rem;
+        flex-wrap: nowrap;
       }
 
       .stat-group {
-        min-width: 60px;
+        min-width: 0;
+        flex: 0 0 auto;
+      }
+
+      .stat-group.stat-session {
+        flex: 1 1 auto;
+        max-width: none;
+      }
+
+      .stat-group.stat-session .session-name {
+        font-size: 0.95rem;
       }
 
       .stat-label {

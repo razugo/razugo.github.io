@@ -58,6 +58,7 @@ nav_id: sessions
         <thead>
           <tr>
             <th>Date</th>
+            <th>Session</th>
             <th>Game</th>
             <th>Duration</th>
             <th>Buy-in</th>
@@ -93,6 +94,7 @@ nav_id: sessions
 
   function populateSessionsTable() {
     const sessions = PokerTracker.DataStore.getSessions();
+    console.log('All sessions retrieved:', sessions);
     const tbody = document.getElementById('sessionsTableBody');
     const cardContainer = document.getElementById('sessionsCardContainer');
 
@@ -115,9 +117,13 @@ nav_id: sessions
         duration = handsCount * 2; // Estimate 2 minutes per hand
       }
 
+      // Generate session name
+      const sessionName = session.name || `${game?.name || 'Session'} - ${session.date}`;
+
       return `
         <tr>
           <td>${session.date}</td>
+          <td>${sessionName}</td>
           <td>${game?.name || 'Unknown'}</td>
           <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
           <td>${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
@@ -136,6 +142,7 @@ nav_id: sessions
 
     // Populate cards (mobile)
     cardContainer.innerHTML = sessions.map(session => {
+      console.log('Processing session for card:', session.id, session);
       const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
 
@@ -143,21 +150,24 @@ nav_id: sessions
       const handsCount = session.total || 0;
       const vpip = (session.vpip || 0).toFixed(1);
 
+      // Generate session name
+      const sessionName = session.name || `${game?.name || 'Session'} - ${session.date}`;
+
       return `
         <div class="session-card">
           <div class="session-card-content">
-            <div class="session-card-info">
-              <span class="session-card-title">${game?.name || 'Unknown'}</span>
+            <div class="session-card-top">
+              <span class="session-card-title">${sessionName}</span>
+              <span class="session-card-game">${game?.name || 'Unknown'}</span>
+            </div>
+            <div class="session-card-bottom">
+              <span class="session-card-date">${session.date}</span>
               <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
                 ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
               </span>
             </div>
-            <div class="session-card-info">
-              <span class="session-card-date">${session.date}</span>
-              <span class="session-card-vpip">VPIP: ${vpip}%</span>
-            </div>
           </div>
-          <div class="session-card-actions">
+          <div class="session-card-actions session-actions">
             <button class="action-menu-btn" onclick="showActionMenu(this, '${session.id}')">⋮</button>
           </div>
         </div>
@@ -166,8 +176,12 @@ nav_id: sessions
   }
 
   function deleteSession(sessionId) {
+    console.log('deleteSession called with sessionId:', sessionId);
     const session = PokerTracker.DataStore.getSession(sessionId);
+    console.log('Retrieved session:', session);
+
     if (!session) {
+      console.error('Session not found for ID:', sessionId);
       alert('Session not found');
       return;
     }
@@ -237,9 +251,6 @@ nav_id: sessions
   }
 
 
-  let currentActionSessionId = null;
-  let menuShowTime = 0;
-
   function showActionMenu(button, sessionId) {
     console.log('showActionMenu called', sessionId);
     const menu = document.getElementById('actionMenu');
@@ -250,7 +261,7 @@ nav_id: sessions
     }
 
     // Check if menu is already open for the same session
-    if (currentActionSessionId === sessionId && menu.classList.contains('show')) {
+    if (menu.classList.contains('show') && menu.dataset.sessionId === sessionId) {
       console.log('Menu already open for this session, hiding it');
       hideActionMenu();
       return;
@@ -259,8 +270,7 @@ nav_id: sessions
     // Close any existing menu first
     menu.classList.remove('show');
 
-    menuShowTime = Date.now(); // Record when menu was shown
-    currentActionSessionId = sessionId;
+    menu.dataset.sessionId = sessionId; // Track which session this menu is for
 
     // Position menu above the button
     const buttonRect = button.getBoundingClientRect();
@@ -306,6 +316,19 @@ nav_id: sessions
     menu.style.left = leftPos + 'px';
     console.log('Final position - left:', leftPos, 'menu width:', menuWidth);
 
+    // Update menu HTML with current session ID
+    menu.innerHTML = `
+      <button class="action-menu-item" onclick="executeAction('view', '${sessionId}')">
+        <span>View</span>
+      </button>
+      <button class="action-menu-item" onclick="executeAction('edit', '${sessionId}')">
+        <span>Edit</span>
+      </button>
+      <button class="action-menu-item delete" onclick="executeAction('delete', '${sessionId}')">
+        <span>Delete</span>
+      </button>
+    `;
+
     // Show the menu
     menu.classList.add('show');
     console.log('Menu should be visible now, has show class:', menu.classList.contains('show'));
@@ -316,24 +339,31 @@ nav_id: sessions
     const menu = document.getElementById('actionMenu');
 
     menu.classList.remove('show');
-    currentActionSessionId = null;
-    menuShowTime = 0; // Reset the show time
+    delete menu.dataset.sessionId; // Clear the session ID
   }
 
-  function executeAction(action) {
-    if (!currentActionSessionId) return;
+  function executeAction(action, sessionId) {
+    console.log('executeAction called with:', action, 'sessionId:', sessionId);
+
+    if (!sessionId) {
+      console.error('No session ID provided');
+      return;
+    }
 
     hideActionMenu();
 
     switch(action) {
       case 'view':
-        viewSession(currentActionSessionId);
+        console.log('Calling viewSession with:', sessionId);
+        viewSession(sessionId);
         break;
       case 'edit':
-        editSession(currentActionSessionId);
+        console.log('Calling editSession with:', sessionId);
+        editSession(sessionId);
         break;
       case 'delete':
-        deleteSession(currentActionSessionId);
+        console.log('Calling deleteSession with:', sessionId);
+        deleteSession(sessionId);
         break;
     }
   }
@@ -341,13 +371,6 @@ nav_id: sessions
   // Close action menu when clicking outside
   document.addEventListener('click', function(e) {
     console.log("clicked outside")
-
-    // Debounce: don't hide menu if it was just shown (within 300ms)
-    const timeSinceShow = Date.now() - menuShowTime;
-    if (timeSinceShow < 10) {
-      console.log("Ignoring click outside - menu was just shown", timeSinceShow + "ms ago");
-      return;
-    }
 
     if (!e.target.closest('.session-actions') && !e.target.closest('.action-menu-popup')) {
       hideActionMenu();
@@ -362,15 +385,7 @@ nav_id: sessions
 
 <!-- Action Menu -->
 <div id="actionMenu" class="action-menu-popup">
-  <button class="action-menu-item" onclick="executeAction('view')">
-    <span>View</span>
-  </button>
-  <button class="action-menu-item" onclick="executeAction('edit')">
-    <span>Edit</span>
-  </button>
-  <button class="action-menu-item delete" onclick="executeAction('delete')">
-    <span>Delete</span>
-  </button>
+  <!-- Menu items are dynamically generated with session ID -->
 </div>
 
     </div>
