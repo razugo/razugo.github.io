@@ -1681,6 +1681,185 @@
       border-color: var(--color-mid-dark) !important;
     }
 
+    /* Session Cards Layout */
+    .sessions-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .session-card {
+      background: var(--color-white);
+      border: 1px solid var(--color-light);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: var(--transition-standard);
+    }
+
+    .session-card:hover {
+      border-color: var(--color-mid);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .session-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: var(--color-lightest);
+      border-bottom: 1px solid var(--color-light);
+    }
+
+    .session-date {
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-dark);
+      font-size: var(--font-size-body);
+    }
+
+    .session-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .session-card-content {
+      padding: 1rem;
+    }
+
+    .session-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+    }
+
+    .session-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .session-info-label {
+      font-size: var(--font-size-small);
+      color: var(--color-mid);
+      font-weight: var(--font-weight-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .session-info-value {
+      font-size: var(--font-size-body);
+      color: var(--color-dark);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    .session-info-value.positive {
+      color: var(--color-success);
+    }
+
+    .session-info-value.negative {
+      color: var(--color-danger);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .session-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .desktop-only {
+        display: none;
+      }
+
+      .session-card-header {
+        padding: 0.75rem;
+      }
+
+      .session-card-content {
+        padding: 0.75rem;
+      }
+
+      .session-actions .desktop-action {
+        display: none;
+      }
+
+      .mobile-action {
+        display: block;
+        position: relative;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-action {
+        display: none;
+      }
+
+      .desktop-action {
+        display: inline-block;
+      }
+
+      .sessions-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      }
+    }
+
+    /* Action Menu Styles */
+    .action-menu-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: var(--color-mid);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: var(--transition-micro);
+    }
+
+    .action-menu-btn:hover {
+      background: var(--color-lighter);
+      color: var(--color-dark);
+    }
+
+    .action-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--color-white);
+      border: 1px solid var(--color-light);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      min-width: 100px;
+      margin-top: 0.25rem;
+    }
+
+    .action-menu button {
+      display: block;
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: none;
+      background: none;
+      text-align: left;
+      color: var(--color-dark);
+      font-size: var(--font-size-small);
+      cursor: pointer;
+      transition: var(--transition-micro);
+    }
+
+    .action-menu button:hover {
+      background: var(--color-lighter);
+    }
+
+    .action-menu button:first-child {
+      border-radius: 6px 6px 0 0;
+    }
+
+    .action-menu button:last-child {
+      border-radius: 0 0 6px 6px;
+    }
+
     /* Toggle Switch Styles */
     .toggle-switch {
       position: relative;
