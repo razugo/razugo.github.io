@@ -560,6 +560,12 @@ nav_id: sessions
       liveSessionBtn.title = 'No live session in progress';
     }
   }
+
+  document.addEventListener('pokertracker:session-created', function() {
+    populateGameFilter();
+    applyFilters();
+    checkActiveSession();
+  });
 </script>
 
 <div data-component="new-session-modal"></div>

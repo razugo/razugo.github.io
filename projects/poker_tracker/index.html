@@ -29,6 +29,12 @@ nav_id: dashboard
 </div>
     <main>
       <div class="container">
+      <div class="status-banner status-banner-warning">
+        <span class="status-banner-icon">⚠️</span>
+        <div>
+          <strong>Beta notice:</strong> PokerTracker is still in beta. Data will not be saved.
+        </div>
+      </div>
       <h1>Dashboard</h1>
 
       <!-- Overall Stats -->
@@ -81,11 +87,19 @@ nav_id: dashboard
       </div>
       </div>
       <script>
+        let bankrollChartInstance = null;
+
         document.addEventListener('DOMContentLoaded', function() {
           populateStats();
           populateRecentSessions();
           createBankrollChart();
           window.addEventListener('resize', updateRecentSessionsResponsiveState);
+        });
+
+        document.addEventListener('pokertracker:session-created', function() {
+          populateStats();
+          populateRecentSessions();
+          createBankrollChart();
         });
 
         function populateStats() {
@@ -204,7 +218,16 @@ nav_id: dashboard
         }
 
         function createBankrollChart() {
-          const ctx = document.getElementById('bankrollChart').getContext('2d');
+          const canvas = document.getElementById('bankrollChart');
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          if (bankrollChartInstance && typeof bankrollChartInstance.destroy === 'function') {
+            bankrollChartInstance.destroy();
+            bankrollChartInstance = null;
+          }
+
           const sessions = PokerTracker.DataStore.getSessions();
 
           // Get the same recent sessions that are displayed in the table (latest 3)
@@ -219,8 +242,7 @@ nav_id: dashboard
             .sort((a, b) => PokerTracker.DataStore.getSessionSortValue(a) - PokerTracker.DataStore.getSessionSortValue(b));
 
           if (sortedRecentSessions.length === 0) {
-            // Show empty chart
-            new Chart(ctx, {
+            bankrollChartInstance = new Chart(ctx, {
               type: 'line',
               data: {
                 labels: ['Start'],
@@ -271,7 +293,7 @@ nav_id: dashboard
             labels.push(labelName);
           });
 
-          new Chart(ctx, {
+          bankrollChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
               labels: labels,

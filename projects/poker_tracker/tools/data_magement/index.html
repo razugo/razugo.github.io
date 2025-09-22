@@ -1,0 +1,549 @@
+---
+title: PokerTracker - Data Management
+nav_id: tools
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/main.css' | relative_url }}">
+</head>
+<body>
+  <div class="nav-container" data-component="nav-bar" data-active="{{ page.nav_id | default: '' }}" data-base="{{ '/projects/poker_tracker' | relative_url }}">
+  <nav class="nav">
+    <a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-brand">PokerTracker</a>
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-link live-session-btn">Live Session</a></li>
+      <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
+      <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
+      <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
+      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
+      <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </nav>
+</div>
+
+  <main>
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+          <h1>Data Management</h1>
+          <p style="color: var(--text-secondary);">Import Poker Clicker session exports into PokerTracker</p>
+        </div>
+        <button class="btn btn-outline" onclick="goBackToTools()">←</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Import from Poker Clicker</h3>
+        </div>
+        <div class="card-content" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <p style="color: var(--text-secondary);">Choose a Poker Clicker export file (<code>.json</code>) and PokerTracker will import the sessions directly into local storage. An alert will confirm how many sessions were added.</p>
+
+          <div class="data-import" data-component="poker-import">
+            <input type="file" id="pokerClickerFileInput" accept="application/json" style="display: none;" />
+            <button class="btn" data-action="trigger-import">Select export file</button>
+            <div class="import-status" data-status="idle" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin: 3rem 0;"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">PokerTracker Backup</h3>
+        </div>
+        <div class="card-content" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <p style="color: var(--text-secondary);">Export your PokerTracker games and sessions to a backup file or restore from a previous export.</p>
+
+          <div class="data-backup" data-component="poker-backup">
+            <div class="backup-actions" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+              <button class="btn" data-action="export-backup">Download Data</button>
+              <button class="btn" data-action="email-backup">Email Data</button>
+              <button class="btn btn-outline" data-action="import-backup">Import Backup</button>
+            </div>
+            <input type="file" id="pokerTrackerBackupFileInput" accept="application/json" style="display: none;" />
+            <div class="backup-status" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<div data-component="new-session-modal"></div>
+<div data-component="new-game-modal"></div>
+<div data-component="session-settings-modal"></div>
+
+<script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/session-settings-modal.js' | relative_url }}"></script>
+
+<script>
+  (function() {
+    const createStatusUpdater = statusElement => message => {
+      if (statusElement) {
+        statusElement.textContent = message || '';
+      }
+    };
+
+    const importComponent = document.querySelector('[data-component="poker-import"]');
+    if (importComponent) {
+      const trigger = importComponent.querySelector('[data-action="trigger-import"]');
+      const fileInput = document.getElementById('pokerClickerFileInput');
+      const statusElement = importComponent.querySelector('.import-status');
+      const updateStatus = createStatusUpdater(statusElement);
+
+      if (trigger && fileInput) {
+        const coerceMoney = value => {
+          if (value === null || typeof value === 'undefined' || value === '') return 0;
+          const numeric = typeof value === 'number' ? value : parseFloat(value);
+          if (!Number.isFinite(numeric)) return 0;
+          return Math.round(numeric * 100) / 100;
+        };
+
+        const parseDateString = value => {
+          if (!value || typeof value !== 'string') return null;
+          const parsed = new Date(value);
+          if (Number.isNaN(parsed.getTime())) return null;
+          return parsed;
+        };
+
+        const toISODate = value => {
+          const parsed = parseDateString(value);
+          if (!parsed) return null;
+          return parsed.toISOString().split('T')[0];
+        };
+
+        const computeDuration = (startValue, endValue) => {
+          const start = parseDateString(startValue);
+          const end = parseDateString(endValue);
+          if (!start || !end || end <= start) return null;
+          const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+          return Math.round(hours * 100) / 100;
+        };
+
+        const buildHandId = (sessionId, index, timestamp) => {
+          const base = timestamp && Number.isFinite(timestamp) ? timestamp : Date.now();
+          return `hand-${sessionId}-${index + 1}-${base}`;
+        };
+
+        const sanitizeCounts = (source, fallback) => {
+          const result = {};
+          if (source && typeof source === 'object') {
+            Object.keys(source).forEach(key => {
+              const numeric = typeof source[key] === 'number' ? source[key] : parseFloat(source[key]);
+              if (Number.isFinite(numeric) && numeric > 0) {
+                result[key] = numeric;
+              }
+            });
+          }
+          if (Object.keys(result).length === 0 && fallback) {
+            return { ...fallback };
+          }
+          return result;
+        };
+
+        const deriveCountsFromHands = (hands, playedOnly) => {
+          return hands.reduce((acc, hand) => {
+            if (!hand || !hand.key) return acc;
+            if (playedOnly && !hand.played) return acc;
+            acc[hand.key] = (acc[hand.key] || 0) + 1;
+            return acc;
+          }, {});
+        };
+
+        const convertHand = (sessionId, hand, index) => {
+          if (!hand || typeof hand !== 'object') {
+            return null;
+          }
+          const timestamp = typeof hand.timestamp === 'number' ? hand.timestamp : parseFloat(hand.timestamp);
+          const position = typeof hand.position === 'number' ? hand.position : (index + 1);
+          const entry = {
+            id: buildHandId(sessionId, index, Number.isFinite(timestamp) ? timestamp : null),
+            key: hand.key || '',
+            timestamp: Number.isFinite(timestamp) ? timestamp : Date.now(),
+            played: Boolean(hand.played),
+            position: Number.isFinite(position) ? position : (index + 1),
+            notes: hand.notes || ''
+          };
+          if (Object.prototype.hasOwnProperty.call(hand, 'outcome')) {
+            entry.outcome = hand.outcome;
+          }
+          if (Object.prototype.hasOwnProperty.call(hand, 'pot')) {
+            entry.pot = hand.pot;
+          }
+          return entry;
+        };
+
+        const convertSession = raw => {
+          if (!raw || typeof raw !== 'object') return null;
+
+          const sessionId = raw.id || `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          const hands = Array.isArray(raw.hands) ? raw.hands : [];
+          const handHistory = hands
+            .map((hand, index) => convertHand(sessionId, hand, index))
+            .filter(Boolean);
+
+          const generatedCounts = deriveCountsFromHands(handHistory, false);
+          const generatedPlayedCounts = deriveCountsFromHands(handHistory, true);
+
+          const counts = sanitizeCounts(raw.counts, generatedCounts);
+          const playedCounts = sanitizeCounts(raw.playedCounts, generatedPlayedCounts);
+
+          const numericTotal = typeof raw.total === 'number' ? raw.total : parseInt(raw.total, 10);
+          const totalHands = Number.isFinite(numericTotal) ? numericTotal : handHistory.length;
+          const numericTotalPlayed = typeof raw.totalPlayed === 'number' ? raw.totalPlayed : parseInt(raw.totalPlayed, 10);
+          const totalPlayed = Number.isFinite(numericTotalPlayed) ? numericTotalPlayed : handHistory.filter(hand => hand.played).length;
+          const rawVpip = typeof raw.vpip === 'number' ? raw.vpip : parseFloat(raw.vpip);
+          const vpipValue = Number.isFinite(rawVpip) ? rawVpip : (totalHands > 0 ? ((totalPlayed / totalHands) * 100) : 0);
+
+          const sessionDate = raw.sessionDate || toISODate(raw.created) || toISODate(raw.startTime) || toISODate(raw.endTime);
+          const durationHours = computeDuration(raw.startTime, raw.endTime);
+
+          const stakes = {};
+          const smallBlind = coerceMoney(raw.smallBlind);
+          const bigBlind = coerceMoney(raw.bigBlind);
+          if (smallBlind > 0 || bigBlind > 0) {
+            stakes.smallBlind = smallBlind > 0 ? smallBlind : null;
+            stakes.bigBlind = bigBlind > 0 ? bigBlind : null;
+            stakes.currency = 'USD';
+          }
+
+          const sessionRecord = {
+            id: sessionId,
+            name: raw.name || null,
+            gameId: raw.gameId || null,
+            buyIn: coerceMoney(raw.buyIn),
+            cashOut: coerceMoney(raw.cashOut),
+            sessionDate: sessionDate || null,
+            durationHours: durationHours,
+            counts: counts,
+            playedCounts: playedCounts,
+            handHistory: handHistory,
+            total: totalHands,
+            totalPlayed: totalPlayed,
+            vpip: Math.max(0, Math.min(100, Math.round((vpipValue || 0) * 10) / 10)),
+            notes: raw.notes || ''
+          };
+
+          if (Object.keys(stakes).length > 0) {
+            sessionRecord.stakes = stakes;
+          }
+
+          return sessionRecord;
+        };
+
+        const parseExport = contents => {
+          let parsed;
+          try {
+            parsed = JSON.parse(contents);
+          } catch (err) {
+            throw new Error('File is not valid JSON.');
+          }
+
+          if (!parsed || !parsed.sessions) {
+            throw new Error('Export missing sessions payload.');
+          }
+
+          let sessionsBlob = parsed.sessions;
+          if (typeof sessionsBlob === 'string') {
+            try {
+              sessionsBlob = JSON.parse(sessionsBlob);
+            } catch (err) {
+              throw new Error('Session payload is not valid JSON.');
+            }
+          }
+
+          if (!sessionsBlob || typeof sessionsBlob !== 'object') {
+            throw new Error('Session payload is not an object.');
+          }
+
+          const converted = Object.values(sessionsBlob)
+            .map(convertSession)
+            .filter(Boolean);
+
+          if (converted.length === 0) {
+            throw new Error('No sessions found to import.');
+          }
+
+          return converted;
+        };
+
+        const mergeSessions = importedSessions => {
+          const existingSessions = Array.isArray(PokerTracker.DataStore.sessions)
+            ? PokerTracker.DataStore.sessions
+            : [];
+
+          const mergedMap = new Map();
+          existingSessions.forEach(session => {
+            if (session && session.id) {
+              mergedMap.set(session.id, session);
+            }
+          });
+
+          let newCount = 0;
+          importedSessions.forEach(session => {
+            if (!session || !session.id) return;
+            if (!mergedMap.has(session.id)) {
+              newCount++;
+            }
+            mergedMap.set(session.id, session);
+          });
+
+          const mergedSessions = Array.from(mergedMap.values());
+          PokerTracker.DataStore.sessions = mergedSessions;
+          PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
+          PokerTracker.DataStore.notifyLiveSessionChange(null);
+
+          return newCount;
+        };
+
+        const handleFileSelection = () => {
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+
+          const fileName = file && file.name ? file.name : 'export.json';
+
+          trigger.disabled = true;
+          updateStatus(`Importing "${fileName}"...`);
+
+          const reader = new FileReader();
+          reader.onload = event => {
+            try {
+              const importedSessions = parseExport(event.target.result);
+              const newCount = mergeSessions(importedSessions);
+              const totalImported = newCount > 0 ? newCount : importedSessions.length;
+              alert(`${totalImported} session${totalImported === 1 ? '' : 's'} imported.`);
+              updateStatus('Import complete. You can import another file if needed.');
+            } catch (err) {
+              console.error(err);
+              alert(err.message || 'Import failed.');
+              updateStatus('');
+            } finally {
+              trigger.disabled = false;
+              fileInput.value = '';
+            }
+          };
+          reader.onerror = () => {
+            alert('Failed to read file.');
+            trigger.disabled = false;
+            updateStatus('');
+            fileInput.value = '';
+          };
+          reader.readAsText(file);
+        };
+
+        trigger.addEventListener('click', () => {
+          if (trigger.disabled) return;
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleFileSelection);
+      }
+    }
+
+    const backupComponent = document.querySelector('[data-component="poker-backup"]');
+    if (backupComponent) {
+      const exportButton = backupComponent.querySelector('[data-action="export-backup"]');
+      const emailButton = backupComponent.querySelector('[data-action="email-backup"]');
+      const importButton = backupComponent.querySelector('[data-action="import-backup"]');
+      const fileInput = document.getElementById('pokerTrackerBackupFileInput');
+      const statusElement = backupComponent.querySelector('.backup-status');
+      const updateBackupStatus = createStatusUpdater(statusElement);
+
+      const safeArray = value => (Array.isArray(value) ? value : []);
+
+      const buildBackupPayload = () => {
+        if (!window.PokerTracker || !PokerTracker.DataStore) {
+          throw new Error('PokerTracker data store is not available.');
+        }
+
+        const dataStore = PokerTracker.DataStore;
+        const games = dataStore.getAllGames ? dataStore.getAllGames() : safeArray(dataStore.games);
+        const sessions = dataStore.getSessions ? dataStore.getSessions() : safeArray(dataStore.sessions);
+
+        return {
+          version: 'pokertracker.backup.v1',
+          exportedAt: new Date().toISOString(),
+          games: safeArray(games),
+          sessions: safeArray(sessions)
+        };
+      };
+
+      const downloadBackup = payload => {
+        const timestamp = new Date().toISOString().replace(/[:]/g, '-');
+        const filename = `pokertracker-backup-${timestamp}.json`;
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        setTimeout(() => {
+          document.body.removeChild(anchor);
+          URL.revokeObjectURL(url);
+        }, 0);
+      };
+
+      const emailBackup = payload => {
+        const timestamp = new Date().toISOString().replace(/[:]/g, '-');
+        const filename = `pokertracker-backup-${timestamp}.json`;
+        const backupData = JSON.stringify(payload, null, 2);
+
+        const sessionCount = payload.sessions.length;
+        const gameCount = payload.games.length;
+        const emailSubject = encodeURIComponent(`PokerTracker Backup - ${timestamp}`);
+        const emailBody = encodeURIComponent(`Hi,
+
+Attached is your PokerTracker backup from ${new Date().toLocaleDateString()}.
+
+Backup Details:
+- ${sessionCount} session${sessionCount === 1 ? '' : 's'}
+- ${gameCount} game${gameCount === 1 ? '' : 's'}
+- Export Date: ${new Date().toLocaleString()}
+
+To restore this backup:
+1. Go to PokerTracker > Tools > Data Management
+2. Click "Import Backup"
+3. Select this backup file
+
+Note: Please copy the backup data below and save it as a .json file to import:
+
+${backupData}`);
+
+        const mailtoLink = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+
+        try {
+          window.location.href = mailtoLink;
+          updateBackupStatus(`Email prepared with ${sessionCount} session${sessionCount === 1 ? '' : 's'} and ${gameCount} game${gameCount === 1 ? '' : 's'}.`);
+        } catch (err) {
+          console.error('Failed to open email client:', err);
+          alert('Unable to open email client. Please copy the backup data manually.');
+        }
+      };
+
+      const parseBackup = contents => {
+        let parsed;
+        try {
+          parsed = JSON.parse(contents);
+        } catch (err) {
+          throw new Error('File is not valid JSON.');
+        }
+
+        if (!parsed || !Array.isArray(parsed.sessions) || !Array.isArray(parsed.games)) {
+          throw new Error('Backup must include sessions and games arrays.');
+        }
+
+        return {
+          games: safeArray(parsed.games),
+          sessions: safeArray(parsed.sessions)
+        };
+      };
+
+      const applyBackup = backup => {
+        if (!window.PokerTracker || !PokerTracker.DataStore) {
+          throw new Error('PokerTracker data store is not available.');
+        }
+
+        PokerTracker.DataStore.games = safeArray(backup.games);
+        PokerTracker.DataStore.sessions = safeArray(backup.sessions);
+        PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
+        PokerTracker.DataStore.notifyLiveSessionChange(null);
+      };
+
+      if (exportButton) {
+        exportButton.addEventListener('click', () => {
+          try {
+            updateBackupStatus('Preparing export...');
+            const payload = buildBackupPayload();
+            downloadBackup(payload);
+            const sessionCount = payload.sessions.length;
+            const gameCount = payload.games.length;
+            updateBackupStatus(`Export complete. Saved ${sessionCount} session${sessionCount === 1 ? '' : 's'} and ${gameCount} game${gameCount === 1 ? '' : 's'}.`);
+          } catch (err) {
+            console.error(err);
+            alert(err.message || 'Export failed.');
+            updateBackupStatus('');
+          }
+        });
+      }
+
+      if (emailButton) {
+        emailButton.addEventListener('click', () => {
+          try {
+            updateBackupStatus('Preparing email...');
+            const payload = buildBackupPayload();
+            emailBackup(payload);
+          } catch (err) {
+            console.error(err);
+            alert(err.message || 'Email preparation failed.');
+            updateBackupStatus('');
+          }
+        });
+      }
+
+      if (importButton && fileInput) {
+        const handleBackupImport = () => {
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+
+          const fileName = file.name || 'backup.json';
+
+          importButton.disabled = true;
+          if (exportButton) exportButton.disabled = true;
+          updateBackupStatus(`Importing "${fileName}"...`);
+
+          const reader = new FileReader();
+          reader.onload = event => {
+            try {
+              const backup = parseBackup(event.target.result);
+              applyBackup(backup);
+              const sessionCount = backup.sessions.length;
+              const gameCount = backup.games.length;
+              alert(`Backup imported. ${sessionCount} session${sessionCount === 1 ? '' : 's'} and ${gameCount} game${gameCount === 1 ? '' : 's'} restored.`);
+              updateBackupStatus('Import complete. Your data is saved locally.');
+            } catch (err) {
+              console.error(err);
+              alert(err.message || 'Import failed.');
+              updateBackupStatus('');
+            } finally {
+              importButton.disabled = false;
+              if (exportButton) exportButton.disabled = false;
+              fileInput.value = '';
+            }
+          };
+          reader.onerror = () => {
+            alert('Failed to read file.');
+            importButton.disabled = false;
+            if (exportButton) exportButton.disabled = false;
+            updateBackupStatus('');
+            fileInput.value = '';
+          };
+          reader.readAsText(file);
+        };
+
+        importButton.addEventListener('click', () => {
+          if (importButton.disabled) return;
+          fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleBackupImport);
+      }
+    }
+  })();
+
+  function goBackToTools() {
+    window.location.href = '/projects/poker_tracker/tools/';
+  }
+</script>
+</body>
+</html>
