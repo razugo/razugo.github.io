@@ -194,14 +194,18 @@ nav_id: dashboard
           const ctx = document.getElementById('bankrollChart').getContext('2d');
           const sessions = PokerTracker.DataStore.getSessions();
 
-          // Sort sessions by date
-          const sortedSessions = sessions.slice().sort((a, b) => {
-            const valueA = PokerTracker.DataStore.getSessionSortValue(a);
-            const valueB = PokerTracker.DataStore.getSessionSortValue(b);
-            return valueA - valueB; // Oldest to newest for cumulative chart
-          });
+          // Get the same recent sessions that are displayed in the table (latest 3)
+          const recentSessions = sessions
+            .slice()
+            .sort((a, b) => PokerTracker.DataStore.getSessionSortValue(b) - PokerTracker.DataStore.getSessionSortValue(a))
+            .slice(0, 3);
 
-          if (sortedSessions.length === 0) {
+          // Sort them chronologically for the chart (oldest to newest)
+          const sortedRecentSessions = recentSessions
+            .slice()
+            .sort((a, b) => PokerTracker.DataStore.getSessionSortValue(a) - PokerTracker.DataStore.getSessionSortValue(b));
+
+          if (sortedRecentSessions.length === 0) {
             // Show empty chart
             new Chart(ctx, {
               type: 'line',
@@ -234,7 +238,7 @@ nav_id: dashboard
             return;
           }
 
-          // Calculate cumulative P&L
+          // Calculate cumulative P&L for recent sessions
           let cumulative = 0;
           const cumulativeData = [];
           const labels = [];
@@ -242,11 +246,16 @@ nav_id: dashboard
           cumulativeData.push(0); // Start at 0
           labels.push('Start');
 
-          sortedSessions.forEach((session, index) => {
-            const profit = (session.cashOut || session.buyIn || 0) - (session.buyIn || 0);
+          sortedRecentSessions.forEach((session, index) => {
+            const profit = (session.cashOut || 0) - (session.buyIn || 0);
             cumulative += profit;
             cumulativeData.push(cumulative);
-            labels.push(`Session ${index + 1}`);
+
+            // Use session name or game name or date for better labels
+            const game = PokerTracker.DataStore.getGame(session.gameId);
+            const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+            const labelName = session.name || game?.name || sessionDate || `Session ${index + 1}`;
+            labels.push(labelName);
           });
 
           new Chart(ctx, {

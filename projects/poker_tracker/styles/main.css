@@ -2827,3 +2827,230 @@
       background-color: var(--background);
       color: var(--text-primary);
     }
+
+    /* =====================================
+       BANKROLL PAGE STYLES
+       ===================================== */
+
+    /* Bankroll Status Card */
+    .bankroll-status-card {
+      background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .bankroll-current-value {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      line-height: 1;
+    }
+
+    .bankroll-change {
+      font-size: 1.25rem;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .bankroll-change.positive {
+      color: #22c55e;
+    }
+
+    .bankroll-change.negative {
+      color: #ef4444;
+    }
+
+    /* Time Period Filters */
+    .time-period-filters {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .time-filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .time-filter-btn:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+
+    .time-filter-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* Chart Type Toggle */
+    .chart-type-toggle {
+      display: flex;
+      background: var(--surface);
+      border-radius: 6px;
+      padding: 0.25rem;
+    }
+
+    .chart-type-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .chart-type-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .chart-type-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Main Bankroll Chart */
+    .bankroll-chart-card {
+      margin-bottom: 2rem;
+    }
+
+    .bankroll-chart-card .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Statistics Grid */
+    .bankroll-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-row:last-child {
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .stat-value.positive {
+      color: var(--success);
+    }
+
+    .stat-value.negative {
+      color: var(--error);
+    }
+
+    /* Secondary Charts Grid */
+    .secondary-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-container-small {
+      height: 250px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .bankroll-current-value {
+        font-size: 2.5rem;
+      }
+
+      .bankroll-change {
+        font-size: 1.125rem;
+      }
+
+      .bankroll-status-card {
+        padding: 1.5rem;
+      }
+
+      .time-period-filters {
+        gap: 0.25rem;
+      }
+
+      .time-filter-btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8rem;
+      }
+
+      .bankroll-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .secondary-charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .chart-type-toggle {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .chart-type-btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.7rem;
+      }
+
+      .bankroll-chart-card .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .bankroll-current-value {
+        font-size: 2rem;
+      }
+
+      .bankroll-change {
+        font-size: 1rem;
+      }
+
+      .secondary-charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-container-small {
+        height: 200px;
+      }
+    }
