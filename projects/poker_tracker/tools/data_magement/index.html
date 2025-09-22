@@ -392,21 +392,23 @@ nav_id: tools
           document.body.removeChild(anchor);
           URL.revokeObjectURL(url);
         }, 0);
+
+        return { timestamp, filename };
       };
 
       const emailBackup = payload => {
-        const timestamp = new Date().toISOString().replace(/[:]/g, '-');
-        const filename = `pokertracker-backup-${timestamp}.json`;
-        const backupData = JSON.stringify(payload, null, 2);
+        const { timestamp, filename } = downloadBackup(payload);
 
         const sessionCount = payload.sessions.length;
         const gameCount = payload.games.length;
         const emailSubject = encodeURIComponent(`PokerTracker Backup - ${timestamp}`);
         const emailBody = encodeURIComponent(`Hi,
 
-Attached is your PokerTracker backup from ${new Date().toLocaleDateString()}.
+A PokerTracker backup was generated on ${new Date().toLocaleDateString()}.
 
-Backup Details:
+Before sending, attach the file named "${filename}" (it's likely in your Downloads folder).
+
+Backup details:
 - ${sessionCount} session${sessionCount === 1 ? '' : 's'}
 - ${gameCount} game${gameCount === 1 ? '' : 's'}
 - Export Date: ${new Date().toLocaleString()}
@@ -414,20 +416,17 @@ Backup Details:
 To restore this backup:
 1. Go to PokerTracker > Tools > Data Management
 2. Click "Import Backup"
-3. Select this backup file
-
-Note: Please copy the backup data below and save it as a .json file to import:
-
-${backupData}`);
+3. Choose the attached backup file
+`);
 
         const mailtoLink = `mailto:?subject=${emailSubject}&body=${emailBody}`;
 
         try {
           window.location.href = mailtoLink;
-          updateBackupStatus(`Email prepared with ${sessionCount} session${sessionCount === 1 ? '' : 's'} and ${gameCount} game${gameCount === 1 ? '' : 's'}.`);
+          updateBackupStatus(`Backup downloaded and email prepared. Attach "${filename}" before sending.`);
         } catch (err) {
           console.error('Failed to open email client:', err);
-          alert('Unable to open email client. Please copy the backup data manually.');
+          alert('Unable to open email client. Please attach the downloaded backup file manually.');
         }
       };
 
