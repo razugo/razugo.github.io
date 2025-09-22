@@ -10,6 +10,7 @@ nav_id: session
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.css">
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -709,20 +710,6 @@ nav_id: session
       });
     }
 
-    const startTimeInput = document.getElementById('startTimeInput');
-    if (startTimeInput) {
-      startTimeInput.addEventListener('change', function() {
-        PokerTracker.DataStore.updateSession(currentSessionId, { startTime: new Date(this.value).toISOString() });
-      });
-    }
-
-    const endTimeInput = document.getElementById('endTimeInput');
-    if (endTimeInput) {
-      endTimeInput.addEventListener('change', function() {
-        PokerTracker.DataStore.updateSession(currentSessionId, { endTime: new Date(this.value).toISOString() });
-      });
-    }
-
     const sessionNotes = document.getElementById('sessionNotes');
     if (sessionNotes) {
       sessionNotes.addEventListener('change', function() {
@@ -759,7 +746,39 @@ nav_id: session
 
     if (isLiveSession) {
       if (confirm('End this live session? This will mark it as completed.')) {
-        PokerTracker.DataStore.endActiveSession(session.id);
+        let durationHours = null;
+        const state = PokerTracker.DataStore.appState || {};
+        if (state.liveSessionStart) {
+          const liveStart = new Date(state.liveSessionStart);
+          if (!Number.isNaN(liveStart.getTime())) {
+            const minutes = Math.max(0, (Date.now() - liveStart.getTime()) / (1000 * 60));
+            if (minutes > 0) {
+              durationHours = Math.round((minutes / 60) * 100) / 100;
+            }
+          }
+        }
+
+        let promptDefault = '';
+        if (typeof durationHours === 'number') {
+          promptDefault = durationHours.toFixed(2);
+        }
+
+        const input = prompt('Enter session duration in hours (e.g., 3.5). Leave blank to keep unset.', promptDefault);
+        if (input === null) {
+          return; // user cancelled
+        }
+
+        let finalDuration = null;
+        if (input.trim() !== '') {
+          const parsed = parseFloat(input);
+          if (!Number.isFinite(parsed) || parsed < 0) {
+            alert('Please enter a valid non-negative number for duration.');
+            return;
+          }
+          finalDuration = Math.round(parsed * 100) / 100;
+        }
+
+        PokerTracker.DataStore.endActiveSession(session.id, { durationHours: finalDuration });
         updateSessionStats();
 
         // Update nav link globally
@@ -819,6 +838,7 @@ nav_id: session
 </script>
 
 <!-- Shared JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="assets/js/data-store.js"></script>
 <script src="assets/js/app.js"></script>

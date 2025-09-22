@@ -19,26 +19,151 @@ PokerTracker.DataStore = {
   get sessions() {
     const stored = localStorage.getItem('poker-tracker-sessions');
     if (stored) {
-      return JSON.parse(stored);
+      try {
+        const parsed = JSON.parse(stored);
+        const normalized = this.normalizeSessionsList(parsed);
+        if (normalized.changed) {
+          localStorage.setItem('poker-tracker-sessions', JSON.stringify(normalized.sessions));
+        }
+        return normalized.sessions;
+      } catch (err) {
+        console.warn('Failed to parse sessions from storage', err);
+        return [];
+      }
     }
     return [];
   },
 
   set sessions(value) {
-    localStorage.setItem('poker-tracker-sessions', JSON.stringify(value));
+    const normalized = this.normalizeSessionsList(Array.isArray(value) ? value : []);
+    localStorage.setItem('poker-tracker-sessions', JSON.stringify(normalized.sessions));
+  },
+
+  normalizeSession: function(session) {
+    if (!session || typeof session !== 'object') {
+      return { session, changed: false };
+    }
+
+    const updated = { ...session };
+    let changed = false;
+
+    const coerceDate = value => {
+      if (!value) return null;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      return date.toISOString().split('T')[0];
+    };
+
+    if (typeof updated.sessionDate === 'string') {
+      const trimmed = updated.sessionDate.trim();
+      if (trimmed !== updated.sessionDate) {
+        updated.sessionDate = trimmed || null;
+        changed = true;
+      }
+    }
+
+    if (!updated.sessionDate) {
+      const derivedDate = coerceDate(updated.startTime) || coerceDate(updated.endTime) || (typeof updated.date === 'string' ? updated.date : null);
+      if (derivedDate) {
+        updated.sessionDate = derivedDate;
+        changed = true;
+      }
+    }
+
+    if (typeof updated.sessionDate === 'undefined') {
+      updated.sessionDate = null;
+      changed = true;
+    }
+
+    const coerceDuration = value => {
+      if (value === null || typeof value === 'undefined') return null;
+      const numeric = typeof value === 'number' ? value : parseFloat(value);
+      if (!Number.isFinite(numeric) || numeric < 0) return null;
+      return Math.round(numeric * 100) / 100;
+    };
+
+    const hasDuration = typeof updated.durationHours === 'number' && Number.isFinite(updated.durationHours);
+    if (!hasDuration) {
+      let minutes = null;
+      if (updated.startTime && updated.endTime) {
+        const start = new Date(updated.startTime);
+        const end = new Date(updated.endTime);
+        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+          minutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
+        }
+      }
+
+      if (minutes === null && updated.startTime && !updated.endTime) {
+        const start = new Date(updated.startTime);
+        if (!Number.isNaN(start.getTime())) {
+          minutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
+        }
+      }
+
+      if (minutes !== null) {
+        const hours = Math.round((minutes / 60) * 100) / 100;
+        updated.durationHours = hours;
+        changed = true;
+      }
+    } else {
+      const normalizedDuration = coerceDuration(updated.durationHours);
+      if (normalizedDuration !== updated.durationHours) {
+        updated.durationHours = normalizedDuration;
+        changed = true;
+      }
+    }
+
+    if (!hasDuration && typeof updated.durationHours === 'undefined') {
+      updated.durationHours = null;
+      changed = true;
+    }
+
+    if (updated.startTime !== undefined) {
+      delete updated.startTime;
+      changed = true;
+    }
+
+    if (updated.endTime !== undefined) {
+      delete updated.endTime;
+      changed = true;
+    }
+
+    return { session: updated, changed };
+  },
+
+  normalizeSessionsList: function(list) {
+    let changed = false;
+    const normalized = (Array.isArray(list) ? list : []).map(item => {
+      const result = this.normalizeSession(item);
+      if (result.changed) changed = true;
+      return result.session;
+    });
+    return { sessions: normalized, changed };
   },
 
   // App state (including live session ID)
   get appState() {
     const stored = localStorage.getItem('poker-tracker-state');
     if (stored) {
-      return JSON.parse(stored);
+      try {
+        const parsed = JSON.parse(stored);
+        return {
+          liveSessionId: parsed.liveSessionId || null,
+          liveSessionStart: parsed.liveSessionStart || null
+        };
+      } catch (err) {
+        console.warn('Failed to parse app state from storage', err);
+      }
     }
-    return { liveSessionId: null };
+    return { liveSessionId: null, liveSessionStart: null };
   },
 
   set appState(value) {
-    localStorage.setItem('poker-tracker-state', JSON.stringify(value));
+    const next = {
+      liveSessionId: value && value.liveSessionId ? value.liveSessionId : null,
+      liveSessionStart: value && value.liveSessionStart ? value.liveSessionStart : null
+    };
+    localStorage.setItem('poker-tracker-state', JSON.stringify(next));
   },
 
   // Methods
@@ -165,11 +290,27 @@ PokerTracker.DataStore = {
         validVpipSessions++;
       }
 
-      // Calculate duration from start/end time or estimate from hands
-      if (session.startTime && session.endTime) {
-        const duration = (new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60);
-        totalMinutes += duration;
-        validTimeSessions++;
+      // Calculate duration from stored duration or fallback estimates
+      const durationHours = typeof session.durationHours === 'number' && Number.isFinite(session.durationHours)
+        ? Math.max(0, session.durationHours)
+        : null;
+
+      if (durationHours !== null) {
+        const minutes = durationHours * 60;
+        totalMinutes += minutes;
+        if (minutes > 0) {
+          validTimeSessions++;
+        }
+      } else if (session.startTime && session.endTime) {
+        const start = new Date(session.startTime);
+        const end = new Date(session.endTime);
+        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+          const minutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
+          if (minutes > 0) {
+            totalMinutes += minutes;
+            validTimeSessions++;
+          }
+        }
       } else if (sessionData.total > 0) {
         // Estimate 2 minutes per hand if no time data
         totalMinutes += sessionData.total * 2;
@@ -198,13 +339,14 @@ PokerTracker.DataStore = {
 
   createSession: function(gameId = null, buyIn = 0) {
     const sessionId = 'session-' + Date.now();
+    const today = new Date().toISOString().split('T')[0];
     const newSession = {
       id: sessionId,
       gameId: gameId,
       buyIn: buyIn,
       cashOut: buyIn,
-      startTime: new Date().toISOString(),
-      endTime: null,
+      sessionDate: today,
+      durationHours: null,
       name: null,
       // Session data (merged)
       counts: {},
@@ -227,16 +369,51 @@ PokerTracker.DataStore = {
     const sessions = this.sessions;
     const sessionIndex = sessions.findIndex(s => s.id === sessionId);
     if (sessionIndex !== -1) {
-      sessions[sessionIndex] = { ...sessions[sessionIndex], ...updates };
+      const current = sessions[sessionIndex];
+      const nextUpdates = { ...updates };
+
+      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'sessionDate')) {
+        const rawValue = nextUpdates.sessionDate;
+        const value = typeof rawValue === 'string' ? rawValue.trim() : rawValue;
+        if (!value) {
+          nextUpdates.sessionDate = null;
+        } else {
+          const parsed = new Date(value);
+          nextUpdates.sessionDate = Number.isNaN(parsed.getTime())
+            ? (typeof value === 'string' ? value : current.sessionDate)
+            : parsed.toISOString().split('T')[0];
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'durationHours')) {
+        const numeric = typeof nextUpdates.durationHours === 'number'
+          ? nextUpdates.durationHours
+          : parseFloat(nextUpdates.durationHours);
+        nextUpdates.durationHours = Number.isFinite(numeric) && numeric >= 0
+          ? Math.round(numeric * 100) / 100
+          : null;
+      }
+
+      if (nextUpdates.startTime || nextUpdates.endTime) {
+        const normalized = this.normalizeSession({ ...current, ...nextUpdates });
+        nextUpdates.sessionDate = normalized.session.sessionDate;
+        nextUpdates.durationHours = normalized.session.durationHours;
+        delete nextUpdates.startTime;
+        delete nextUpdates.endTime;
+      }
+
+      const nextSession = { ...current, ...nextUpdates };
+      sessions[sessionIndex] = nextSession;
       this.sessions = sessions;
 
       const state = this.appState;
-      if (state.liveSessionId === sessionId && sessions[sessionIndex].endTime) {
+      if (state.liveSessionId === sessionId && nextSession.durationHours !== null) {
         state.liveSessionId = null;
+        state.liveSessionStart = null;
         this.appState = state;
         this.notifyLiveSessionChange(null);
       }
-      return sessions[sessionIndex];
+      return nextSession;
     }
     return null;
   },
@@ -266,12 +443,16 @@ PokerTracker.DataStore = {
   getSessionDate: function(session) {
     if (!session) return '';
 
-    const source = session.startTime || session.endTime || session.date || null;
-    if (!source) return '';
+    const preferred = session.sessionDate || session.date || session.startTime || session.endTime || null;
+    if (!preferred) return '';
 
-    const date = new Date(source);
+    if (typeof preferred === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(preferred)) {
+      return preferred;
+    }
+
+    const date = new Date(preferred);
     if (Number.isNaN(date.getTime())) {
-      return typeof session.date === 'string' ? session.date : '';
+      return typeof preferred === 'string' ? preferred : '';
     }
 
     return date.toISOString().split('T')[0];
@@ -279,9 +460,9 @@ PokerTracker.DataStore = {
 
   getSessionSortValue: function(session) {
     if (!session) return 0;
-    const source = session.startTime || session.endTime || session.date || null;
-    if (!source) return 0;
-    const value = new Date(source).getTime();
+    const dateStr = this.getSessionDate(session);
+    if (!dateStr) return 0;
+    const value = new Date(`${dateStr}T00:00:00`).getTime();
     return Number.isNaN(value) ? 0 : value;
   },
 
@@ -299,13 +480,14 @@ PokerTracker.DataStore = {
     this.endActiveSession();
 
     const sessionId = 'session-' + Date.now();
+    const today = new Date().toISOString().split('T')[0];
     const newSession = {
       id: sessionId,
       gameId: gameId,
       buyIn: buyIn,
       cashOut: buyIn,
-      startTime: new Date().toISOString(),
-      endTime: null,
+      sessionDate: today,
+      durationHours: null,
       name: null,
       // Session data (merged)
       counts: {},
@@ -324,6 +506,7 @@ PokerTracker.DataStore = {
     // Set as live session in app state
     const state = this.appState;
     state.liveSessionId = sessionId;
+    state.liveSessionStart = new Date().toISOString();
     this.appState = state;
 
     this.notifyLiveSessionChange(sessionId);
@@ -332,30 +515,52 @@ PokerTracker.DataStore = {
   },
 
   endActiveSession: function(sessionId = null, options = {}) {
-    const targetSessionId = sessionId || this.appState.liveSessionId;
+    const state = this.appState;
+    const targetSessionId = sessionId || state.liveSessionId;
     let endedSession = null;
 
     if (targetSessionId) {
       const sessions = this.sessions;
       const sessionIndex = sessions.findIndex(s => s.id === targetSessionId);
-      const timestamp = options.endTime || new Date().toISOString();
 
       if (sessionIndex !== -1) {
         const sessionRecord = sessions[sessionIndex];
-        if (!sessionRecord.endTime) {
-          const updatedSession = { ...sessionRecord, endTime: timestamp };
-          sessions[sessionIndex] = updatedSession;
-          this.sessions = sessions;
-          endedSession = updatedSession;
-        } else {
-          endedSession = sessionRecord;
+
+        const parseDuration = value => {
+          if (value === null || typeof value === 'undefined') return null;
+          const numeric = typeof value === 'number' ? value : parseFloat(value);
+          if (!Number.isFinite(numeric) || numeric < 0) return null;
+          return Math.round(numeric * 100) / 100;
+        };
+
+        let normalizedDuration = parseDuration(options.durationHours);
+
+        if (normalizedDuration === null && state.liveSessionStart) {
+          const liveStart = new Date(state.liveSessionStart);
+          if (!Number.isNaN(liveStart.getTime())) {
+            const minutes = Math.max(0, (Date.now() - liveStart.getTime()) / (1000 * 60));
+            if (minutes > 0) {
+              normalizedDuration = Math.round((minutes / 60) * 100) / 100;
+            }
+          }
         }
+
+        const updatedSession = { ...sessionRecord };
+        if (normalizedDuration !== null) {
+          updatedSession.durationHours = normalizedDuration;
+        } else if (typeof updatedSession.durationHours === 'undefined') {
+          updatedSession.durationHours = null;
+        }
+
+        sessions[sessionIndex] = updatedSession;
+        this.sessions = sessions;
+        endedSession = updatedSession;
       }
     }
 
-    const state = this.appState;
     if (state.liveSessionId === targetSessionId) {
       state.liveSessionId = null;
+      state.liveSessionStart = null;
       this.appState = state;
       this.notifyLiveSessionChange(null);
     }

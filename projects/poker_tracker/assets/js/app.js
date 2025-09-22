@@ -158,7 +158,7 @@ PokerTracker.DatePickers = (function() {
     }
 
     const options = Object.assign({
-      allowInput: true,
+      allowInput: false,
       disableMobile: true,
       dateFormat: 'Y-m-d'
     }, userOptions || {});
@@ -174,6 +174,20 @@ PokerTracker.DatePickers = (function() {
 
     options.onReady = [
       function(selectedDates, dateStr, instance) {
+        if (instance && instance.input) {
+          try {
+            instance.input.setAttribute('readonly', 'readonly');
+          } catch (err) {
+            // noop
+          }
+        }
+        if (instance && instance.altInput) {
+          try {
+            instance.altInput.setAttribute('readonly', 'readonly');
+          } catch (err) {
+            // noop
+          }
+        }
         injectClearButton(instance, clearLabel, triggerEvent);
       },
       ...readyHooks
@@ -187,6 +201,11 @@ PokerTracker.DatePickers = (function() {
     ];
 
     const instance = flatpickr(element, options);
+    try {
+      element.setAttribute('readonly', 'readonly');
+    } catch (err) {
+      // noop
+    }
     if (key) {
       instances.set(key, instance);
     }
@@ -247,6 +266,167 @@ PokerTracker.DatePickers = (function() {
         }
       }
     }
+  };
+})();
+
+PokerTracker.Dropdowns = (function() {
+  const instances = new Map();
+
+  function getElement(target) {
+    if (!target) return null;
+    if (typeof target === 'string') {
+      return document.getElementById(target);
+    }
+    return target;
+  }
+
+  function ensureSlimSelect() {
+    if (typeof window.SlimSelect === 'undefined') {
+      console.warn('SlimSelect is not available. Skipping dropdown setup.');
+      return false;
+    }
+    return true;
+  }
+
+  function toData(option, selectedValue) {
+    return {
+      text: option.text,
+      value: typeof option.value === 'undefined' ? '' : option.value,
+      disabled: !!option.disabled,
+      placeholder: !!option.placeholder,
+      innerHTML: option.innerHTML,
+      selected: typeof selectedValue !== 'undefined' && option.value === selectedValue
+    };
+  }
+
+  function setDomOptions(element, options = [], selectedValue) {
+    if (!element) return;
+
+    while (element.firstChild) {
+      element.removeChild(element.firstChild);
+    }
+
+    options.forEach(option => {
+      const opt = document.createElement('option');
+      opt.value = typeof option.value === 'undefined' ? '' : option.value;
+      opt.textContent = option.text || '';
+
+      if (option.innerHTML) {
+        opt.innerHTML = option.innerHTML;
+      }
+
+      if (option.disabled) opt.disabled = true;
+      if (option.placeholder) opt.dataset.placeholder = 'true';
+      if (typeof selectedValue !== 'undefined' && opt.value === selectedValue) {
+        opt.selected = true;
+      }
+
+      element.appendChild(opt);
+    });
+  }
+
+  function init(target, config = {}) {
+    const element = getElement(target);
+    if (!element || !ensureSlimSelect()) return null;
+
+    const key = element.id || element.name;
+    if (key && instances.has(key)) {
+      const existing = instances.get(key);
+      if (existing && typeof existing.destroy === 'function') {
+        existing.destroy();
+      }
+      instances.delete(key);
+    }
+
+    const options = Object.assign({
+      settings: {
+        allowDeselect: !element.hasAttribute('required'),
+        hideSelected: false,
+        showSearch: element.options.length > 6
+      }
+    }, config || {});
+
+    options.select = element;
+
+    if (!options.settings) {
+      options.settings = {};
+    }
+
+    if (typeof options.settings.allowDeselect === 'undefined') {
+      options.settings.allowDeselect = !element.hasAttribute('required');
+    }
+
+    if (typeof options.settings.showSearch === 'undefined') {
+      options.settings.showSearch = element.options.length > 6;
+    }
+
+    const placeholderText = options.placeholderText || options.settings.placeholderText || options.placeholder || element.getAttribute('data-placeholder') || '';
+    if (placeholderText) {
+      options.placeholder = placeholderText;
+      options.settings.placeholderText = placeholderText;
+      options.settings.placeholderTextAll = placeholderText;
+      options.settings.placeholder = placeholderText;
+    }
+
+    const instance = new SlimSelect(options);
+    if (key) {
+      instances.set(key, instance);
+    }
+    return instance;
+  }
+
+  function getInstance(target) {
+    const element = getElement(target);
+    const key = element?.id || element?.name;
+    if (!key) return null;
+    return instances.get(key) || null;
+  }
+
+  function setOptions(target, options = [], selectedValue) {
+    const element = getElement(target);
+    if (!element) return;
+
+    const value = typeof selectedValue === 'undefined' ? (element.value || '') : (selectedValue || '');
+    setDomOptions(element, options, value);
+
+    const instance = getInstance(element);
+    if (instance && typeof instance.setData === 'function') {
+      const data = options.map(option => toData(option, value));
+      if (!data.some(option => option.value === '')) {
+        data.unshift({
+          value: '',
+          text: '',
+          placeholder: true,
+          disabled: false,
+          selected: !value
+        });
+      }
+
+      instance.setData(data);
+      instance.setSelected(value || '');
+    }
+  }
+
+  function setValue(target, value, triggerChange = true) {
+    const element = getElement(target);
+    if (!element) return;
+
+    const instance = getInstance(element);
+    if (instance && typeof instance.setSelected === 'function') {
+      instance.setSelected(value || '');
+    }
+
+    element.value = value || '';
+    if (triggerChange) {
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  return {
+    init: init,
+    get: getInstance,
+    setOptions: setOptions,
+    setValue: setValue
   };
 })();
 

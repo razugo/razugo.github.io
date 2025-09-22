@@ -10,6 +10,7 @@ nav_id: sessions
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.css">
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -34,7 +35,7 @@ nav_id: sessions
     <div class="filter-field">
       <label class="filter-label" for="gameFilter">Game</label>
       <select class="filter-input" id="gameFilter">
-        <option value="">All Games</option>
+        <option value="" data-placeholder="true"></option>
       </select>
     </div>
     <div class="filter-field">
@@ -48,9 +49,9 @@ nav_id: sessions
     <div class="filter-field">
       <label class="filter-label" for="profitFilter">Results</label>
       <select class="filter-input" id="profitFilter">
-        <option value="">All Results</option>
-        <option value="positive">Winning Sessions</option>
-        <option value="negative">Losing Sessions</option>
+        <option value="" data-placeholder="true"></option>
+        <option value="positive">Winning</option>
+        <option value="negative">Losing</option>
       </select>
     </div>
   <div class="filter-field filter-button">
@@ -149,6 +150,28 @@ nav_id: sessions
       syncDateToConstraints();
     }
 
+    if (PokerTracker?.Dropdowns) {
+      PokerTracker.Dropdowns.init('gameFilter', {
+        placeholder: 'All games',
+        placeholderText: 'All games',
+        settings: {
+          allowDeselect: true,
+          showSearch: true,
+          placeholderText: 'All games'
+        }
+      });
+
+      PokerTracker.Dropdowns.init('profitFilter', {
+        placeholder: 'All results',
+        placeholderText: 'All results',
+        settings: {
+          allowDeselect: true,
+          showSearch: false,
+          placeholderText: 'All results'
+        }
+      });
+    }
+
     populateGameFilter();
     renderSessions();
     setupFilters();
@@ -191,13 +214,22 @@ nav_id: sessions
       const vpip = (session.vpip || 0).toFixed(1);
       const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
-      let duration = 0;
-      if (session.startTime && session.endTime) {
-        duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
+      let durationMinutes = 0;
+      if (typeof session.durationHours === 'number' && Number.isFinite(session.durationHours) && session.durationHours > 0) {
+        durationMinutes = session.durationHours * 60;
+      } else if (session.startTime && session.endTime) {
+        const start = new Date(session.startTime);
+        const end = new Date(session.endTime);
+        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+          durationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
+        }
       } else if (session.startTime) {
-        duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
+        const start = new Date(session.startTime);
+        if (!Number.isNaN(start.getTime())) {
+          durationMinutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
+        }
       } else if (handsCount > 0) {
-        duration = handsCount * 2;
+        durationMinutes = handsCount * 2;
       }
 
       const baseName = session.name || game?.name || 'Session';
@@ -208,7 +240,7 @@ nav_id: sessions
           <td>${sessionDate || '-'}</td>
           <td>${sessionLabel || '-'}</td>
           <td>${game?.name || '-'}</td>
-          <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
+          <td>${durationMinutes > 0 ? PokerTracker.Utils.formatDuration(Math.round(durationMinutes)) : '-'}</td>
           <td class="col-stake">${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
           <td class="col-stake">${PokerTracker.Utils.formatCurrency(session.cashOut || 0)}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
@@ -228,13 +260,12 @@ nav_id: sessions
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
       const sessionDate = PokerTracker.DataStore.getSessionDate(session);
       const baseName = session.name || game?.name || 'Session';
-      const sessionName = sessionDate ? `${baseName} - ${sessionDate}` : baseName;
 
       return `
         <div class="session-card">
           <div class="session-card-content">
             <div class="session-card-top">
-              <span class="session-card-title">${sessionName}</span>
+              <span class="session-card-title">${baseName || '-'}</span>
               <span class="session-card-game">${game?.name || '-'}</span>
             </div>
             <div class="session-card-bottom">
@@ -363,33 +394,42 @@ nav_id: sessions
     const sessions = PokerTracker.DataStore.getSessions();
     const hasUngroupedSessions = sessions.some(session => !session.gameId);
 
-    gameSelect.innerHTML = '';
-
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'All Games';
-    gameSelect.appendChild(defaultOption);
+    const options = [];
 
     games
       .slice()
       .sort((a, b) => a.name.localeCompare(b.name))
       .forEach(game => {
-        const option = document.createElement('option');
-        option.value = game.id;
-        const location = game.location ? ` (${game.location})` : '';
-        option.textContent = `${game.name}${location}`;
-        gameSelect.appendChild(option);
+        options.push({
+          text: game.name,
+          value: game.id
+        });
       });
 
     if (hasUngroupedSessions) {
-      const noGameOption = document.createElement('option');
-      noGameOption.value = '__no_game__';
-      noGameOption.textContent = 'No Game';
-      gameSelect.appendChild(noGameOption);
+      options.push({ text: 'No Game', value: '__no_game__' });
     }
 
-    if (previousValue && gameSelect.querySelector(`option[value="${previousValue}"]`)) {
-      gameSelect.value = previousValue;
+    if (PokerTracker?.Dropdowns) {
+      PokerTracker.Dropdowns.setOptions('gameFilter', options, previousValue || null);
+    } else {
+      gameSelect.innerHTML = '';
+
+      const blankOption = document.createElement('option');
+      blankOption.value = '';
+      blankOption.textContent = '';
+      blankOption.selected = !previousValue;
+      gameSelect.appendChild(blankOption);
+
+      options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.text;
+        if (option.value === previousValue) {
+          opt.selected = true;
+        }
+        gameSelect.appendChild(opt);
+      });
     }
   }
 
@@ -489,6 +529,7 @@ nav_id: sessions
 </script>
 
 <!-- Shared JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="assets/js/data-store.js"></script>
 <script src="assets/js/app.js"></script>

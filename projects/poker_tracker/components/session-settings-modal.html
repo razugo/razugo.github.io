@@ -33,12 +33,12 @@
       <!-- Timing Inputs -->
       <div class="session-form-grid session-form-grid-time">
         <div class="form-group">
-          <label for="modalStartTimeInput">Start Time</label>
-          <input type="text" id="modalStartTimeInput" class="form-input datetime-picker-input" placeholder="YYYY-MM-DD HH:MM" autocomplete="off">
+          <label for="modalSessionDateInput">Session Date</label>
+          <input type="text" id="modalSessionDateInput" class="form-input date-picker-input" placeholder="YYYY-MM-DD" autocomplete="off">
         </div>
         <div class="form-group">
-          <label for="modalEndTimeInput">End Time</label>
-          <input type="text" id="modalEndTimeInput" class="form-input datetime-picker-input" placeholder="YYYY-MM-DD HH:MM" autocomplete="off">
+          <label for="modalDurationInput">Duration (hrs)</label>
+          <input type="number" id="modalDurationInput" class="form-input" placeholder="0" step="0.25" min="0">
         </div>
       </div>
 
@@ -103,27 +103,26 @@ PokerTracker.SessionModal = {
     document.getElementById('modalSessionNotes').value = session.notes || '';
 
     // Set times
-    const startTimeInput = document.getElementById('modalStartTimeInput');
-    const endTimeInput = document.getElementById('modalEndTimeInput');
-    const startDate = session.startTime ? new Date(session.startTime) : null;
-    const endDate = session.endTime ? new Date(session.endTime) : null;
+    const dateInput = document.getElementById('modalSessionDateInput');
+    const durationInput = document.getElementById('modalDurationInput');
+    const sessionDate = session.sessionDate || '';
+    const durationHours = typeof session.durationHours === 'number' && Number.isFinite(session.durationHours)
+      ? session.durationHours
+      : '';
 
     if (PokerTracker?.DatePickers) {
-      PokerTracker.DatePickers.setDate('modalStartTimeInput', startDate, false);
-      PokerTracker.DatePickers.setDate('modalEndTimeInput', endDate, false);
-      if (typeof this.refreshTimeConstraints === 'function') {
-        this.refreshTimeConstraints();
-      }
-    } else {
-      startTimeInput.value = startDate ? this.formatDateTimeLocal(startDate) : '';
-      endTimeInput.value = endDate ? this.formatDateTimeLocal(endDate) : '';
+      const dateValue = sessionDate ? new Date(`${sessionDate}T00:00:00`) : null;
+      PokerTracker.DatePickers.setDate('modalSessionDateInput', dateValue, false);
+    } else if (dateInput) {
+      dateInput.value = sessionDate;
+    }
+
+    if (durationInput) {
+      durationInput.value = durationHours === '' ? '' : durationHours;
     }
 
     // Populate games dropdown
-    this.populateGameSelect();
-    if (session.gameId) {
-      document.getElementById('modalGameSelect').value = session.gameId;
-    }
+    this.populateGameSelect(session.gameId || '');
 
     // Update end session button visibility
     const isActive = PokerTracker.DataStore.getActiveSession()?.id === this.currentSessionId;
@@ -131,55 +130,41 @@ PokerTracker.SessionModal = {
     endBtn.style.display = isActive ? 'inline-block' : 'none';
   },
 
-  refreshTimeConstraints: function() {
-    if (typeof this._handleStartChange === 'function' && typeof this._handleEndChange === 'function') {
-      this._handleStartChange();
-      this._handleEndChange();
-      return;
-    }
-
-    if (!PokerTracker?.DatePickers) return;
-
-    const startPicker = PokerTracker.DatePickers.get('modalStartTimeInput');
-    const endPicker = PokerTracker.DatePickers.get('modalEndTimeInput');
-
-    if (!startPicker || !endPicker) return;
-
-    const startDate = startPicker.selectedDates?.[0] || null;
-    const endDate = endPicker.selectedDates?.[0] || null;
-
-    endPicker.set('minDate', startDate || null);
-    startPicker.set('maxDate', endDate || null);
-
-    if (startDate && endDate && endDate < startDate) {
-      PokerTracker.DatePickers.setDate('modalEndTimeInput', startDate, true);
-    }
-  },
-
-  populateGameSelect: function() {
+  populateGameSelect: function(selectedValue = '') {
     const gameSelect = document.getElementById('modalGameSelect');
+    if (!gameSelect) return;
+
     const games = PokerTracker.DataStore.getAllGames();
 
-    // Clear existing options except first
-    while (gameSelect.children.length > 1) {
-      gameSelect.removeChild(gameSelect.lastChild);
-    }
+    const options = [
+      {
+        text: 'Select Game',
+        value: '',
+        placeholder: true
+      }
+    ];
 
     games.forEach(game => {
-      const option = document.createElement('option');
-      option.value = game.id;
-      option.textContent = `${game.name} (${game.location})`;
-      gameSelect.appendChild(option);
+      options.push({
+        text: game.name,
+        value: game.id
+      });
     });
-  },
 
-  formatDateTimeLocal: function(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+    if (PokerTracker?.Dropdowns) {
+      PokerTracker.Dropdowns.setOptions('modalGameSelect', options, selectedValue);
+    } else {
+      gameSelect.innerHTML = '';
+      options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.text;
+        if (option.value === selectedValue) {
+          opt.selected = true;
+        }
+        gameSelect.appendChild(opt);
+      });
+    }
   },
 
   parseNumericInput: function(value) {
@@ -231,19 +216,22 @@ PokerTracker.SessionModal = {
         getUpdates: element => ({ gameId: element.value || null })
       },
       {
-        id: 'modalStartTimeInput',
+        id: 'modalSessionDateInput',
         event: 'change',
         getUpdates: element => {
           const value = element.value;
-          return value ? { startTime: new Date(value).toISOString() } : { startTime: null };
+          return value ? { sessionDate: value } : { sessionDate: null };
         }
       },
       {
-        id: 'modalEndTimeInput',
-        event: 'change',
+        id: 'modalDurationInput',
+        event: 'input',
         getUpdates: element => {
-          const value = element.value;
-          return value ? { endTime: new Date(value).toISOString() } : { endTime: null };
+          const value = parseFloat(element.value);
+          if (Number.isNaN(value) || value < 0) {
+            return { durationHours: null };
+          }
+          return { durationHours: Math.round(value * 100) / 100 };
         }
       },
       {
@@ -336,11 +324,13 @@ PokerTracker.SessionModal = {
       notes: document.getElementById('modalSessionNotes').value
     };
 
-    const startTimeValue = document.getElementById('modalStartTimeInput').value;
-    const endTimeValue = document.getElementById('modalEndTimeInput').value;
+    const sessionDateValue = document.getElementById('modalSessionDateInput').value;
+    const durationValue = parseFloat(document.getElementById('modalDurationInput').value);
 
-    updates.startTime = startTimeValue ? new Date(startTimeValue).toISOString() : null;
-    updates.endTime = endTimeValue ? new Date(endTimeValue).toISOString() : null;
+    updates.sessionDate = sessionDateValue || null;
+    updates.durationHours = Number.isFinite(durationValue) && durationValue >= 0
+      ? Math.round(durationValue * 100) / 100
+      : null;
 
     this.handleFieldUpdates(updates);
   },
@@ -349,24 +339,64 @@ PokerTracker.SessionModal = {
     if (!this.currentSessionId) return;
 
     if (confirm('Are you sure you want to end this session?')) {
-      // Set end time if not already set
-      const endTimeInput = document.getElementById('modalEndTimeInput');
-      let endTimeIso;
-      if (endTimeInput.value) {
-        endTimeIso = new Date(endTimeInput.value).toISOString();
-      } else {
-        const now = new Date();
-        endTimeIso = now.toISOString();
-        if (PokerTracker?.DatePickers) {
-          PokerTracker.DatePickers.setDate('modalEndTimeInput', now, true);
-        } else {
-          endTimeInput.value = this.formatDateTimeLocal(now);
-          endTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+      const durationInput = document.getElementById('modalDurationInput');
+      const sessionDateField = document.getElementById('modalSessionDateInput');
+      const state = PokerTracker.DataStore.appState || {};
+      const activeSession = PokerTracker.DataStore.getActiveSession();
+      const isLiveSession = activeSession && activeSession.id === this.currentSessionId;
+
+      let durationHours = null;
+
+      if (isLiveSession) {
+        let suggested = null;
+        if (state.liveSessionStart) {
+          const liveStart = new Date(state.liveSessionStart);
+          if (!Number.isNaN(liveStart.getTime())) {
+            const minutes = Math.max(0, (Date.now() - liveStart.getTime()) / (1000 * 60));
+            if (minutes > 0) {
+              suggested = Math.round((minutes / 60) * 100) / 100;
+            }
+          }
+        }
+
+        const promptDefault = suggested !== null ? suggested.toFixed(2) : '';
+        const input = prompt('Enter session duration in hours (e.g., 3.5). Leave blank to keep unset.', promptDefault);
+        if (input === null) {
+          return; // User cancelled
+        }
+
+        if (input.trim() !== '') {
+          const parsed = parseFloat(input);
+          if (!Number.isFinite(parsed) || parsed < 0) {
+            alert('Please enter a valid non-negative number for duration.');
+            return;
+          }
+          durationHours = Math.round(parsed * 100) / 100;
+          if (durationInput) {
+            durationInput.value = durationHours;
+          }
+        }
+      } else if (durationInput) {
+        const parsed = parseFloat(durationInput.value);
+        if (Number.isFinite(parsed) && parsed >= 0) {
+          durationHours = Math.round(parsed * 100) / 100;
         }
       }
 
-      this.handleFieldUpdates({ endTime: endTimeIso });
-      PokerTracker.DataStore.endActiveSession(this.currentSessionId, { endTime: endTimeIso });
+      const updates = {};
+      if (typeof durationHours === 'number') {
+        updates.durationHours = durationHours;
+      }
+
+      if (sessionDateField && sessionDateField.value) {
+        updates.sessionDate = sessionDateField.value;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        this.handleFieldUpdates(updates);
+      }
+
+      PokerTracker.DataStore.endActiveSession(this.currentSessionId, { durationHours });
       this.closeSessionSettingsModal();
 
       if (window.updateLiveSessionNavLink) {
@@ -403,58 +433,27 @@ window.showSessionSettingsModal = function(sessionId) {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+  if (!PokerTracker?.Dropdowns) return;
+
+  PokerTracker.Dropdowns.init('modalGameSelect', {
+    placeholder: 'Select Game',
+    placeholderText: 'Select Game',
+    settings: {
+      allowDeselect: true,
+      showSearch: true,
+      placeholderText: 'Select Game'
+    }
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
   if (!PokerTracker?.DatePickers) return;
 
-  let startPicker = null;
-  let endPicker = null;
-
-  const handleStartChange = () => {
-    if (!PokerTracker.DatePickers || !startPicker || !endPicker) return;
-    const startDate = startPicker.selectedDates?.[0] || null;
-    endPicker.set('minDate', startDate || null);
-
-    if (!startDate) return;
-
-    const endDate = endPicker.selectedDates?.[0] || null;
-    if (endDate && endDate < startDate) {
-      PokerTracker.DatePickers.setDate('modalEndTimeInput', startDate, true);
-    }
-  };
-
-  const handleEndChange = () => {
-    if (!PokerTracker.DatePickers || !startPicker || !endPicker) return;
-    const endDate = endPicker.selectedDates?.[0] || null;
-    startPicker.set('maxDate', endDate || null);
-
-    if (!endDate) return;
-
-    const startDate = startPicker.selectedDates?.[0] || null;
-    if (startDate && startDate > endDate) {
-      PokerTracker.DatePickers.setDate('modalStartTimeInput', endDate, true);
-    }
-  };
-
-  PokerTracker.SessionModal._handleStartChange = handleStartChange;
-  PokerTracker.SessionModal._handleEndChange = handleEndChange;
-
-  startPicker = PokerTracker.DatePickers.initDateTimeField('modalStartTimeInput', {
+  PokerTracker.DatePickers.initDateField('modalSessionDateInput', {
     altInput: true,
-    altFormat: 'M j, Y h:i K',
+    altFormat: 'M j, Y',
     altInputClass: 'form-input flatpickr-alt-input',
-    clearLabel: 'Clear',
-    minuteIncrement: 5,
-    onChange: handleStartChange
+    clearLabel: 'Clear'
   });
-
-  endPicker = PokerTracker.DatePickers.initDateTimeField('modalEndTimeInput', {
-    altInput: true,
-    altFormat: 'M j, Y h:i K',
-    altInputClass: 'form-input flatpickr-alt-input',
-    clearLabel: 'Clear',
-    minuteIncrement: 5,
-    onChange: handleEndChange
-  });
-
-  PokerTracker.SessionModal.refreshTimeConstraints();
 });
 </script>
