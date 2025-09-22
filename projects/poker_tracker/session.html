@@ -12,6 +12,7 @@ nav_id: session
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.css">
   <link rel="stylesheet" href="styles/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   {% include_relative components/nav-bar.html %}
@@ -78,12 +79,52 @@ nav_id: session
   <div id="list-container">
     <!-- List items will be dynamically generated -->
   </div>
+
+  <!-- Hand Analysis -->
+  <div class="card session-analysis-card" id="sessionAnalysisCard">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Hand Analysis</h2>
+        <p class="card-subtitle">Compare your dealt hands against expected variance.</p>
+      </div>
+      <div class="session-analysis-mode" id="handAnalysisMode">Analyzing all dealt hands</div>
+    </div>
+    <div class="card-content">
+      <div class="session-analysis-empty" id="handAnalysisEmpty">Track some hands in this session to unlock hand analysis.</div>
+      <div class="session-analysis-body is-hidden" id="handAnalysisBody">
+        <div class="luck-badge" id="handAnalysisBadge">Expected 📊</div>
+        <div class="session-analysis-chart">
+          <canvas id="handAnalysisChart"></canvas>
+        </div>
+        <div class="session-analysis-stats">
+          <div class="analysis-stat-card">
+            <span class="analysis-stat-label">Avg Strength</span>
+            <span class="analysis-stat-value" id="handAnalysisAvg">-</span>
+          </div>
+          <div class="analysis-stat-card">
+            <span class="analysis-stat-label">Z-Score</span>
+            <span class="analysis-stat-value" id="handAnalysisZScore">-</span>
+          </div>
+          <div class="analysis-stat-card">
+            <span class="analysis-stat-label">Std Dev</span>
+            <span class="analysis-stat-value" id="handAnalysisStd">-</span>
+          </div>
+        </div>
+        <div class="session-analysis-footer">
+          <p class="analysis-sample" id="handAnalysisSample"></p>
+          <p class="analysis-description" id="handAnalysisDescription"></p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
 <!-- Magnify overlay for mobile -->
 <div id="magnify-overlay"></div>
 
+<script src="assets/js/constants.js"></script>
+<script src="assets/js/hand-analysis.js"></script>
 <script>
 
   let currentSessionId = null;
@@ -110,6 +151,19 @@ nav_id: session
   const gridContainer = document.getElementById('grid-container');
   const listContainer = document.getElementById('list-container');
   const magnifyOverlay = document.getElementById('magnify-overlay');
+  const analysisElements = {
+    card: document.getElementById('sessionAnalysisCard'),
+    empty: document.getElementById('handAnalysisEmpty'),
+    body: document.getElementById('handAnalysisBody'),
+    badge: document.getElementById('handAnalysisBadge'),
+    mode: document.getElementById('handAnalysisMode'),
+    avg: document.getElementById('handAnalysisAvg'),
+    zScore: document.getElementById('handAnalysisZScore'),
+    stdDev: document.getElementById('handAnalysisStd'),
+    sample: document.getElementById('handAnalysisSample'),
+    description: document.getElementById('handAnalysisDescription'),
+    chartCanvas: document.getElementById('handAnalysisChart')
+  };
 
   // Get session ID from URL parameters
   function getSessionIdFromURL() {
@@ -169,6 +223,29 @@ nav_id: session
 
 
 
+  }
+
+  function updateHandAnalysisView(sessionData) {
+    if (!analysisElements.card || !window.PokerTracker || !PokerTracker.HandAnalysis) {
+      return;
+    }
+
+    const modeText = showPlayed ? 'Analyzing played hands' : 'Analyzing all dealt hands';
+    if (analysisElements.mode) {
+      analysisElements.mode.textContent = modeText;
+    }
+
+    const data = sessionData || getSessionData();
+    if (!currentSessionId || !data || !Array.isArray(data.handHistory)) {
+      PokerTracker.HandAnalysis.clear(analysisElements, 'Select a session to view hand analysis.');
+      return;
+    }
+
+    PokerTracker.HandAnalysis.update({
+      handHistory: data.handHistory,
+      usePlayedOnly: showPlayed,
+      elements: analysisElements
+    });
   }
 
   function keyFor(i, j) {
@@ -247,6 +324,12 @@ nav_id: session
         cell.style.backgroundColor = '';
         cell.style.color = '';
       }
+      if (window.PokerTracker && PokerTracker.HandAnalysis) {
+        PokerTracker.HandAnalysis.clear(analysisElements, 'Select a session to view hand analysis.');
+      }
+      if (analysisElements.mode) {
+        analysisElements.mode.textContent = showPlayed ? 'Analyzing played hands' : 'Analyzing all dealt hands';
+      }
       return;
     }
 
@@ -265,6 +348,7 @@ nav_id: session
       cell.style.display = 'flex';
     }
     updateCellColors();
+    updateHandAnalysisView(sessionData);
   }
 
   function updateMagnifyOverlay(cell, clientX, clientY) {

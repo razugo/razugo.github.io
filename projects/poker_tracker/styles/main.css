@@ -61,6 +61,10 @@
       line-height: 1.5;
     }
 
+    .is-hidden {
+      display: none !important;
+    }
+
     /* Navigation */
     .nav {
       background: var(--surface);
@@ -597,6 +601,12 @@
       font-size: 1.25rem;
       font-weight: 600;
       margin: 0;
+    }
+
+    .card-subtitle {
+      margin-top: 0.25rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
     }
 
     .card-content {
@@ -2073,6 +2083,148 @@
       display: flex;
     }
 
+    /* Session Hand Analysis */
+    .session-analysis-card {
+      margin-top: 2rem;
+    }
+
+    .session-analysis-card .card-header {
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .session-analysis-mode {
+      align-self: flex-start;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--background);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .session-analysis-card.analysis-empty .session-analysis-mode {
+      opacity: 0.7;
+    }
+
+    .session-analysis-empty {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      text-align: center;
+      color: var(--text-secondary);
+      background: var(--background);
+      font-size: 0.9rem;
+    }
+
+    .session-analysis-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .luck-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary);
+      width: fit-content;
+    }
+
+    .luck-badge.high-roll {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+    }
+
+    .luck-badge.low-roll {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--danger);
+    }
+
+    .luck-badge.expected {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--primary);
+    }
+
+    .session-analysis-chart {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 0.75rem;
+      height: 260px;
+    }
+
+    .session-analysis-chart canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .session-analysis-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .analysis-stat-card {
+      background: var(--background);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+
+    .analysis-stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .analysis-stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .session-analysis-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .analysis-sample {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 768px) {
+      .session-analysis-chart {
+        height: 220px;
+        padding: 0.5rem;
+      }
+
+      .analysis-stat-value {
+        font-size: 1.35rem;
+      }
+    }
+
     .list-item {
       display: flex;
       flex-wrap: wrap;
@@ -2832,38 +2984,6 @@
        BANKROLL PAGE STYLES
        ===================================== */
 
-    /* Bankroll Status Card */
-    .bankroll-status-card {
-      background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%);
-      color: white;
-      padding: 2rem;
-      border-radius: 12px;
-      text-align: center;
-      margin-bottom: 2rem;
-      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
-    }
-
-    .bankroll-current-value {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      line-height: 1;
-    }
-
-    .bankroll-change {
-      font-size: 1.25rem;
-      font-weight: 600;
-      opacity: 0.9;
-    }
-
-    .bankroll-change.positive {
-      color: #22c55e;
-    }
-
-    .bankroll-change.negative {
-      color: #ef4444;
-    }
-
     /* Time Period Filters */
     .time-period-filters {
       display: flex;
@@ -2896,35 +3016,44 @@
       color: white;
     }
 
-    /* Chart Type Toggle */
-    .chart-type-toggle {
+    /* Chart Controls */
+    .bankroll-chart-controls {
       display: flex;
-      background: var(--surface);
-      border-radius: 6px;
-      padding: 0.25rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.35rem;
+      padding: 0.25rem 0;
+      min-width: 0;
     }
 
-    .chart-type-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+    .bankroll-chart-label {
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
     }
 
-    .chart-type-btn:hover {
+    .bankroll-type-select {
+      width: auto;
+      min-width: 160px;
+      padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background-color: var(--surface);
+      border-color: var(--border);
       color: var(--text-primary);
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M10.59.59 6 5.17 1.41.59 0 2l6 6 6-6z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 0.75rem;
     }
 
-    .chart-type-btn.active {
-      background: var(--primary);
-      color: white;
+    .bankroll-type-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
     /* Main Bankroll Chart */
@@ -2938,12 +3067,29 @@
       align-items: center;
     }
 
+    .bankroll-chart-card .chart-container {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+    }
+
+    .bankroll-chart-card canvas {
+      border-radius: var(--radius);
+    }
+
     /* Statistics Grid */
     .bankroll-stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1.5rem;
       margin-bottom: 2rem;
+      align-items: stretch;
+    }
+
+    .bankroll-stats-grid .card {
+      min-height: 100%;
+      scroll-snap-align: start;
     }
 
     .stat-row {
@@ -2989,18 +3135,6 @@
 
     /* Responsive Design */
     @media (max-width: 768px) {
-      .bankroll-current-value {
-        font-size: 2.5rem;
-      }
-
-      .bankroll-change {
-        font-size: 1.125rem;
-      }
-
-      .bankroll-status-card {
-        padding: 1.5rem;
-      }
-
       .time-period-filters {
         gap: 0.25rem;
       }
@@ -3011,8 +3145,17 @@
       }
 
       .bankroll-stats-grid {
-        grid-template-columns: 1fr;
+        display: flex;
         gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .bankroll-stats-grid .card {
+        flex: 0 0 auto;
+        min-width: min(320px, 85vw);
       }
 
       .secondary-charts-grid {
@@ -3020,32 +3163,22 @@
         gap: 1rem;
       }
 
-      .chart-type-toggle {
-        flex-direction: column;
-        gap: 0.25rem;
-      }
-
-      .chart-type-btn {
-        padding: 0.375rem 0.5rem;
-        font-size: 0.7rem;
-      }
-
       .bankroll-chart-card .card-header {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start;
       }
+
+      .bankroll-chart-controls {
+        width: 100%;
+      }
+
+      .bankroll-type-select {
+        width: 100%;
+      }
     }
 
     @media (max-width: 480px) {
-      .bankroll-current-value {
-        font-size: 2rem;
-      }
-
-      .bankroll-change {
-        font-size: 1rem;
-      }
-
       .secondary-charts-grid {
         grid-template-columns: 1fr;
       }
