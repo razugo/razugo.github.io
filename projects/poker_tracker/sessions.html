@@ -19,35 +19,42 @@ nav_id: sessions
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
     <h1>Sessions</h1>
     <div style="display: flex; gap: 1rem;">
-      <button class="btn" onclick="goToActiveSession()" id="liveSessionBtn">Live</button>
+      <button class="btn" onclick="goToActiveSession()" id="liveSessionBtn">Live Session</button>
       <button class="btn btn-primary" onclick="PokerTracker.Modal.showNewSessionModal()">+ New Session</button>
     </div>
   </div>
 
   <!-- Filters -->
   <div class="filters">
-    <input type="text" class="filter-input" placeholder="Search sessions..." id="sessionSearch">
-    <select class="filter-input" id="gameFilter">
-      <option value="">All Games</option>
-      <option value="aria-1-3">Aria 1/3</option>
-      <option value="home-game">Home Game</option>
-      <option value="bellagio-2-5">Bellagio 2/5</option>
-      <option value="wynn-5-10">Wynn 5/10</option>
-      <option value="commerce-3-5">Commerce 3/5</option>
-    </select>
-    <div class="date-filter-group">
-      <label class="filter-label">From Date</label>
+    <div class="filter-field">
+      <label class="filter-label" for="sessionSearch">Session Name</label>
+      <input type="text" class="filter-input" placeholder="Name contains" id="sessionSearch">
+    </div>
+    <div class="filter-field">
+      <label class="filter-label" for="gameFilter">Game</label>
+      <select class="filter-input" id="gameFilter">
+        <option value="">All Games</option>
+      </select>
+    </div>
+    <div class="filter-field">
+      <label class="filter-label" for="dateFrom">From Date</label>
       <input type="date" class="filter-input" id="dateFrom">
     </div>
-    <div class="date-filter-group">
-      <label class="filter-label">To Date</label>
+    <div class="filter-field">
+      <label class="filter-label" for="dateTo">To Date</label>
       <input type="date" class="filter-input" id="dateTo">
     </div>
-    <select class="filter-input" id="profitFilter">
-      <option value="">All Results</option>
-      <option value="positive">Winning Sessions</option>
-      <option value="negative">Losing Sessions</option>
-    </select>
+    <div class="filter-field">
+      <label class="filter-label" for="profitFilter">Results</label>
+      <select class="filter-input" id="profitFilter">
+        <option value="">All Results</option>
+        <option value="positive">Winning Sessions</option>
+        <option value="negative">Losing Sessions</option>
+      </select>
+    </div>
+    <div class="filter-field filter-button">
+      <button type="button" class="btn btn-primary session-filter-apply" id="sessionFilterApplyBtn" aria-label="Apply session filters">Search</button>
+    </div>
   </div>
 
   <!-- Sessions Table (Desktop) -->
@@ -87,44 +94,59 @@ nav_id: sessions
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    populateSessionsTable();
+    populateGameFilter();
+    renderSessions();
     setupFilters();
     checkActiveSession();
+
+    document.addEventListener('pokertracker:live-session-change', function() {
+      checkActiveSession();
+      populateGameFilter();
+      applyFilters();
+    });
   });
 
-  function populateSessionsTable() {
-    const sessions = PokerTracker.DataStore.getSessions();
-    console.log('All sessions retrieved:', sessions);
+  function renderSessions(sessions = PokerTracker.DataStore.getSessions()) {
     const tbody = document.getElementById('sessionsTableBody');
     const cardContainer = document.getElementById('sessionsCardContainer');
 
-    // Populate table (desktop)
-    tbody.innerHTML = sessions.map(session => {
+    if (!tbody || !cardContainer) return;
+
+    const orderedSessions = [...sessions].sort((a, b) => {
+      const valueA = PokerTracker.DataStore.getSessionSortValue(a);
+      const valueB = PokerTracker.DataStore.getSessionSortValue(b);
+      return valueB - valueA; // Most recent first
+    });
+
+    if (orderedSessions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="sessions-empty">No sessions match the current filters.</td></tr>';
+      cardContainer.innerHTML = '<div class="sessions-empty">No sessions match the current filters.</div>';
+      return;
+    }
+
+    tbody.innerHTML = orderedSessions.map(session => {
       const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
-
-      // Get hands count and VPIP directly from session
       const handsCount = session.total || 0;
       const vpip = (session.vpip || 0).toFixed(1);
+      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
-      // Calculate duration from start/end time or estimate
       let duration = 0;
       if (session.startTime && session.endTime) {
         duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
       } else if (session.startTime) {
         duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
       } else if (handsCount > 0) {
-        duration = handsCount * 2; // Estimate 2 minutes per hand
+        duration = handsCount * 2;
       }
 
-      // Generate session name
-      const sessionName = session.name || `${game?.name || 'Session'} - ${session.date}`;
+      const sessionName = session.name;
 
       return `
         <tr>
-          <td>${session.date}</td>
-          <td>${sessionName}</td>
-          <td>${game?.name || 'Unknown'}</td>
+          <td>${sessionDate || '-'}</td>
+          <td>${sessionName || '-'}</td>
+          <td>${game?.name || '-'}</td>
           <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
           <td>${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
           <td>${PokerTracker.Utils.formatCurrency(session.cashOut || 0)}</td>
@@ -133,35 +155,28 @@ nav_id: sessions
           <td>${vpip}%</td>
           <td>
             <div class="session-actions">
-              <button class="action-menu-btn" onclick="console.log('Button clicked!'); showActionMenu(this, '${session.id}')">⋮</button>
+              <button class="action-menu-btn" onclick="showActionMenu(this, '${session.id}')">⋮</button>
             </div>
           </td>
         </tr>
       `;
     }).join('');
 
-    // Populate cards (mobile)
-    cardContainer.innerHTML = sessions.map(session => {
-      console.log('Processing session for card:', session.id, session);
+    cardContainer.innerHTML = orderedSessions.map(session => {
       const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
-
-      // Get hands count and VPIP directly from session
-      const handsCount = session.total || 0;
-      const vpip = (session.vpip || 0).toFixed(1);
-
-      // Generate session name
-      const sessionName = session.name || `${game?.name || 'Session'} - ${session.date}`;
+      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+      const sessionName = session.name;
 
       return `
         <div class="session-card">
           <div class="session-card-content">
             <div class="session-card-top">
-              <span class="session-card-title">${sessionName}</span>
-              <span class="session-card-game">${game?.name || 'Unknown'}</span>
+              <span class="session-card-title">${sessionName || '-'}</span>
+              <span class="session-card-game">${game?.name || '-'}</span>
             </div>
             <div class="session-card-bottom">
-              <span class="session-card-date">${session.date}</span>
+              <span class="session-card-date">${sessionDate || '-'}</span>
               <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
                 ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
               </span>
@@ -174,6 +189,8 @@ nav_id: sessions
       `;
     }).join('');
   }
+
+  window.populateSessionsTable = renderSessions;
 
   function deleteSession(sessionId) {
     console.log('deleteSession called with sessionId:', sessionId);
@@ -191,27 +208,129 @@ nav_id: sessions
     if (confirm(`Are you sure you want to delete this session? This will permanently delete ${handsCount} hands and cannot be undone.`)) {
       PokerTracker.DataStore.deleteSession(sessionId);
       console.error('Session deleted successfully!');
-      populateSessionsTable();
+      applyFilters();
       checkActiveSession();
     }
   }
 
   function setupFilters() {
-    // Add filter functionality here
-    const filters = ['sessionSearch', 'gameFilter', 'dateFrom', 'dateTo', 'profitFilter'];
-    filters.forEach(filterId => {
-      document.getElementById(filterId).addEventListener('change', applyFilters);
-      document.getElementById(filterId).addEventListener('input', applyFilters);
+    const applyButton = document.getElementById('sessionFilterApplyBtn');
+    if (applyButton) {
+      applyButton.addEventListener('click', applyFilters);
+    }
+
+    ['sessionSearch', 'dateFrom', 'dateTo'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input) {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
+    });
+  }
+
+  function populateGameFilter() {
+    const gameSelect = document.getElementById('gameFilter');
+    if (!gameSelect) return;
+
+    const previousValue = gameSelect.value;
+    const games = PokerTracker.DataStore.getAllGames();
+    const sessions = PokerTracker.DataStore.getSessions();
+    const hasUngroupedSessions = sessions.some(session => !session.gameId);
+
+    gameSelect.innerHTML = '';
+
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'All Games';
+    gameSelect.appendChild(defaultOption);
+
+    games
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .forEach(game => {
+        const option = document.createElement('option');
+        option.value = game.id;
+        const location = game.location ? ` (${game.location})` : '';
+        option.textContent = `${game.name}${location}`;
+        gameSelect.appendChild(option);
+      });
+
+    if (hasUngroupedSessions) {
+      const noGameOption = document.createElement('option');
+      noGameOption.value = '__no_game__';
+      noGameOption.textContent = 'No Game';
+      gameSelect.appendChild(noGameOption);
+    }
+
+    if (previousValue && gameSelect.querySelector(`option[value="${previousValue}"]`)) {
+      gameSelect.value = previousValue;
+    }
+  }
+
+  function getFilteredSessions() {
+    const nameFilter = document.getElementById('sessionSearch').value.trim().toLowerCase();
+    const gameFilter = document.getElementById('gameFilter').value;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const profitFilter = document.getElementById('profitFilter').value;
+
+    const sessions = PokerTracker.DataStore.getSessions();
+    const games = PokerTracker.DataStore.getAllGames();
+    const gamesById = {};
+    games.forEach(game => { gamesById[game.id] = game; });
+
+    return sessions.filter(session => {
+      const game = gamesById[session.gameId] || null;
+      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+
+      if (nameFilter) {
+        const sessionName = (session.name || '').toLowerCase();
+        const gameName = (game?.name || '').toLowerCase();
+        if (!sessionName.includes(nameFilter) && !gameName.includes(nameFilter)) {
+          return false;
+        }
+      }
+
+      if (gameFilter) {
+        if (gameFilter === '__no_game__') {
+          if (session.gameId) return false;
+        } else if (session.gameId !== gameFilter) {
+          return false;
+        }
+      }
+
+      if (dateFrom && (!sessionDate || sessionDate < dateFrom)) {
+        return false;
+      }
+
+      if (dateTo && (!sessionDate || sessionDate > dateTo)) {
+        return false;
+      }
+
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      if (profitFilter === 'positive' && profit <= 0) {
+        return false;
+      }
+      if (profitFilter === 'negative' && profit >= 0) {
+        return false;
+      }
+
+      return true;
     });
   }
 
   function applyFilters() {
-    // Filter implementation would go here
-    console.log('Applying filters...');
+    const filteredSessions = getFilteredSessions();
+    renderSessions(filteredSessions);
   }
 
   function viewSession(sessionId) {
-    window.location.href = `/projects/poker_tracker/session?session_id=${sessionId}`;
+    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}`;
+    window.location.href = `${sessionRoute}?session_id=${sessionId}`;
   }
 
   function editSession(sessionId) {
@@ -221,22 +340,28 @@ nav_id: sessions
   function goToActiveSession() {
     const activeSession = PokerTracker.DataStore.getActiveSession();
     if (activeSession) {
-      window.location.href = `/projects/poker_tracker/session?session_id=${activeSession.id}`;
+      const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}`;
+      window.location.href = `${sessionRoute}?session_id=${activeSession.id}`;
     }
   }
 
   function checkActiveSession() {
+    if (typeof PokerTracker === 'undefined' || !PokerTracker.DataStore) return;
+
     const activeSession = PokerTracker.DataStore.getActiveSession();
     const liveSessionBtn = document.getElementById('liveSessionBtn');
+    if (!liveSessionBtn) return;
 
     if (activeSession) {
       liveSessionBtn.className = 'btn btn-live-active';
       liveSessionBtn.disabled = false;
       liveSessionBtn.textContent = 'Live';
+      liveSessionBtn.title = 'Go to live session';
     } else {
       liveSessionBtn.className = 'btn btn-live-disabled';
       liveSessionBtn.disabled = true;
       liveSessionBtn.textContent = 'Live';
+      liveSessionBtn.title = 'No live session in progress';
     }
   }
 </script>

@@ -149,7 +149,25 @@ PokerTracker.SessionModal = {
   parseNumericInput: function(value) {
     if (value === '' || value === null || typeof value === 'undefined') return 0;
     const parsed = parseFloat(value);
-    return isNaN(parsed) ? 0 : parsed;
+    return isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
+  },
+
+  enforceCurrencyPrecision: function(input) {
+    if (!input) return;
+    input.addEventListener('input', function() {
+      const current = this.value;
+      const decimalIndex = current.indexOf('.');
+      if (decimalIndex !== -1 && current.length - decimalIndex - 1 > 2) {
+        const trimmed = current.slice(0, decimalIndex + 3);
+        const caret = trimmed.length;
+        this.value = trimmed;
+        try {
+          this.setSelectionRange(caret, caret);
+        } catch (err) {
+          // Ignore browsers that don't support setSelectionRange on input type number
+        }
+      }
+    });
   },
 
   ensureAutoSaveListeners: function() {
@@ -202,6 +220,10 @@ PokerTracker.SessionModal = {
     fieldConfigs.forEach(config => {
       const element = document.getElementById(config.id);
       if (!element) return;
+
+      if (config.id === 'modalBuyInInput' || config.id === 'modalCashOutInput') {
+        this.enforceCurrencyPrecision(element);
+      }
 
       element.addEventListener(config.event || 'input', () => {
         const updates = config.getUpdates(element) || {};
@@ -303,17 +325,11 @@ PokerTracker.SessionModal = {
       }
 
       this.handleFieldUpdates({ endTime: endTimeIso });
+      PokerTracker.DataStore.endActiveSession(this.currentSessionId, { endTime: endTimeIso });
       this.closeSessionSettingsModal();
 
-      // End the live session if this is the active one
-      const activeSession = PokerTracker.DataStore.getActiveSession();
-      if (activeSession && activeSession.id === this.currentSessionId) {
-        PokerTracker.DataStore.endLiveSession();
-
-        // Update nav link if available
-        if (window.updateLiveSessionNavLink) {
-          window.updateLiveSessionNavLink();
-        }
+      if (window.updateLiveSessionNavLink) {
+        window.updateLiveSessionNavLink();
       }
 
       // Redirect to sessions page

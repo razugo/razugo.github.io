@@ -12,6 +12,10 @@
 </nav>
 
 <script>
+  window.PokerTracker = window.PokerTracker || {};
+  window.PokerTracker.routes = window.PokerTracker.routes || {};
+  window.PokerTracker.routes.session = '{{ site.baseurl }}{% link projects/poker_tracker/session.html %}';
+
   // Mobile nav toggle
   document.addEventListener('DOMContentLoaded', function() {
     const navToggle = document.getElementById('navToggle');
@@ -31,6 +35,8 @@
 
     // Setup Live Session nav link
     setupLiveSessionNavLink();
+
+    document.addEventListener('pokertracker:live-session-change', setupLiveSessionNavLink);
   });
 
   function setupLiveSessionNavLink() {
@@ -41,33 +47,32 @@
     if (typeof PokerTracker !== 'undefined' && PokerTracker.DataStore) {
       const activeSession = PokerTracker.DataStore.getActiveSession();
 
+      liveSessionLink.classList.remove('live-session-start', 'live-session-active');
+
       if (activeSession) {
-        // Live session is active - show "Goto Live Session" with active styling
+        // Live session is active - show "Go to Live Session" with active styling
         liveSessionLink.textContent = 'Live Session';
         liveSessionLink.href = `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}?session_id=${activeSession.id}`;
-        liveSessionLink.classList.remove('nav-link-disabled');
         liveSessionLink.classList.add('live-session-active');
         liveSessionLink.style.opacity = '1';
         liveSessionLink.style.pointerEvents = 'auto';
-        liveSessionLink.title = `Active session: ${activeSession.name || 'Unnamed'}`;
+        liveSessionLink.title = `Active session: ${activeSession.name || 'Unnamed Session'}`;
       } else {
-        // No live session - show "+ Live Session" with border
+        // No live session - show "+ Live Session" call to action
         liveSessionLink.textContent = '+ Live Session';
         liveSessionLink.href = '#';
-        liveSessionLink.classList.remove('nav-link-disabled', 'live-session-active');
         liveSessionLink.classList.add('live-session-start');
         liveSessionLink.style.opacity = '1';
         liveSessionLink.style.pointerEvents = 'auto';
         liveSessionLink.title = 'Start a new live session';
       }
 
-      // Add click handler
       liveSessionLink.onclick = function(e) {
-        if (!activeSession) {
+        const currentActiveSession = PokerTracker.DataStore.getActiveSession();
+        if (!currentActiveSession) {
           e.preventDefault();
           startNewLiveSession();
         }
-        // If active session exists, the href will handle navigation
       };
     } else {
       // DataStore not available, disable link
@@ -75,6 +80,11 @@
       liveSessionLink.href = '#';
       liveSessionLink.style.opacity = '0.5';
       liveSessionLink.style.pointerEvents = 'none';
+      liveSessionLink.title = 'Live sessions unavailable';
+    }
+
+    if (typeof window.checkActiveSession === 'function') {
+      window.checkActiveSession();
     }
   }
 

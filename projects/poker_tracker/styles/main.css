@@ -121,11 +121,6 @@
       background: var(--primary);
       color: white;
       font-weight: 600;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-    }
-
-    .nav-link.live-session-active:hover {
-      background: #059669;
     }
 
     /* Live Session Button in Sessions Page */
@@ -743,10 +738,17 @@
 
     /* Filters */
     .filters {
-      display: flex;
-      gap: 1rem;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.75rem 1rem;
       margin-bottom: 1.5rem;
-      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .filter-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
     }
 
     .filter-input {
@@ -754,12 +756,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       font-size: 0.875rem;
-    }
-
-    .date-filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+      width: 100%;
     }
 
     .filter-label {
@@ -768,6 +765,27 @@
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+    }
+
+    .filter-button {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-top: 1.3rem;
+    }
+
+    .filter-button .session-filter-apply {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sessions-empty {
+      padding: 1rem;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
     }
 
     /* Grid (from original) */
@@ -1254,7 +1272,22 @@
       }
 
       .filters {
-        flex-direction: column;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .filter-button {
+        padding-top: 0;
+        width: 100%;
+      }
+
+      .filter-button .session-filter-apply {
+        width: 100%;
+      }
+
+      @media (max-width: 600px) {
+        .filters {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
 
       .stats-grid {
@@ -2384,24 +2417,6 @@
       }
 
       /* Session notes are already in their own div, so no grid changes needed */
-
-      /* Mobile button layout below grid */
-      .filters {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: center !important;
-        gap: 0.5rem !important;
-        margin-top: 1rem !important;
-        flex-wrap: wrap !important;
-      }
-
-      .filters .btn-sm {
-        padding: 0.4rem 0.6rem !important;
-        font-size: 0.75rem !important;
-        min-width: auto !important;
-        text-align: center !important;
-        white-space: nowrap !important;
-      }
     }
 
     /* List Item Styles - moved outside media queries for consistent styling */

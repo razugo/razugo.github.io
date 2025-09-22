@@ -51,14 +51,24 @@ PokerTracker.DataStore = {
   },
 
   createGame: function(name, location, smallBlind, bigBlind) {
+    const normalizeStake = value => {
+      if (value === null || typeof value === 'undefined' || value === '') return null;
+      const parsed = typeof value === 'number' ? value : parseFloat(value);
+      if (!Number.isFinite(parsed) || parsed <= 0) return null;
+      return Math.round(parsed * 100) / 100;
+    };
+
+    const normalizedSmall = normalizeStake(smallBlind);
+    const normalizedBig = normalizeStake(bigBlind);
+
     const gameId = 'game-' + Date.now();
     const newGame = {
       id: gameId,
       name: name,
       location: location,
       stakes: {
-        smallBlind: smallBlind,
-        bigBlind: bigBlind,
+        smallBlind: normalizedSmall,
+        bigBlind: normalizedBig,
         currency: 'USD'
       }
     };
@@ -74,7 +84,25 @@ PokerTracker.DataStore = {
     const games = this.games;
     const gameIndex = games.findIndex(g => g.id === gameId);
     if (gameIndex !== -1) {
-      games[gameIndex] = { ...games[gameIndex], ...updates };
+      const normalizeStake = value => {
+        if (value === null || typeof value === 'undefined' || value === '') return null;
+        const parsed = typeof value === 'number' ? value : parseFloat(value);
+        if (!Number.isFinite(parsed) || parsed <= 0) return null;
+        return Math.round(parsed * 100) / 100;
+      };
+
+      const nextGame = { ...games[gameIndex], ...updates };
+
+      if (updates.stakes) {
+        nextGame.stakes = {
+          ...games[gameIndex].stakes,
+          ...updates.stakes,
+          smallBlind: normalizeStake(updates.stakes.smallBlind),
+          bigBlind: normalizeStake(updates.stakes.bigBlind)
+        };
+      }
+
+      games[gameIndex] = nextGame;
       this.games = games;
       return games[gameIndex];
     }
@@ -172,7 +200,6 @@ PokerTracker.DataStore = {
     const sessionId = 'session-' + Date.now();
     const newSession = {
       id: sessionId,
-      date: new Date().toISOString().split('T')[0],
       gameId: gameId,
       buyIn: buyIn,
       cashOut: buyIn,
@@ -202,6 +229,13 @@ PokerTracker.DataStore = {
     if (sessionIndex !== -1) {
       sessions[sessionIndex] = { ...sessions[sessionIndex], ...updates };
       this.sessions = sessions;
+
+      const state = this.appState;
+      if (state.liveSessionId === sessionId && sessions[sessionIndex].endTime) {
+        state.liveSessionId = null;
+        this.appState = state;
+        this.notifyLiveSessionChange(null);
+      }
       return sessions[sessionIndex];
     }
     return null;
@@ -217,7 +251,38 @@ PokerTracker.DataStore = {
     if (state.liveSessionId === sessionId) {
       state.liveSessionId = null;
       this.appState = state;
+      this.notifyLiveSessionChange(null);
     }
+  },
+
+  notifyLiveSessionChange: function(sessionId) {
+    if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
+      document.dispatchEvent(new CustomEvent('pokertracker:live-session-change', {
+        detail: { sessionId }
+      }));
+    }
+  },
+
+  getSessionDate: function(session) {
+    if (!session) return '';
+
+    const source = session.startTime || session.endTime || session.date || null;
+    if (!source) return '';
+
+    const date = new Date(source);
+    if (Number.isNaN(date.getTime())) {
+      return typeof session.date === 'string' ? session.date : '';
+    }
+
+    return date.toISOString().split('T')[0];
+  },
+
+  getSessionSortValue: function(session) {
+    if (!session) return 0;
+    const source = session.startTime || session.endTime || session.date || null;
+    if (!source) return 0;
+    const value = new Date(source).getTime();
+    return Number.isNaN(value) ? 0 : value;
   },
 
   getActiveSession: function() {
@@ -231,12 +296,11 @@ PokerTracker.DataStore = {
 
   createLiveSession: function(gameId = null, buyIn = 0) {
     // End any existing live session first
-    this.endLiveSession();
+    this.endActiveSession();
 
     const sessionId = 'session-' + Date.now();
     const newSession = {
       id: sessionId,
-      date: new Date().toISOString().split('T')[0],
       gameId: gameId,
       buyIn: buyIn,
       cashOut: buyIn,
@@ -262,21 +326,45 @@ PokerTracker.DataStore = {
     state.liveSessionId = sessionId;
     this.appState = state;
 
+    this.notifyLiveSessionChange(sessionId);
+
     return newSession;
   },
 
-  endLiveSession: function() {
-    const liveSession = this.getActiveSession();
-    if (liveSession) {
-      liveSession.endTime = new Date().toISOString();
-      this.sessions = this.sessions; // Trigger save
+  endActiveSession: function(sessionId = null, options = {}) {
+    const targetSessionId = sessionId || this.appState.liveSessionId;
+    let endedSession = null;
 
-      // Clear live session from app state
-      const state = this.appState;
+    if (targetSessionId) {
+      const sessions = this.sessions;
+      const sessionIndex = sessions.findIndex(s => s.id === targetSessionId);
+      const timestamp = options.endTime || new Date().toISOString();
+
+      if (sessionIndex !== -1) {
+        const sessionRecord = sessions[sessionIndex];
+        if (!sessionRecord.endTime) {
+          const updatedSession = { ...sessionRecord, endTime: timestamp };
+          sessions[sessionIndex] = updatedSession;
+          this.sessions = sessions;
+          endedSession = updatedSession;
+        } else {
+          endedSession = sessionRecord;
+        }
+      }
+    }
+
+    const state = this.appState;
+    if (state.liveSessionId === targetSessionId) {
       state.liveSessionId = null;
       this.appState = state;
+      this.notifyLiveSessionChange(null);
     }
-    return liveSession;
+
+    return endedSession;
+  },
+
+  endLiveSession: function() {
+    return this.endActiveSession();
   },
 
   hasLiveSession: function() {

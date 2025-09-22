@@ -33,6 +33,7 @@ nav_id: games
         <button class="modal-close" onclick="closeEditGameModal()">&times;</button>
       </div>
       <div class="modal-body">
+        <p class="session-autosave-note">Changes save automatically.</p>
         <form id="editGameForm">
           <div class="form-group">
             <label class="form-label" for="editGameName">Game Name</label>
@@ -45,18 +46,17 @@ nav_id: games
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="editSmallBlind">Small Blind ($)</label>
-              <input type="number" class="form-input" id="editSmallBlind" step="0.01" min="0" required>
+              <input type="number" class="form-input" id="editSmallBlind" step="0.01" min="0">
             </div>
             <div class="form-group">
               <label class="form-label" for="editBigBlind">Big Blind ($)</label>
-              <input type="number" class="form-input" id="editBigBlind" step="0.01" min="0" required>
+              <input type="number" class="form-input" id="editBigBlind" step="0.01" min="0">
             </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-cancel" onclick="closeEditGameModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveGameChanges()">Save Changes</button>
+        <button type="button" class="btn btn-cancel" onclick="closeEditGameModal()">Close</button>
       </div>
     </div>
   </div>
@@ -76,17 +76,21 @@ nav_id: games
         <div class="card" style="text-align: center; padding: 3rem;">
           <h3>No Games Created</h3>
           <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Create your first game to start tracking poker sessions.</p>
-          <button class="btn btn-primary" onclick="PokerTracker.Utils.showNewGameModal()">+ Create Your First Game</button>
         </div>
       `;
       return;
     }
 
+    const formatStake = amount => {
+      const parsed = typeof amount === 'number' ? amount : parseFloat(amount);
+      return Number.isFinite(parsed) && parsed > 0 ? PokerTracker.Utils.formatCurrency(parsed) : '—';
+    };
+
     container.innerHTML = games.map(game => `
       <div class="game-card">
         <h3>${game.name}</h3>
         <p><strong>Location:</strong> ${game.location}</p>
-        <p><strong>Stakes:</strong> ${PokerTracker.Utils.formatCurrency(game.stakes.smallBlind)}/${PokerTracker.Utils.formatCurrency(game.stakes.bigBlind)}</p>
+        <p><strong>Stakes:</strong> ${formatStake(game.stakes.smallBlind)} / ${formatStake(game.stakes.bigBlind)}</p>
         <div style="margin-top: 1rem;">
           <button class="btn btn-outline btn-sm" onclick="editGame('${game.id}')">Edit</button>
           <button class="btn btn-outline btn-sm" onclick="deleteGame('${game.id}')">Delete</button>
@@ -96,6 +100,106 @@ nav_id: games
   }
 
   let currentEditingGameId = null;
+  let editGameAutoSaveTimer = null;
+  const EDIT_GAME_AUTOSAVE_DELAY = 400;
+  let editGameListenersBound = false;
+
+  function setFieldError(inputId, hasError) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const formGroup = input.closest('.form-group');
+    if (hasError) {
+      input.classList.add('error');
+      if (formGroup) formGroup.classList.add('error');
+    } else {
+      input.classList.remove('error');
+      if (formGroup) formGroup.classList.remove('error');
+    }
+  }
+
+  function parseStakeInput(value) {
+    if (!value || value.trim() === '') return { value: null, error: false };
+    const parsed = parseFloat(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return { value: null, error: true };
+    }
+    return { value: Math.round(parsed * 100) / 100, error: false };
+  }
+
+  function getEditGameFormValues() {
+    const nameInput = document.getElementById('editGameName');
+    const locationInput = document.getElementById('editGameLocation');
+    const smallInput = document.getElementById('editSmallBlind');
+    const bigInput = document.getElementById('editBigBlind');
+
+    const name = nameInput.value.trim();
+    const location = locationInput.value.trim();
+    const small = parseStakeInput(smallInput.value.trim());
+    const big = parseStakeInput(bigInput.value.trim());
+
+    let isValid = true;
+
+    if (!name) {
+      setFieldError('editGameName', true);
+      isValid = false;
+    } else {
+      setFieldError('editGameName', false);
+    }
+
+    setFieldError('editSmallBlind', small.error);
+    setFieldError('editBigBlind', big.error);
+
+    if (small.error || big.error) {
+      isValid = false;
+    }
+
+    if (!small.error && !big.error && small.value !== null && big.value !== null && big.value <= small.value) {
+      setFieldError('editSmallBlind', true);
+      setFieldError('editBigBlind', true);
+      isValid = false;
+    }
+
+    if (!isValid) {
+      return null;
+    }
+
+    return {
+      name,
+      location: location || '-',
+      stakes: {
+        smallBlind: small.value,
+        bigBlind: big.value,
+        currency: 'USD'
+      }
+    };
+  }
+
+  function scheduleGameAutoSave() {
+    if (!currentEditingGameId) return;
+    clearTimeout(editGameAutoSaveTimer);
+    editGameAutoSaveTimer = setTimeout(persistGameChanges, EDIT_GAME_AUTOSAVE_DELAY);
+  }
+
+  function persistGameChanges() {
+    if (!currentEditingGameId) return;
+    clearTimeout(editGameAutoSaveTimer);
+    const updates = getEditGameFormValues();
+    if (!updates) return;
+
+    PokerTracker.DataStore.updateGame(currentEditingGameId, updates);
+    populateGamesList();
+  }
+
+  function bindEditGameListeners() {
+    if (editGameListenersBound) return;
+    ['editGameName', 'editGameLocation', 'editSmallBlind', 'editBigBlind'].forEach(id => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.addEventListener('input', scheduleGameAutoSave);
+      input.addEventListener('change', scheduleGameAutoSave);
+    });
+    editGameListenersBound = true;
+  }
 
   function editGame(gameId) {
     const game = PokerTracker.DataStore.getGame(gameId);
@@ -107,59 +211,31 @@ nav_id: games
     currentEditingGameId = gameId;
 
     // Populate form with current values
+    const toInputValue = amount => {
+      const numeric = typeof amount === 'number' ? amount : parseFloat(amount);
+      return Number.isFinite(numeric) && numeric > 0 ? numeric.toFixed(2) : '';
+    };
+
     document.getElementById('editGameName').value = game.name;
     document.getElementById('editGameLocation').value = game.location;
-    document.getElementById('editSmallBlind').value = game.stakes.smallBlind;
-    document.getElementById('editBigBlind').value = game.stakes.bigBlind;
+    document.getElementById('editSmallBlind').value = toInputValue(game.stakes.smallBlind);
+    document.getElementById('editBigBlind').value = toInputValue(game.stakes.bigBlind);
+
+    setFieldError('editGameName', false);
+    setFieldError('editSmallBlind', false);
+    setFieldError('editBigBlind', false);
+
+    bindEditGameListeners();
 
     // Show modal
     document.getElementById('editGameModal').classList.add('show');
   }
 
   function closeEditGameModal() {
+    persistGameChanges();
     document.getElementById('editGameModal').classList.remove('show');
     currentEditingGameId = null;
-  }
-
-  function saveGameChanges() {
-    if (!currentEditingGameId) return;
-
-    const name = document.getElementById('editGameName').value.trim();
-    const location = document.getElementById('editGameLocation').value.trim();
-    const smallBlind = parseFloat(document.getElementById('editSmallBlind').value);
-    const bigBlind = parseFloat(document.getElementById('editBigBlind').value);
-
-    // Validation
-    if (!name) {
-      console.error('Game name cannot be empty');
-      return;
-    }
-
-    if (isNaN(smallBlind) || smallBlind <= 0) {
-      console.error('Invalid small blind amount');
-      return;
-    }
-
-    if (isNaN(bigBlind) || bigBlind <= smallBlind) {
-      console.error('Big blind must be greater than small blind');
-      return;
-    }
-
-    // Update the game
-    const updates = {
-      name: name,
-      location: location || 'Unknown',
-      stakes: {
-        smallBlind: smallBlind,
-        bigBlind: bigBlind,
-        currency: 'USD'
-      }
-    };
-
-    PokerTracker.DataStore.updateGame(currentEditingGameId, updates);
-    console.error('Game updated successfully!');
-    closeEditGameModal();
-    populateGamesList();
+    clearTimeout(editGameAutoSaveTimer);
   }
 
   // Close modal when clicking outside
@@ -168,6 +244,23 @@ nav_id: games
     if (event.target === modal) {
       closeEditGameModal();
     }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    ['editSmallBlind', 'editBigBlind'].forEach(id => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.addEventListener('input', function() {
+        const value = this.value;
+        const dotIndex = value.indexOf('.');
+        if (dotIndex !== -1 && value.length - dotIndex - 1 > 2) {
+          const trimmed = value.slice(0, dotIndex + 3);
+          const caret = trimmed.length;
+          this.value = trimmed;
+          this.setSelectionRange(caret, caret);
+        }
+      });
+    });
   });
 
   function deleteGame(gameId) {

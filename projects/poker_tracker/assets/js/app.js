@@ -46,7 +46,8 @@ PokerTracker.Utils = {
     }
 
     // Redirect to the session page
-    window.location.href = `/projects/poker_tracker/session?session_id=${newSession.id}`;
+    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '/projects/poker_tracker/session.html';
+    window.location.href = `${sessionRoute}?session_id=${newSession.id}`;
   },
 
   showNewGameModal: function() {
@@ -56,24 +57,34 @@ PokerTracker.Utils = {
     const location = prompt('Enter location (e.g., "Aria Casino"):');
     if (location === null) return;
 
-    const smallBlind = prompt('Enter small blind amount:');
-    if (smallBlind === null) return;
-    const smallBlindAmount = parseFloat(smallBlind);
-    if (isNaN(smallBlindAmount) || smallBlindAmount <= 0) {
-    console.error('Invalid small blind amount');
+    const smallBlindInput = prompt('Enter small blind amount (optional):');
+    if (smallBlindInput === null) return;
+    const smallBlindAmount = smallBlindInput.trim() === '' ? null : parseFloat(smallBlindInput);
+    if (smallBlindInput.trim() !== '' && (isNaN(smallBlindAmount) || smallBlindAmount <= 0)) {
+      console.error('Invalid small blind amount');
       return;
     }
 
-    const bigBlind = prompt('Enter big blind amount:');
-    if (bigBlind === null) return;
-    const bigBlindAmount = parseFloat(bigBlind);
-    if (isNaN(bigBlindAmount) || bigBlindAmount <= smallBlindAmount) {
-    console.error('Invalid big blind amount');
+    const bigBlindInput = prompt('Enter big blind amount (optional):');
+    if (bigBlindInput === null) return;
+    const bigBlindAmount = bigBlindInput.trim() === '' ? null : parseFloat(bigBlindInput);
+    if (bigBlindInput.trim() !== '' && (isNaN(bigBlindAmount) || bigBlindAmount <= 0)) {
+      console.error('Invalid big blind amount');
+      return;
+    }
+
+    if (smallBlindAmount !== null && bigBlindAmount !== null && bigBlindAmount <= smallBlindAmount) {
+      console.error('Big blind must be greater than small blind when both are provided');
       return;
     }
 
     // Create the game
-    PokerTracker.DataStore.createGame(gameName.trim(), location.trim() || 'Unknown', smallBlindAmount, bigBlindAmount);
+    PokerTracker.DataStore.createGame(
+      gameName.trim(),
+      location.trim() || '-',
+      smallBlindAmount,
+      bigBlindAmount
+    );
 
     console.error('Game created successfully!');
 

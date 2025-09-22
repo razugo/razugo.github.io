@@ -623,20 +623,35 @@ nav_id: session
       return;
     }
 
-    // Populate games dropdown (if it exists)
-    const gameSelect = document.getElementById('gameSelect');
-    if (gameSelect) {
-      const games = PokerTracker.DataStore.getAllGames();
-      console.log('Available games:', games);
-      console.log('Session gameId:', session.gameId);
+   // Populate games dropdown (if it exists)
+   const gameSelect = document.getElementById('gameSelect');
+   if (gameSelect) {
+     const games = PokerTracker.DataStore.getAllGames();
+     console.log('Available games:', games);
+     console.log('Session gameId:', session.gameId);
+
+      const formatStake = value => {
+        const parsed = typeof value === 'number' ? value : parseFloat(value);
+        return Number.isFinite(parsed) && parsed > 0 ? PokerTracker.Utils.formatCurrency(parsed) : null;
+      };
+
+      const formatGameLabel = game => {
+        const stakes = game?.stakes || {};
+        const small = formatStake(stakes.smallBlind);
+        const big = formatStake(stakes.bigBlind);
+
+        if (small || big) {
+          return `${game.name} (${small || '—'}/${big || '—'})`;
+        }
+        return game.name;
+      };
 
       games.forEach(game => {
-        if (game && game.stakes) {
-          const option = document.createElement('option');
-          option.value = game.id;
-          option.textContent = `${game.name} (${game.stakes.smallBlind}/${game.stakes.bigBlind})`;
-          gameSelect.appendChild(option);
-        }
+        if (!game) return;
+        const option = document.createElement('option');
+        option.value = game.id;
+        option.textContent = formatGameLabel(game);
+        gameSelect.appendChild(option);
       });
     } else {
       console.log('gameSelect element not found - skipping game dropdown population');
@@ -739,7 +754,7 @@ nav_id: session
 
     if (isLiveSession) {
       if (confirm('End this live session? This will mark it as completed.')) {
-        PokerTracker.DataStore.endLiveSession();
+        PokerTracker.DataStore.endActiveSession(session.id);
         updateSessionStats();
 
         // Update nav link globally

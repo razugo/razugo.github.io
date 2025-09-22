@@ -15,12 +15,12 @@
         <input type="text" id="gameLocationInput" class="form-input" placeholder="e.g., Aria Casino">
       </div>
       <div class="form-group">
-        <label for="smallBlindInput">Small Blind *</label>
-        <input type="number" id="smallBlindInput" class="form-input" placeholder="1" step="0.01" min="0.01" required>
+        <label for="smallBlindInput">Small Blind</label>
+        <input type="number" id="smallBlindInput" class="form-input" placeholder="1" step="0.01" min="0.01">
       </div>
       <div class="form-group">
-        <label for="bigBlindInput">Big Blind *</label>
-        <input type="number" id="bigBlindInput" class="form-input" placeholder="3" step="0.01" min="0.01" required>
+        <label for="bigBlindInput">Big Blind</label>
+        <input type="number" id="bigBlindInput" class="form-input" placeholder="3" step="0.01" min="0.01">
       </div>
     </div>
     <div class="modal-footer">
@@ -90,16 +90,17 @@ PokerTracker.GameModal = {
     }
 
     // Validate small blind
-    const smallBlindAmount = parseFloat(smallBlindValue);
+    const smallBlindAmount = smallBlindValue ? Math.round(parseFloat(smallBlindValue) * 100) / 100 : null;
     if (!this.validateAndHighlight('smallBlindInput', smallBlindValue, null,
-        !smallBlindValue || isNaN(smallBlindAmount) || smallBlindAmount <= 0)) {
+        smallBlindValue && (isNaN(smallBlindAmount) || smallBlindAmount <= 0))) {
       isValid = false;
     }
 
     // Validate big blind
-    const bigBlindAmount = parseFloat(bigBlindValue);
-    if (!this.validateAndHighlight('bigBlindInput', bigBlindValue, null,
-        !bigBlindValue || isNaN(bigBlindAmount) || bigBlindAmount <= 0 || bigBlindAmount <= smallBlindAmount)) {
+    const bigBlindAmount = bigBlindValue ? Math.round(parseFloat(bigBlindValue) * 100) / 100 : null;
+    const bigInvalid = bigBlindValue && (isNaN(bigBlindAmount) || bigBlindAmount <= 0);
+    const blindOrderInvalid = !bigInvalid && bigBlindAmount !== null && smallBlindAmount !== null && bigBlindAmount <= smallBlindAmount;
+    if (!this.validateAndHighlight('bigBlindInput', bigBlindValue, null, bigInvalid || blindOrderInvalid)) {
       isValid = false;
     }
 
@@ -110,7 +111,7 @@ PokerTracker.GameModal = {
     // Create the game
     PokerTracker.DataStore.createGame(
       gameName,
-      location || 'Unknown',
+      location || '-',
       smallBlindAmount,
       bigBlindAmount
     );
@@ -150,14 +151,25 @@ document.addEventListener('DOMContentLoaded', function() {
   const inputs = ['gameNameInput', 'gameLocationInput', 'smallBlindInput', 'bigBlindInput'];
   inputs.forEach(inputId => {
     const input = document.getElementById(inputId);
-    if (input) {
+    if (!input) return;
+
+    input.addEventListener('input', function() {
+      if (this.classList.contains('error')) {
+        this.classList.remove('error');
+        const formGroup = this.closest('.form-group');
+        if (formGroup) {
+          formGroup.classList.remove('error');
+        }
+      }
+    });
+
+    if (input.type === 'number' && input.step === '0.01') {
       input.addEventListener('input', function() {
-        if (this.classList.contains('error')) {
-          this.classList.remove('error');
-          const formGroup = this.closest('.form-group');
-          if (formGroup) {
-            formGroup.classList.remove('error');
-          }
+        const value = this.value;
+        const dotIndex = value.indexOf('.');
+        if (dotIndex !== -1 && value.length - dotIndex - 1 > 2) {
+          const trimmed = value.slice(0, dotIndex + 3);
+          this.value = trimmed;
         }
       });
     }

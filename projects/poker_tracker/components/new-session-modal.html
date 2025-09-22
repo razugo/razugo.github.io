@@ -91,7 +91,8 @@ PokerTracker.Modal = {
     this.closeNewSessionModal();
 
     // Redirect to the session page
-    window.location.href = `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}?session_id=${newSession.id}`;
+    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}`;
+    window.location.href = `${sessionRoute}?session_id=${newSession.id}`;
   }
 };
 

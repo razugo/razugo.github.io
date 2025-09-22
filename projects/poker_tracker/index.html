@@ -105,12 +105,19 @@ nav_id: dashboard
           const sessions = PokerTracker.DataStore.getSessions().slice(-5).reverse();
           const tbody = document.getElementById('recentSessionsTableBody');
 
-          tbody.innerHTML = sessions.map(session => {
+          const ordered = sessions.slice().sort((a, b) => {
+            const valueA = PokerTracker.DataStore.getSessionSortValue(a);
+            const valueB = PokerTracker.DataStore.getSessionSortValue(b);
+            return valueB - valueA;
+          });
+
+          tbody.innerHTML = ordered.map(session => {
             const game = PokerTracker.DataStore.getGame(session.gameId);
             const profit = (session.cashOut || 0) - (session.buyIn || 0);
 
             // Get hands count directly from session
             const handsCount = session.total || 0;
+            const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
             // Calculate duration from start/end time or estimate
             let duration = 0;
@@ -124,7 +131,7 @@ nav_id: dashboard
 
             return `
               <tr>
-                <td>${session.date}</td>
+                <td>${sessionDate || '-'}</td>
                 <td>${game?.name || 'Unknown'}</td>
                 <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
                 <td>${handsCount}</td>
@@ -140,7 +147,11 @@ nav_id: dashboard
           const sessions = PokerTracker.DataStore.getSessions();
 
           // Sort sessions by date
-          const sortedSessions = sessions.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+          const sortedSessions = sessions.slice().sort((a, b) => {
+            const valueA = PokerTracker.DataStore.getSessionSortValue(a);
+            const valueB = PokerTracker.DataStore.getSessionSortValue(b);
+            return valueA - valueB; // Oldest to newest for cumulative chart
+          });
 
           if (sortedSessions.length === 0) {
             // Show empty chart
