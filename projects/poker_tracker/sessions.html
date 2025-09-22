@@ -293,12 +293,33 @@ nav_id: sessions
     const totalSessions = sessions.length;
     let totalHands = 0;
     let totalPlayed = 0;
+    let totalDurationMinutes = 0;
 
     sessions.forEach(session => {
       const dealt = session.total || 0;
       const played = session.totalPlayed || 0;
       totalHands += dealt;
       totalPlayed += played;
+
+      // Calculate duration for this session
+      let durationMinutes = 0;
+      if (typeof session.durationHours === 'number' && Number.isFinite(session.durationHours) && session.durationHours > 0) {
+        durationMinutes = session.durationHours * 60;
+      } else if (session.startTime && session.endTime) {
+        const start = new Date(session.startTime);
+        const end = new Date(session.endTime);
+        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+          durationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
+        }
+      } else if (session.startTime) {
+        const start = new Date(session.startTime);
+        if (!Number.isNaN(start.getTime())) {
+          durationMinutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
+        }
+      } else if (dealt > 0) {
+        durationMinutes = dealt * 2;
+      }
+      totalDurationMinutes += durationMinutes;
     });
 
     const vpipValue = totalHands > 0 ? ((totalPlayed / totalHands) * 100).toFixed(1) : null;
@@ -314,8 +335,8 @@ nav_id: sessions
         <span class="summary-subvalue">${totalPlayed.toLocaleString()} / ${totalHands.toLocaleString()}</span>
       </div>
       <div class="summary-card">
-        <span class="summary-label">Hands Dealt</span>
-        <span class="summary-value">${totalHands.toLocaleString()}</span>
+        <span class="summary-label">Total Duration</span>
+        <span class="summary-value">${totalDurationMinutes > 0 ? PokerTracker.Utils.formatDuration(Math.round(totalDurationMinutes)) : '-'}</span>
       </div>`;
   }
 

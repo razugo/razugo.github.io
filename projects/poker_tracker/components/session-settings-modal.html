@@ -6,13 +6,21 @@
       <button class="modal-close" onclick="PokerTracker.SessionModal.closeSessionSettingsModal()">&times;</button>
     </div>
     <div class="modal-body">
-      <!-- Session Name -->
-      <div class="form-group">
-        <label for="modalSessionNameInput">Session Name</label>
-        <input type="text" id="modalSessionNameInput" class="form-input" placeholder="Enter session name">
+      <!-- Session Name + Game -->
+      <div class="session-form-grid session-form-grid-name-game">
+        <div class="form-group">
+          <label for="modalSessionNameInput">Session Name</label>
+          <input type="text" id="modalSessionNameInput" class="form-input" placeholder="Enter session name">
+        </div>
+        <div class="form-group">
+          <label for="modalGameSelect">Game</label>
+          <select id="modalGameSelect" class="form-input">
+            <option value="">Select Game</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Financial + Game Inputs -->
+      <!-- Financial Inputs -->
       <div class="session-form-grid session-form-grid-finance">
         <div class="form-group">
           <label for="modalBuyInInput">Buy In</label>
@@ -21,12 +29,6 @@
         <div class="form-group">
           <label for="modalCashOutInput">Cash Out</label>
           <input type="number" id="modalCashOutInput" class="form-input" placeholder="0.00" step="0.01" min="0">
-        </div>
-        <div class="form-group">
-          <label for="modalGameSelect">Game</label>
-          <select id="modalGameSelect" class="form-input">
-            <option value="">Select Game</option>
-          </select>
         </div>
       </div>
 
