@@ -170,6 +170,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dotIndex !== -1 && value.length - dotIndex - 1 > 2) {
           const trimmed = value.slice(0, dotIndex + 3);
           this.value = trimmed;
+          try {
+            const caret = trimmed.length;
+            this.setSelectionRange(caret, caret);
+          } catch (err) {
+            // Ignore unsupported browsers for setSelectionRange on number inputs
+          }
         }
       });
     }

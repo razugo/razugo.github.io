@@ -30,22 +30,27 @@ nav_id: dashboard
           <a href="/projects/poker_tracker/sessions" class="btn btn-outline btn-sm">View All</a>
         </div>
         <div class="card-content">
-          <div class="table-container">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Game</th>
-                  <th>Duration</th>
-                  <th>Hands</th>
-                  <th>P&L</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="recentSessionsTableBody">
-                <!-- Populated by JavaScript -->
-              </tbody>
-            </table>
+          <div class="recent-sessions-table-wrapper desktop-view">
+            <div class="table-container recent-sessions-table-container">
+              <table class="table recent-sessions-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Game</th>
+                    <th class="col-duration">Duration</th>
+                    <th class="col-hands">Hands</th>
+                    <th>P&L</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recentSessionsTableBody">
+                  <!-- Populated by JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="recent-sessions-cards mobile-view" id="recentSessionsCards">
+            <!-- Populated by JavaScript -->
           </div>
         </div>
       </div>
@@ -67,6 +72,7 @@ nav_id: dashboard
           populateStats();
           populateRecentSessions();
           createBankrollChart();
+          window.addEventListener('resize', updateRecentSessionsResponsiveState);
         });
 
         function populateStats() {
@@ -102,44 +108,74 @@ nav_id: dashboard
         }
 
         function populateRecentSessions() {
-          const sessions = PokerTracker.DataStore.getSessions().slice(-5).reverse();
+          const sessions = PokerTracker.DataStore.getSessions();
           const tbody = document.getElementById('recentSessionsTableBody');
+          const cardsContainer = document.getElementById('recentSessionsCards');
 
-          const ordered = sessions.slice().sort((a, b) => {
-            const valueA = PokerTracker.DataStore.getSessionSortValue(a);
-            const valueB = PokerTracker.DataStore.getSessionSortValue(b);
-            return valueB - valueA;
-          });
+          const ordered = sessions
+            .slice()
+            .sort((a, b) => PokerTracker.DataStore.getSessionSortValue(b) - PokerTracker.DataStore.getSessionSortValue(a))
+            .slice(0, 3);
 
-          tbody.innerHTML = ordered.map(session => {
-            const game = PokerTracker.DataStore.getGame(session.gameId);
-            const profit = (session.cashOut || 0) - (session.buyIn || 0);
+          if (tbody) {
+            tbody.innerHTML = ordered.map(session => {
+              const game = PokerTracker.DataStore.getGame(session.gameId);
+              const profit = (session.cashOut || 0) - (session.buyIn || 0);
+              const handsCount = session.total || 0;
+              const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
-            // Get hands count directly from session
-            const handsCount = session.total || 0;
-            const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+              let duration = 0;
+              if (session.startTime && session.endTime) {
+                duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
+              } else if (session.startTime) {
+                duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
+              } else if (handsCount > 0) {
+                duration = handsCount * 2;
+              }
 
-            // Calculate duration from start/end time or estimate
-            let duration = 0;
-            if (session.startTime && session.endTime) {
-              duration = Math.round((new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60));
-            } else if (session.startTime) {
-              duration = Math.round((new Date() - new Date(session.startTime)) / (1000 * 60));
-            } else if (handsCount > 0) {
-              duration = handsCount * 2; // Estimate 2 minutes per hand
-            }
+              return `
+                <tr>
+                  <td>${sessionDate || '-'}</td>
+                  <td>${game?.name || '-'}</td>
+                  <td class="col-duration">${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
+                  <td class="col-hands">${handsCount}</td>
+                  <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
+                  <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
+                </tr>
+              `;
+            }).join('');
+          }
 
-            return `
-              <tr>
-                <td>${sessionDate || '-'}</td>
-                <td>${game?.name || 'Unknown'}</td>
-                <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
-                <td>${handsCount}</td>
-                <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
-                <td><button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button></td>
-              </tr>
-            `;
-          }).join('');
+          if (cardsContainer) {
+            cardsContainer.innerHTML = ordered.map(session => {
+              const game = PokerTracker.DataStore.getGame(session.gameId);
+              const profit = (session.cashOut || 0) - (session.buyIn || 0);
+              const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+              const baseName = session.name || game?.name || 'Session';
+
+              return `
+                <div class="session-card">
+                  <div class="session-card-content">
+                    <div class="session-card-top">
+                      <span class="session-card-title">${baseName}</span>
+                      <span class="session-card-game">${game?.name || '-'}</span>
+                    </div>
+                    <div class="session-card-bottom">
+                      <span class="session-card-date">${sessionDate || '-'}</span>
+                      <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
+                        ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="session-card-actions">
+                    <button class="btn btn-outline btn-sm" onclick="viewSession('${session.id}')">View</button>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+
+          updateRecentSessionsResponsiveState();
         }
 
         function createBankrollChart() {
@@ -228,6 +264,22 @@ nav_id: dashboard
               }
             }
           });
+        }
+
+        function updateRecentSessionsResponsiveState() {
+          const tableEl = document.querySelector('.recent-sessions-table');
+          if (!tableEl) return;
+
+          const containerEl = tableEl.closest('.recent-sessions-table-container');
+          const hideHands = window.matchMedia('(max-width: 1100px)').matches;
+          const hideDuration = window.matchMedia('(max-width: 900px)').matches;
+
+          tableEl.dataset.hideHands = hideHands ? 'true' : 'false';
+          tableEl.dataset.hideDuration = hideDuration ? 'true' : 'false';
+
+          if (containerEl) {
+            containerEl.classList.toggle('scrollable', tableEl.scrollWidth > containerEl.clientWidth);
+          }
         }
 
       </script>

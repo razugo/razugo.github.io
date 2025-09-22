@@ -340,7 +340,10 @@
       display: flex;
       gap: 1rem;
       align-items: center;
-      margin: 1rem 0;
+      margin: 1.25rem auto;
+      justify-content: center;
+      max-width: 360px;
+      width: 100%;
     }
 
     #toggle-controls .toggle-container {
@@ -656,12 +659,46 @@
       -webkit-overflow-scrolling: touch;
     }
 
+.sessions-table-container {
+  position: relative;
+  overflow-x: hidden;
+}
 
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-    }
+.sessions-table-container.scrollable {
+  overflow-x: auto;
+}
+
+.recent-sessions-table-container {
+  position: relative;
+  overflow-x: hidden;
+}
+
+.recent-sessions-table-container.scrollable {
+  overflow-x: auto;
+}
+
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.sessions-table[data-hide-stakes="true"] .col-stake {
+  display: none;
+}
+
+.sessions-table[data-hide-hands="true"] .col-hands {
+  display: none;
+}
+
+.recent-sessions-table[data-hide-duration="true"] .col-duration {
+  display: none;
+}
+
+.recent-sessions-table[data-hide-hands="true"] .col-hands {
+  display: none;
+}
 
     .table th,
     .table td {
@@ -749,6 +786,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
+      min-width: 0;
     }
 
     .filter-input {
@@ -757,6 +795,7 @@
       border-radius: var(--radius);
       font-size: 0.875rem;
       width: 100%;
+      min-width: 0;
     }
 
     .filter-label {
@@ -786,6 +825,53 @@
       text-align: center;
       color: var(--text-secondary);
       font-size: 0.9rem;
+    }
+
+    .sessions-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.875rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+
+    .summary-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .summary-subvalue {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .recent-sessions-table-wrapper {
+      width: 100%;
+    }
+
+    .recent-sessions-cards {
+      display: none;
+    }
+
+    .recent-sessions-cards .session-card {
+      margin-bottom: 0.75rem;
     }
 
     /* Grid (from original) */
@@ -910,10 +996,17 @@
       padding: 0.75rem 1rem;
       z-index: 110;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
+      justify-content: center;
       box-shadow: var(--shadow);
+    }
+
+    .live-stats-inner {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
     }
 
     .live-stats-content {
@@ -923,6 +1016,17 @@
       gap: 0.75rem 1.5rem;
       justify-content: space-between;
       flex: 1;
+      min-width: 0;
+    }
+
+    .session-body {
+      padding-top: 1.5rem !important;
+    }
+
+    .session-body-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .stat-group {
@@ -1322,11 +1426,13 @@
       }
 
       /* Show scroll indicator on mobile */
-      .table-container {
+      .sessions-table-container,
+      .recent-sessions-table-container {
         position: relative;
       }
 
-      .table-container::after {
+      .sessions-table-container.scrollable::after,
+      .recent-sessions-table-container.scrollable::after {
         content: '← Scroll →';
         position: absolute;
         bottom: 0.5rem;
@@ -1341,7 +1447,8 @@
       }
 
       /* Hide scroll indicator if table fits */
-      .table-container:not([data-scrollable])::after {
+      .sessions-table-container::after,
+      .recent-sessions-table-container::after {
         display: none;
       }
 
@@ -1681,8 +1788,9 @@
       background: var(--color-lightest);
       border-radius: 8px;
       padding: 4px;
-      margin-bottom: 20px;
+      margin: 0 auto 20px;
       border: 1px solid var(--color-light);
+      max-width: 360px;
     }
 
     .view-tab {
@@ -1714,6 +1822,9 @@
       flex-direction: column;
       align-items: center;
       gap: 24px;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     #grid-container.active {
@@ -1835,6 +1946,9 @@
       max-height: 60vh;
       overflow-y: auto;
       padding: 0;
+      max-width: 960px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     #list-container.active {
@@ -2053,6 +2167,11 @@
 
       #toggle-controls {
         padding: 0 16px;
+        max-width: 100%;
+      }
+
+      .session-body #view-tabs {
+        max-width: 100%;
       }
 
       #toggle-controls button {
@@ -2367,19 +2486,20 @@
         box-sizing: border-box !important; /* Include padding in width calculation */
       }
 
-      .session-form-grid {
-        display: grid;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-      }
+    .session-form-grid {
+      display: grid;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
 
-      .session-form-grid .form-group {
-        margin-bottom: 0;
-      }
+    .session-form-grid .form-group {
+      margin-bottom: 0;
+      min-width: 0;
+    }
 
-      .session-form-grid-finance {
-        grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.2fr);
-        align-items: end;
+    .session-form-grid-finance {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 1.2fr);
+      align-items: end;
       }
 
       .session-form-grid-time {
@@ -2387,11 +2507,19 @@
         align-items: end;
       }
 
-      .session-form-grid .form-input {
-        font-size: 0.9rem;
-        padding: 0.45rem 0.55rem;
-        width: 100%;
-      }
+    .session-form-grid .form-input,
+    .session-form-grid select {
+      font-size: 0.9rem;
+      padding: 0.45rem 0.55rem;
+      width: 100%;
+      min-width: 0;
+      line-height: 1.2;
+    }
+
+    .session-form-grid-time .form-input {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+    }
 
       .session-autosave-note {
         font-size: 0.85rem;
@@ -2406,6 +2534,12 @@
 
         .session-form-grid-finance > .form-group:last-child {
           grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .session-form-grid-time {
+          grid-template-columns: 1fr;
         }
       }
 

@@ -52,26 +52,30 @@ nav_id: sessions
         <option value="negative">Losing Sessions</option>
       </select>
     </div>
-    <div class="filter-field filter-button">
-      <button type="button" class="btn btn-primary session-filter-apply" id="sessionFilterApplyBtn" aria-label="Apply session filters">Search</button>
-    </div>
+  <div class="filter-field filter-button">
+    <button type="button" class="btn btn-primary session-filter-apply" id="sessionFilterApplyBtn" aria-label="Apply session filters">Search</button>
+  </div>
+</div>
+
+  <div class="sessions-summary" id="sessionsSummary">
+    <!-- Populated by JavaScript -->
   </div>
 
   <!-- Sessions Table (Desktop) -->
   <div class="card desktop-view">
     <div class="card-content">
-      <div class="table-container">
-        <table class="table">
+      <div class="table-container sessions-table-container">
+        <table class="table sessions-table">
         <thead>
           <tr>
             <th>Date</th>
             <th>Session</th>
             <th>Game</th>
             <th>Duration</th>
-            <th>Buy-in</th>
-            <th>Cash-out</th>
+            <th class="col-stake">Buy-in</th>
+            <th class="col-stake">Cash-out</th>
             <th>P&L</th>
-            <th>Hands</th>
+            <th class="col-hands">Hands</th>
             <th>VPIP</th>
             <th>Actions</th>
           </tr>
@@ -104,6 +108,8 @@ nav_id: sessions
       populateGameFilter();
       applyFilters();
     });
+
+    window.addEventListener('resize', updateSessionsTableResponsiveState);
   });
 
   function renderSessions(sessions = PokerTracker.DataStore.getSessions()) {
@@ -118,9 +124,12 @@ nav_id: sessions
       return valueB - valueA; // Most recent first
     });
 
+    renderSessionsSummary(orderedSessions);
+
     if (orderedSessions.length === 0) {
       tbody.innerHTML = '<tr><td colspan="10" class="sessions-empty">No sessions match the current filters.</td></tr>';
       cardContainer.innerHTML = '<div class="sessions-empty">No sessions match the current filters.</div>';
+      updateSessionsTableResponsiveState();
       return;
     }
 
@@ -140,18 +149,19 @@ nav_id: sessions
         duration = handsCount * 2;
       }
 
-      const sessionName = session.name;
+      const baseName = session.name || game?.name || 'Session';
+      const sessionLabel = baseName;
 
       return `
         <tr>
           <td>${sessionDate || '-'}</td>
-          <td>${sessionName || '-'}</td>
+          <td>${sessionLabel || '-'}</td>
           <td>${game?.name || '-'}</td>
           <td>${duration > 0 ? PokerTracker.Utils.formatDuration(duration) : '-'}</td>
-          <td>${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
-          <td>${PokerTracker.Utils.formatCurrency(session.cashOut || 0)}</td>
+          <td class="col-stake">${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
+          <td class="col-stake">${PokerTracker.Utils.formatCurrency(session.cashOut || 0)}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
-          <td>${handsCount}</td>
+          <td class="col-hands">${handsCount}</td>
           <td>${vpip}%</td>
           <td>
             <div class="session-actions">
@@ -166,13 +176,14 @@ nav_id: sessions
       const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
       const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-      const sessionName = session.name;
+      const baseName = session.name || game?.name || 'Session';
+      const sessionName = sessionDate ? `${baseName} - ${sessionDate}` : baseName;
 
       return `
         <div class="session-card">
           <div class="session-card-content">
             <div class="session-card-top">
-              <span class="session-card-title">${sessionName || '-'}</span>
+              <span class="session-card-title">${sessionName}</span>
               <span class="session-card-game">${game?.name || '-'}</span>
             </div>
             <div class="session-card-bottom">
@@ -188,9 +199,59 @@ nav_id: sessions
         </div>
       `;
     }).join('');
+    updateSessionsTableResponsiveState();
   }
 
   window.populateSessionsTable = renderSessions;
+
+  function renderSessionsSummary(sessions) {
+    const summaryEl = document.getElementById('sessionsSummary');
+    if (!summaryEl) return;
+
+    const totalSessions = sessions.length;
+    let totalHands = 0;
+    let totalPlayed = 0;
+
+    sessions.forEach(session => {
+      const dealt = session.total || 0;
+      const played = session.totalPlayed || 0;
+      totalHands += dealt;
+      totalPlayed += played;
+    });
+
+    const vpipValue = totalHands > 0 ? ((totalPlayed / totalHands) * 100).toFixed(1) : null;
+
+    summaryEl.innerHTML = `
+      <div class="summary-card">
+        <span class="summary-label">Sessions</span>
+        <span class="summary-value">${totalSessions}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">VPIP</span>
+        <span class="summary-value">${vpipValue !== null ? `${vpipValue}%` : '-'}</span>
+        <span class="summary-subvalue">${totalPlayed.toLocaleString()} / ${totalHands.toLocaleString()}</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Hands Dealt</span>
+        <span class="summary-value">${totalHands.toLocaleString()}</span>
+      </div>`;
+  }
+
+  function updateSessionsTableResponsiveState() {
+    const tableEl = document.querySelector('.sessions-table');
+    if (!tableEl) return;
+
+    const containerEl = tableEl.closest('.table-container');
+    const hideHands = window.matchMedia('(max-width: 1100px)').matches;
+    const hideStakes = window.matchMedia('(max-width: 900px)').matches;
+
+    tableEl.dataset.hideHands = hideHands ? 'true' : 'false';
+    tableEl.dataset.hideStakes = hideStakes ? 'true' : 'false';
+
+    if (containerEl) {
+      containerEl.classList.toggle('scrollable', tableEl.scrollWidth > containerEl.clientWidth);
+    }
+  }
 
   function deleteSession(sessionId) {
     console.log('deleteSession called with sessionId:', sessionId);
