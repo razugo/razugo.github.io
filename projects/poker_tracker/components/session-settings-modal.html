@@ -34,11 +34,11 @@
       <div class="session-form-grid session-form-grid-time">
         <div class="form-group">
           <label for="modalStartTimeInput">Start Time</label>
-          <input type="datetime-local" id="modalStartTimeInput" class="form-input">
+          <input type="text" id="modalStartTimeInput" class="form-input datetime-picker-input" placeholder="YYYY-MM-DD HH:MM" autocomplete="off">
         </div>
         <div class="form-group">
           <label for="modalEndTimeInput">End Time</label>
-          <input type="datetime-local" id="modalEndTimeInput" class="form-input">
+          <input type="text" id="modalEndTimeInput" class="form-input datetime-picker-input" placeholder="YYYY-MM-DD HH:MM" autocomplete="off">
         </div>
       </div>
 
@@ -105,8 +105,19 @@ PokerTracker.SessionModal = {
     // Set times
     const startTimeInput = document.getElementById('modalStartTimeInput');
     const endTimeInput = document.getElementById('modalEndTimeInput');
-    startTimeInput.value = session.startTime ? this.formatDateTimeLocal(new Date(session.startTime)) : '';
-    endTimeInput.value = session.endTime ? this.formatDateTimeLocal(new Date(session.endTime)) : '';
+    const startDate = session.startTime ? new Date(session.startTime) : null;
+    const endDate = session.endTime ? new Date(session.endTime) : null;
+
+    if (PokerTracker?.DatePickers) {
+      PokerTracker.DatePickers.setDate('modalStartTimeInput', startDate, false);
+      PokerTracker.DatePickers.setDate('modalEndTimeInput', endDate, false);
+      if (typeof this.refreshTimeConstraints === 'function') {
+        this.refreshTimeConstraints();
+      }
+    } else {
+      startTimeInput.value = startDate ? this.formatDateTimeLocal(startDate) : '';
+      endTimeInput.value = endDate ? this.formatDateTimeLocal(endDate) : '';
+    }
 
     // Populate games dropdown
     this.populateGameSelect();
@@ -118,6 +129,31 @@ PokerTracker.SessionModal = {
     const isActive = PokerTracker.DataStore.getActiveSession()?.id === this.currentSessionId;
     const endBtn = document.getElementById('modalEndSessionBtn');
     endBtn.style.display = isActive ? 'inline-block' : 'none';
+  },
+
+  refreshTimeConstraints: function() {
+    if (typeof this._handleStartChange === 'function' && typeof this._handleEndChange === 'function') {
+      this._handleStartChange();
+      this._handleEndChange();
+      return;
+    }
+
+    if (!PokerTracker?.DatePickers) return;
+
+    const startPicker = PokerTracker.DatePickers.get('modalStartTimeInput');
+    const endPicker = PokerTracker.DatePickers.get('modalEndTimeInput');
+
+    if (!startPicker || !endPicker) return;
+
+    const startDate = startPicker.selectedDates?.[0] || null;
+    const endDate = endPicker.selectedDates?.[0] || null;
+
+    endPicker.set('minDate', startDate || null);
+    startPicker.set('maxDate', endDate || null);
+
+    if (startDate && endDate && endDate < startDate) {
+      PokerTracker.DatePickers.setDate('modalEndTimeInput', startDate, true);
+    }
   },
 
   populateGameSelect: function() {
@@ -321,7 +357,12 @@ PokerTracker.SessionModal = {
       } else {
         const now = new Date();
         endTimeIso = now.toISOString();
-        endTimeInput.value = this.formatDateTimeLocal(now);
+        if (PokerTracker?.DatePickers) {
+          PokerTracker.DatePickers.setDate('modalEndTimeInput', now, true);
+        } else {
+          endTimeInput.value = this.formatDateTimeLocal(now);
+          endTimeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
 
       this.handleFieldUpdates({ endTime: endTimeIso });
@@ -360,4 +401,60 @@ document.addEventListener('keydown', function(e) {
 window.showSessionSettingsModal = function(sessionId) {
   PokerTracker.SessionModal.showSessionSettingsModal(sessionId);
 };
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (!PokerTracker?.DatePickers) return;
+
+  let startPicker = null;
+  let endPicker = null;
+
+  const handleStartChange = () => {
+    if (!PokerTracker.DatePickers || !startPicker || !endPicker) return;
+    const startDate = startPicker.selectedDates?.[0] || null;
+    endPicker.set('minDate', startDate || null);
+
+    if (!startDate) return;
+
+    const endDate = endPicker.selectedDates?.[0] || null;
+    if (endDate && endDate < startDate) {
+      PokerTracker.DatePickers.setDate('modalEndTimeInput', startDate, true);
+    }
+  };
+
+  const handleEndChange = () => {
+    if (!PokerTracker.DatePickers || !startPicker || !endPicker) return;
+    const endDate = endPicker.selectedDates?.[0] || null;
+    startPicker.set('maxDate', endDate || null);
+
+    if (!endDate) return;
+
+    const startDate = startPicker.selectedDates?.[0] || null;
+    if (startDate && startDate > endDate) {
+      PokerTracker.DatePickers.setDate('modalStartTimeInput', endDate, true);
+    }
+  };
+
+  PokerTracker.SessionModal._handleStartChange = handleStartChange;
+  PokerTracker.SessionModal._handleEndChange = handleEndChange;
+
+  startPicker = PokerTracker.DatePickers.initDateTimeField('modalStartTimeInput', {
+    altInput: true,
+    altFormat: 'M j, Y h:i K',
+    altInputClass: 'form-input flatpickr-alt-input',
+    clearLabel: 'Clear',
+    minuteIncrement: 5,
+    onChange: handleStartChange
+  });
+
+  endPicker = PokerTracker.DatePickers.initDateTimeField('modalEndTimeInput', {
+    altInput: true,
+    altFormat: 'M j, Y h:i K',
+    altInputClass: 'form-input flatpickr-alt-input',
+    clearLabel: 'Clear',
+    minuteIncrement: 5,
+    onChange: handleEndChange
+  });
+
+  PokerTracker.SessionModal.refreshTimeConstraints();
+});
 </script>

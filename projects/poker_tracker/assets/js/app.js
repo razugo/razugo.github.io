@@ -95,6 +95,161 @@ PokerTracker.Utils = {
   }
 };
 
+PokerTracker.DatePickers = (function() {
+  const instances = new Map();
+
+  function getElement(target) {
+    if (!target) return null;
+    if (typeof target === 'string') {
+      return document.getElementById(target);
+    }
+    return target;
+  }
+
+  function ensureFlatpickr() {
+    if (typeof window.flatpickr === 'undefined') {
+      console.warn('Flatpickr is not available. Skipping date picker setup.');
+      return false;
+    }
+    return true;
+  }
+
+  function normalizeHooks(hook) {
+    if (!hook) return [];
+    return Array.isArray(hook) ? hook : [hook];
+  }
+
+  function dispatchChange(input, eventName) {
+    if (!input) return;
+    const event = new Event(eventName || 'change', { bubbles: true });
+    input.dispatchEvent(event);
+  }
+
+  function injectClearButton(instance, label, eventName) {
+    const calendar = instance?.calendarContainer;
+    if (!calendar || calendar.querySelector('.flatpickr-clear-button')) return;
+
+    const actions = document.createElement('div');
+    actions.className = 'flatpickr-custom-actions';
+
+    const clearButton = document.createElement('button');
+    clearButton.type = 'button';
+    clearButton.className = 'flatpickr-clear-button';
+    clearButton.textContent = label || 'Clear';
+    clearButton.addEventListener('click', () => {
+      instance.clear();
+      dispatchChange(instance.input, eventName);
+      instance.close();
+    });
+
+    actions.appendChild(clearButton);
+    calendar.appendChild(actions);
+  }
+
+  function initInstance(target, userOptions = {}) {
+    const element = getElement(target);
+    if (!element || !ensureFlatpickr()) return null;
+
+    const key = element.id || element.name;
+    if (key && instances.has(key)) {
+      const existing = instances.get(key);
+      if (existing) existing.destroy();
+      instances.delete(key);
+    }
+
+    const options = Object.assign({
+      allowInput: true,
+      disableMobile: true,
+      dateFormat: 'Y-m-d'
+    }, userOptions || {});
+
+    const triggerEvent = options.triggerEvent || 'change';
+    delete options.triggerEvent;
+
+    const clearLabel = options.clearLabel || 'Clear';
+    delete options.clearLabel;
+
+    const readyHooks = normalizeHooks(options.onReady);
+    const changeHooks = normalizeHooks(options.onChange);
+
+    options.onReady = [
+      function(selectedDates, dateStr, instance) {
+        injectClearButton(instance, clearLabel, triggerEvent);
+      },
+      ...readyHooks
+    ];
+
+    options.onChange = [
+      function(selectedDates, dateStr, instance) {
+        dispatchChange(instance.input, triggerEvent);
+      },
+      ...changeHooks
+    ];
+
+    const instance = flatpickr(element, options);
+    if (key) {
+      instances.set(key, instance);
+    }
+    return instance;
+  }
+
+  return {
+    init: function(target, options) {
+      return initInstance(target, options);
+    },
+
+    initDateField: function(target, options = {}) {
+      return initInstance(target, Object.assign({
+        dateFormat: 'Y-m-d'
+      }, options));
+    },
+
+    initDateTimeField: function(target, options = {}) {
+      return initInstance(target, Object.assign({
+        enableTime: true,
+        dateFormat: 'Y-m-d\\TH:i',
+        time_24hr: false
+      }, options));
+    },
+
+    get: function(id) {
+      return instances.get(id) || null;
+    },
+
+    setDate: function(id, value, triggerChange = false) {
+      const instance = this.get(id);
+      if (instance) {
+        instance.setDate(value || null, triggerChange);
+      } else {
+        const element = getElement(id);
+        if (element) {
+          element.value = value || '';
+          if (triggerChange) {
+            dispatchChange(element, 'change');
+          }
+        }
+      }
+    },
+
+    clear: function(id, triggerChange = true) {
+      const instance = this.get(id);
+      const element = getElement(id);
+
+      if (instance) {
+        instance.clear();
+        if (triggerChange) {
+          dispatchChange(instance.input, 'change');
+        }
+      } else if (element) {
+        element.value = '';
+        if (triggerChange) {
+          dispatchChange(element, 'change');
+        }
+      }
+    }
+  };
+})();
+
 // Initialize any shared functionality
 document.addEventListener('DOMContentLoaded', function() {
   console.log('PokerTracker app initialized');

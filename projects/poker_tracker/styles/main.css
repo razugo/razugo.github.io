@@ -263,6 +263,45 @@
       color: var(--danger);
     }
 
+    .flatpickr-calendar {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-family: inherit;
+    }
+
+    .flatpickr-calendar .flatpickr-time input,
+    .flatpickr-calendar .flatpickr-time .flatpickr-am-pm {
+      font-size: 0.875rem;
+    }
+
+    .flatpickr-custom-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .flatpickr-clear-button {
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition-micro), color var(--transition-micro);
+    }
+
+    .flatpickr-clear-button:hover,
+    .flatpickr-clear-button:focus {
+      outline: none;
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--primary);
+    }
+
     /* Toggle Switch */
     .toggle-container {
       display: inline-flex;
@@ -2534,12 +2573,6 @@
 
         .session-form-grid-finance > .form-group:last-child {
           grid-column: 1 / -1;
-        }
-      }
-
-      @media (max-width: 600px) {
-        .session-form-grid-time {
-          grid-template-columns: 1fr;
         }
       }
 

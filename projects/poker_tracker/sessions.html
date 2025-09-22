@@ -9,6 +9,7 @@ nav_id: sessions
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -38,11 +39,11 @@ nav_id: sessions
     </div>
     <div class="filter-field">
       <label class="filter-label" for="dateFrom">From Date</label>
-      <input type="date" class="filter-input" id="dateFrom">
+      <input type="text" class="filter-input date-picker-input" id="dateFrom" placeholder="YYYY-MM-DD" autocomplete="off">
     </div>
     <div class="filter-field">
       <label class="filter-label" for="dateTo">To Date</label>
-      <input type="date" class="filter-input" id="dateTo">
+      <input type="text" class="filter-input date-picker-input" id="dateTo" placeholder="YYYY-MM-DD" autocomplete="off">
     </div>
     <div class="filter-field">
       <label class="filter-label" for="profitFilter">Results</label>
@@ -98,6 +99,56 @@ nav_id: sessions
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    let dateFromPicker = null;
+    let dateToPicker = null;
+
+    const syncDateFromConstraints = () => {
+      if (!PokerTracker?.DatePickers || !dateFromPicker || !dateToPicker) return;
+      const fromDate = dateFromPicker.selectedDates?.[0] || null;
+      dateToPicker.set('minDate', fromDate || null);
+
+      if (!fromDate) return;
+
+      const toDate = dateToPicker.selectedDates?.[0] || null;
+      if (toDate && toDate < fromDate) {
+        PokerTracker.DatePickers.setDate('dateTo', fromDate, true);
+      }
+    };
+
+    const syncDateToConstraints = () => {
+      if (!PokerTracker?.DatePickers || !dateFromPicker || !dateToPicker) return;
+      const toDate = dateToPicker.selectedDates?.[0] || null;
+      dateFromPicker.set('maxDate', toDate || null);
+
+      if (!toDate) return;
+
+      const fromDate = dateFromPicker.selectedDates?.[0] || null;
+      if (fromDate && fromDate > toDate) {
+        PokerTracker.DatePickers.setDate('dateFrom', toDate, true);
+      }
+    };
+
+    if (PokerTracker?.DatePickers) {
+      dateFromPicker = PokerTracker.DatePickers.initDateField('dateFrom', {
+        altInput: true,
+        altFormat: 'M j, Y',
+        altInputClass: 'filter-input flatpickr-alt-input',
+        clearLabel: 'Clear',
+        onChange: syncDateFromConstraints
+      });
+
+      dateToPicker = PokerTracker.DatePickers.initDateField('dateTo', {
+        altInput: true,
+        altFormat: 'M j, Y',
+        altInputClass: 'filter-input flatpickr-alt-input',
+        clearLabel: 'Clear',
+        onChange: syncDateToConstraints
+      });
+
+      syncDateFromConstraints();
+      syncDateToConstraints();
+    }
+
     populateGameFilter();
     renderSessions();
     setupFilters();
@@ -290,6 +341,16 @@ nav_id: sessions
           }
         });
       }
+
+      const picker = PokerTracker?.DatePickers?.get(id);
+      if (picker?.altInput) {
+        picker.altInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            applyFilters();
+          }
+        });
+      }
     });
   }
 
@@ -428,6 +489,7 @@ nav_id: sessions
 </script>
 
 <!-- Shared JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="assets/js/data-store.js"></script>
 <script src="assets/js/app.js"></script>
 
