@@ -64,7 +64,6 @@ nav_id: tools
           <div class="data-backup" data-component="poker-backup">
             <div class="backup-actions" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
               <button class="btn" data-action="export-backup">Download Data</button>
-              <button class="btn" data-action="email-backup">Email Data</button>
               <button class="btn btn-outline" data-action="import-backup">Import Backup</button>
             </div>
             <input type="file" id="pokerTrackerBackupFileInput" accept="application/json" style="display: none;" />
@@ -353,7 +352,6 @@ nav_id: tools
     const backupComponent = document.querySelector('[data-component="poker-backup"]');
     if (backupComponent) {
       const exportButton = backupComponent.querySelector('[data-action="export-backup"]');
-      const emailButton = backupComponent.querySelector('[data-action="email-backup"]');
       const importButton = backupComponent.querySelector('[data-action="import-backup"]');
       const fileInput = document.getElementById('pokerTrackerBackupFileInput');
       const statusElement = backupComponent.querySelector('.backup-status');
@@ -392,42 +390,6 @@ nav_id: tools
           document.body.removeChild(anchor);
           URL.revokeObjectURL(url);
         }, 0);
-
-        return { timestamp, filename };
-      };
-
-      const emailBackup = payload => {
-        const { timestamp, filename } = downloadBackup(payload);
-
-        const sessionCount = payload.sessions.length;
-        const gameCount = payload.games.length;
-        const emailSubject = encodeURIComponent(`PokerTracker Backup - ${timestamp}`);
-        const emailBody = encodeURIComponent(`Hi,
-
-A PokerTracker backup was generated on ${new Date().toLocaleDateString()}.
-
-Before sending, attach the file named "${filename}" (it's likely in your Downloads folder).
-
-Backup details:
-- ${sessionCount} session${sessionCount === 1 ? '' : 's'}
-- ${gameCount} game${gameCount === 1 ? '' : 's'}
-- Export Date: ${new Date().toLocaleString()}
-
-To restore this backup:
-1. Go to PokerTracker > Tools > Data Management
-2. Click "Import Backup"
-3. Choose the attached backup file
-`);
-
-        const mailtoLink = `mailto:?subject=${emailSubject}&body=${emailBody}`;
-
-        try {
-          window.location.href = mailtoLink;
-          updateBackupStatus(`Backup downloaded and email prepared. Attach "${filename}" before sending.`);
-        } catch (err) {
-          console.error('Failed to open email client:', err);
-          alert('Unable to open email client. Please attach the downloaded backup file manually.');
-        }
       };
 
       const parseBackup = contents => {
@@ -471,20 +433,6 @@ To restore this backup:
           } catch (err) {
             console.error(err);
             alert(err.message || 'Export failed.');
-            updateBackupStatus('');
-          }
-        });
-      }
-
-      if (emailButton) {
-        emailButton.addEventListener('click', () => {
-          try {
-            updateBackupStatus('Preparing email...');
-            const payload = buildBackupPayload();
-            emailBackup(payload);
-          } catch (err) {
-            console.error(err);
-            alert(err.message || 'Email preparation failed.');
             updateBackupStatus('');
           }
         });
