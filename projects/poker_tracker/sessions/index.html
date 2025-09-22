@@ -11,10 +11,23 @@ nav_id: sessions
   <title>{{ page.title | default: "PokerTracker" }}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.css">
-  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/main.css' | relative_url }}">
 </head>
 <body>
-  {% include_relative components/nav-bar.html %}
+  <div class="nav-container" data-component="nav-bar" data-active="{{ page.nav_id | default: '' }}" data-base="{{ '/projects/poker_tracker' | relative_url }}">
+  <nav class="nav">
+    <a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-brand">PokerTracker</a>
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-link live-session-btn">Live Session</a></li>
+      <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
+      <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
+      <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
+      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
+      <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </nav>
+</div>
 
   <main>
     <div class="container">
@@ -512,7 +525,7 @@ nav_id: sessions
   }
 
   function viewSession(sessionId) {
-    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}`;
+    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '{{ '/projects/poker_tracker/session/' | relative_url }}';
     window.location.href = `${sessionRoute}?session_id=${sessionId}`;
   }
 
@@ -523,7 +536,7 @@ nav_id: sessions
   function goToActiveSession() {
     const activeSession = PokerTracker.DataStore.getActiveSession();
     if (activeSession) {
-      const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || `{{ site.baseurl }}{% link projects/poker_tracker/session.html %}`;
+      const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '{{ '/projects/poker_tracker/session/' | relative_url }}';
       window.location.href = `${sessionRoute}?session_id=${activeSession.id}`;
     }
   }
@@ -549,11 +562,19 @@ nav_id: sessions
   }
 </script>
 
+<div data-component="new-session-modal"></div>
+<div data-component="new-game-modal"></div>
+<div data-component="session-settings-modal"></div>
+
 <!-- Shared JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="assets/js/data-store.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/session-settings-modal.js' | relative_url }}"></script>
 
 <script>
   function quickAction() {
@@ -688,11 +709,6 @@ nav_id: sessions
   });
 
 </script>
-
-{% include_relative components/new-session-modal.html %}
-{% include_relative components/new-game-modal.html %}
-{% include_relative components/session-settings-modal.html %}
-
 <!-- Action Menu -->
 <div id="actionMenu" class="action-menu-popup">
   <!-- Menu items are dynamically generated with session ID -->

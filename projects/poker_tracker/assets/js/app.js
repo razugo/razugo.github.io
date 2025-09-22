@@ -46,7 +46,7 @@ PokerTracker.Utils = {
     }
 
     // Redirect to the session page
-    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '/projects/poker_tracker/session.html';
+    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '/projects/poker_tracker/session/';
     window.location.href = `${sessionRoute}?session_id=${newSession.id}`;
   },
 

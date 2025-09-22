@@ -9,10 +9,23 @@ nav_id: games
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
-  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/main.css' | relative_url }}">
 </head>
 <body>
-  {% include_relative components/nav-bar.html %}
+  <div class="nav-container" data-component="nav-bar" data-active="{{ page.nav_id | default: '' }}" data-base="{{ '/projects/poker_tracker' | relative_url }}">
+  <nav class="nav">
+    <a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-brand">PokerTracker</a>
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-link live-session-btn">Live Session</a></li>
+      <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
+      <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
+      <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
+      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
+      <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </nav>
+</div>
 
   <main>
     <div class="container">
@@ -278,9 +291,15 @@ nav_id: games
   }
 </script>
 
+<div data-component="new-session-modal"></div>
+<div data-component="new-game-modal"></div>
+
 <!-- Shared JavaScript -->
-<script src="assets/js/data-store.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
 
 <script>
   function quickAction() {
@@ -291,8 +310,5 @@ nav_id: games
 
     </div>
   </main>
-
-  {% include_relative components/new-session-modal.html %}
-  {% include_relative components/new-game-modal.html %}
 </body>
 </html>

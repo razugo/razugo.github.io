@@ -20,7 +20,7 @@ Builds the entire Jekyll site including this poker tracker project.
 
 ### Testing Changes
 - Changes to HTML files auto-reload when Jekyll server is running
-- CSS changes in `_includes/styles/main.css` auto-reload
+- CSS changes in `_includes/assets/styles/main.css` auto-reload
 - JavaScript changes in `_includes/scripts/` auto-reload
 - No separate build step required for this standalone application
 
@@ -32,7 +32,7 @@ This is a poker hand tracking application built using Jekyll with modular compon
 
 ### Jekyll Multi-Page Application
 - **Modular Structure**: Separate Jekyll pages for each section with shared layout and components
-- **URL Routing**: Each page has its own URL path (/, /sessions, /session, /games, /tools, /hand_strength)
+- **URL Routing**: Each page has its own URL path (/, /bankroll, /sessions, /session, /games, /tools, /tools/hand_strength)
 - **Shared Components**: Reusable components in `_includes/components/`
 - **Shared Data Layer**: Centralized data management in `_includes/scripts/data-store.js`
 
@@ -84,36 +84,41 @@ This is a poker hand tracking application built using Jekyll with modular compon
 ```
 poker_tracker/
 ├── index.html                    # Dashboard page (main entry)
-├── sessions.html                 # Sessions management page
-├── session.html                  # Individual session tracking page
-├── games.html                    # Games management page
-├── tools.html                    # Tools overview page
-├── hand_strength.html            # Hand strength analysis tool
-├── components/
-│   └── nav-bar.html             # Navigation component
-├── styles/
-│   └── main.css                 # All CSS styles (includes tool-specific styles)
-└── assets/
-    └── js/
-        ├── data-store.js        # Centralized data management
-        └── app.js               # Shared utilities
+├── bankroll/index.html           # Bankroll analytics
+├── sessions/index.html           # Sessions management page
+├── session/index.html            # Individual session tracking page
+├── games/index.html              # Games management page
+└── tools/
+    ├── index.html               # Tools overview page
+    └── hand_strength/index.html # Hand strength analysis tool
+
+assets/
+├── styles/main.css               # Global styles
+└── js/
+    ├── data-store.js            # Centralized data management
+    ├── app.js                   # Shared utilities
+    ├── nav-bar.js               # Navigation component logic
+    ├── new-session-modal.js     # New session modal component
+    ├── new-game-modal.js        # New game modal component
+    └── session-settings-modal.js # Session settings modal component
 ```
 
 ## Development Notes
 
 ### Navigation
 - Each page uses Jekyll's `nav_id` front matter for active navigation state
-- Navigation links use `{{ site.baseurl }}` for proper URL construction
-- Mobile navigation toggle handled in nav-bar component
+- Global nav behavior lives in `assets/js/nav-bar.js` and consumes the `data-component="nav-bar"` placeholder
+- Links rely on `relative_url` helpers so pages work regardless of depth
+- Mobile navigation toggle handled directly in the nav-bar component
 
 ### Data Management
 - `PokerTracker.DataStore` provides centralized data access
-- All pages share the same data layer through Jekyll includes
+- Shared utilities (`PokerTracker.Utils`, modals) live in `assets/js/` modules
 - Statistics calculations happen in the data store for consistency
 
 ### Component System
-- Components are included using Jekyll's `{% include_relative %}` syntax
-- Each component is self-contained with its own HTML, CSS, and JavaScript
+- Components render via JavaScript modules (`assets/js/*-modal.js`, `nav-bar.js`) attached with `data-component` hooks
+- Keep component scripts self-contained and namespaced under `PokerTracker.*`
 - Shared utilities available through `PokerTracker.Utils`
 
 ### Poker Grid Logic
@@ -133,7 +138,7 @@ poker_tracker/
 ### Adding New Components
 1. Create component file in `components/`
 2. Include component in pages using `{% include_relative components/component-name.html %}`
-3. Add component-specific styles to `styles/main.css`
+3. Add component-specific styles to `assets/styles/main.css`
 4. Add component JavaScript within the component file
 
 ### Modifying Data Structure
@@ -148,10 +153,10 @@ poker_tracker/
 
 ### Adding New Tools
 1. Create tool page as Jekyll page with front matter (`nav_id: tools`)
-2. Add tool card to `tools.html` with appropriate `onclick="openTool('tool-name')"`
-3. Add tool-specific styles to `styles/main.css`
+2. Add tool card to `tools/index.html` with appropriate `onclick="openTool('tool-name')"`
+3. Add tool-specific styles to `assets/styles/main.css`
 4. Use shared nav-bar component with `{% include_relative components/nav-bar.html %}`
-5. Include shared CSS with `<link rel="stylesheet" href="styles/main.css">`
+5. Include shared CSS with `<link rel="stylesheet" href="assets/styles/main.css">`
 
 ### Tool Architecture Notes
 - **Hand Strength Tool**: Uses responsive poker grid with percentage-based range selection
