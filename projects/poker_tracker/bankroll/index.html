@@ -505,11 +505,12 @@ nav_id: bankroll
 
   function formatCurrencyCompact(value) {
     const numeric = Number(value) || 0;
-    return new Intl.NumberFormat('en-US', {
+    const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
-    }).format(numeric);
+    }).format(Math.abs(numeric));
+    return numeric < 0 ? `-${formatted}` : formatted;
   }
 
   function buildCumulativeSeries(sessions, grouping) {

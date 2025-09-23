@@ -21,10 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
 PokerTracker.Utils = {
   // Format currency
   formatCurrency: function(amount) {
-    return new Intl.NumberFormat('en-US', {
+    const formatted = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount);
+    }).format(Math.abs(amount));
+    return amount < 0 ? `-${formatted}` : formatted;
   },
 
   // Format duration
