@@ -28,7 +28,7 @@
                 <select id="newSessionLocationSelect" class="form-input">
                   <option value="">Select location...</option>
                 </select>
-                <input type="text" id="newSessionLocationInput" class="form-input" placeholder="Enter new location" style="display: none;">
+                <input type="text" id="newSessionLocationInput" class="form-input" placeholder="Enter new location" style="display: none;" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
               </div>
               <div class="session-form-grid session-form-grid-stakes">
                 <div class="form-group">
@@ -223,7 +223,17 @@
       locationSelect.style.display = 'none';
       locationInput.style.display = 'block';
       locationInput.value = '';
-      locationInput.focus();
+
+      // iOS-specific focus handling
+      setTimeout(() => {
+        locationInput.focus();
+        // Double-focus for iOS Safari
+        setTimeout(() => {
+          if (document.activeElement !== locationInput) {
+            locationInput.focus();
+          }
+        }, 50);
+      }, 100);
     } else {
       // Use selected location
       locationInput.style.display = 'none';
@@ -236,10 +246,16 @@
 
     if (!locationSelect || !locationInput) return;
 
-    // Add a small delay to prevent premature blur on mobile
+    // Longer delay for iOS to handle virtual keyboard and focus properly
     setTimeout(() => {
       // Check if the input is still focused (user might have tapped back into it)
       if (document.activeElement === locationInput) return;
+
+      // Additional check for iOS - make sure we're not in the middle of text input
+      if (locationInput.value !== locationInput.defaultValue && document.activeElement !== locationInput) {
+        // User is actively typing, don't close yet
+        return;
+      }
 
       const newLocation = locationInput.value.trim();
 
@@ -255,7 +271,7 @@
       // Switch back to dropdown
       locationInput.style.display = 'none';
       locationSelect.style.display = 'block';
-    }, 100);
+    }, 300);
   }
 
   function setupLocationHandlers() {
@@ -267,7 +283,14 @@
     }
 
     if (locationInput && !locationInput.dataset.bound) {
-      locationInput.addEventListener('blur', handleLocationInputBlur);
+      // Use focusout instead of blur for better iOS compatibility
+      locationInput.addEventListener('focusout', handleLocationInputBlur);
+
+      // Add input event to track active typing
+      locationInput.addEventListener('input', () => {
+        locationInput.defaultValue = locationInput.value;
+      });
+
       locationInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
           event.preventDefault();
@@ -279,6 +302,12 @@
           locationInput.blur();
         }
       });
+
+      // iOS-specific touch event to ensure input can receive focus
+      locationInput.addEventListener('touchstart', (event) => {
+        event.stopPropagation();
+      });
+
       locationInput.dataset.bound = 'true';
     }
   }

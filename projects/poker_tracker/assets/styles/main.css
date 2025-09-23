@@ -116,6 +116,31 @@
       line-height: 1;
     }
 
+    /* Field-specific minimum widths to prevent layout shifts */
+    .datetime-value[data-field="year"] {
+      min-width: 48px; /* Fits 4-digit years like "2025" */
+    }
+
+    .datetime-value[data-field="month"] {
+      min-width: 42px; /* Fits longest month "Dec" */
+    }
+
+    .datetime-value[data-field="day"] {
+      min-width: 28px; /* Fits 2-digit days like "31" */
+    }
+
+    .datetime-value[data-field="hour"] {
+      min-width: 28px; /* Fits 2-digit hours like "12" */
+    }
+
+    .datetime-value[data-field="minute"] {
+      min-width: 28px; /* Fits 2-digit minutes like "59" */
+    }
+
+    .datetime-value[data-field="ampm"] {
+      min-width: 36px; /* Fits "AM" or "PM" */
+    }
+
     .datetime-label {
       font-size: 10px;
       color: var(--text-secondary);
@@ -169,10 +194,8 @@
       }
 
       .datetime-increment, .datetime-decrement {
-        width: 30px;
         height: 44px;
         font-size: 16px;
-        min-width: 30px;
         min-height: 44px;
         background: transparent;
         border: none;
@@ -181,7 +204,7 @@
       }
 
       .datetime-value {
-        min-width: 48px;
+        min-width: 32px;
         min-height: 40px;
         padding: 4px;
         font-size: 12px;
@@ -189,6 +212,31 @@
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      /* Tablet-specific field minimum widths */
+      .datetime-value[data-field="year"] {
+        min-width: 52px; /* Larger for 4-digit years on tablet */
+      }
+
+      .datetime-value[data-field="month"] {
+        min-width: 46px; /* Larger for month names on tablet */
+      }
+
+      .datetime-value[data-field="day"] {
+        min-width: 32px; /* Standard for 2-digit days */
+      }
+
+      .datetime-value[data-field="hour"] {
+        min-width: 32px; /* Standard for 2-digit hours */
+      }
+
+      .datetime-value[data-field="minute"] {
+        min-width: 32px; /* Slightly larger for minutes */
+      }
+
+      .datetime-value[data-field="ampm"] {
+        min-width: 40px; /* Standard for AM/PM */
       }
 
       .datetime-label {
@@ -214,10 +262,8 @@
       }
 
       .datetime-increment, .datetime-decrement {
-        width: 52px;
         height: 52px;
         font-size: 18px;
-        min-width: 52px;
         min-height: 52px;
         background: transparent;
         border: none;
@@ -226,8 +272,33 @@
       }
 
       .datetime-value {
-        min-height: 36px;
+        min-height: 24px;
         font-size: 18px;
+      }
+
+      /* Mobile-specific field minimum widths */
+      .datetime-value[data-field="year"] {
+        min-width: 64px; /* Largest for 4-digit years on mobile */
+      }
+
+      .datetime-value[data-field="month"] {
+        min-width: 56px; /* Larger for month names on mobile */
+      }
+
+      .datetime-value[data-field="day"] {
+        min-width: 36px; /* Larger for 2-digit days on mobile */
+      }
+
+      .datetime-value[data-field="hour"] {
+        min-width: 36px; /* Larger for 2-digit hours on mobile */
+      }
+
+      .datetime-value[data-field="minute"] {
+        min-width: 36px; /* Larger for minutes on mobile */
+      }
+
+      .datetime-value[data-field="ampm"] {
+        min-width: 48px; /* Larger for AM/PM on mobile */
       }
 
       .datetime-label {
