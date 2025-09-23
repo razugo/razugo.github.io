@@ -185,11 +185,17 @@
       if (!locationSelect || !locationInput) return;
 
       if (locationSelect.value === '+ Location') {
-        // Show input for new location
+        // Completely hide the SlimSelect dropdown
         const slimInstance = PT.Dropdowns.get('modalLocationSelect');
-        if (slimInstance && slimInstance.container) {
-          slimInstance.container.style.display = 'none';
+        if (slimInstance) {
+          selectorId = slimInstance.settings.id;
+          selectorMenu = this.modal.querySelector(`[aria-controls="${selectorId}"]`);
+          if (selectorMenu) {
+            selectorMenu.style.display = 'none';
+          }
         }
+
+        // Show the text input
         locationInput.style.display = 'block';
         locationInput.value = '';
 
@@ -204,14 +210,7 @@
           }, 50);
         }, 100);
       } else {
-        // Use selected location
-        locationInput.style.display = 'none';
-        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
-        if (slimInstance && slimInstance.container) {
-          slimInstance.container.style.display = 'block';
-        }
-
-        // Update the session with selected location
+        // Regular location selection - update the session immediately
         if (this.currentSessionId) {
           const location = locationSelect.value || null;
           this.handleFieldUpdates({ location });
@@ -220,48 +219,44 @@
     },
 
     handleLocationInputBlur() {
-      const locationSelect = document.getElementById('modalLocationSelect');
       const locationInput = document.getElementById('modalLocationInput');
 
-      if (!locationSelect || !locationInput) return;
+      if (!locationInput) return;
 
       // Longer delay for iOS to handle virtual keyboard and focus properly
       setTimeout(() => {
         // Check if the input is still focused (user might have tapped back into it)
         if (document.activeElement === locationInput) return;
 
-        // Additional check for iOS - make sure we're not in the middle of text input
-        if (locationInput.value !== locationInput.defaultValue && document.activeElement !== locationInput) {
-          // User is actively typing, don't close yet
-          return;
-        }
-
         const newLocation = locationInput.value.trim();
 
-        if (newLocation) {
-          // Add new location to dropdown and select it
-          this.populateLocationDropdown();
-          PT.Dropdowns.setValue('modalLocationSelect', newLocation);
+        if (!newLocation) {
+          // No location entered, hide text input and show dropdown
+          locationInput.style.display = 'none';
 
-          // Update the session
-          if (this.currentSessionId) {
-            this.handleFieldUpdates({ location: newLocation });
+          // Show the SlimSelect dropdown again
+          const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+          if (slimInstance) {
+            selectorId = slimInstance.settings.id;
+            selectorMenu = this.modal.querySelector(`[aria-controls="${selectorId}"]`);
+            if (selectorMenu) {
+              selectorMenu.style.removeProperty('display');
+            }
           }
-        } else {
-          // No location entered, reset to empty selection
+
+          // Reset the dropdown to empty selection
           PT.Dropdowns.setValue('modalLocationSelect', '');
 
           // Update the session to clear location
           if (this.currentSessionId) {
             this.handleFieldUpdates({ location: null });
           }
-        }
-
-        // Switch back to dropdown
-        locationInput.style.display = 'none';
-        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
-        if (slimInstance && slimInstance.container) {
-          slimInstance.container.style.display = 'block';
+        } else {
+          // Keep the input visible with the entered value
+          // Update the session immediately
+          if (this.currentSessionId) {
+            this.handleFieldUpdates({ location: newLocation });
+          }
         }
       }, 300);
     },
@@ -316,9 +311,15 @@
           PT.Dropdowns.setValue('modalLocationSelect', '');
         }
         locationInput.style.display = 'none';
+
+        // Show the SlimSelect dropdown
         const slimInstance = PT.Dropdowns.get('modalLocationSelect');
-        if (slimInstance && slimInstance.container) {
-          slimInstance.container.style.display = 'block';
+        if (slimInstance) {
+          selectorId = slimInstance.settings.id;
+          selectorMenu = this.modal.querySelector(`[aria-controls="${selectorId}"]`);
+          if (selectorMenu) {
+            selectorMenu.style.removeProperty('display');
+          }
         }
       }
 
@@ -466,6 +467,7 @@
         locationInput.addEventListener('touchstart', (event) => {
           event.stopPropagation();
         });
+
       }
 
       const fieldConfigs = [
@@ -588,17 +590,21 @@
       if (!this.currentSessionId) return;
 
       // Get location from dropdown or input
-      const locationSelect = document.getElementById('modalLocationSelect');
       const locationInput = document.getElementById('modalLocationInput');
       let location = null;
 
-      // Check SlimSelect dropdown first
-      const slimInstance = PT.Dropdowns.get('modalLocationSelect');
-      if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
-        const selectedValue = locationSelect.value;
-        location = selectedValue && selectedValue !== '+ Location' ? selectedValue : null;
-      } else if (locationInput && locationInput.style.display !== 'none') {
+      // Check if text input is visible (user entered custom location)
+      if (locationInput && locationInput.style.display !== 'none') {
         location = locationInput.value.trim() || null;
+      } else {
+        // Check SlimSelect dropdown value
+        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+        if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
+          const selectedValue = slimInstance.getSelected();
+          if (selectedValue && selectedValue.length > 0 && selectedValue[0].value !== '+ Location') {
+            location = selectedValue[0].value || null;
+          }
+        }
       }
 
       const updates = {

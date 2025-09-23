@@ -16,11 +16,13 @@
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label class="toggle-container">
-                <input type="checkbox" id="liveToggle" class="toggle-input">
-                <span class="toggle-slider"></span>
+              <div class="toggle-container">
+                <label for="liveToggle" class="toggle-wrapper">
+                  <input type="checkbox" id="liveToggle" class="toggle-input">
+                  <span class="toggle-slider"></span>
+                </label>
                 <span class="toggle-label">Live Session</span>
-              </label>
+              </div>
             </div>
             <div class="session-form-section" data-section="details" style="display: none;">
               <div class="form-group" data-field="location">
@@ -179,8 +181,7 @@
   }
 
   function populateLocationDropdown() {
-    const locationSelect = document.getElementById('newSessionLocationSelect');
-    if (!locationSelect || !PT.DataStore) return;
+    if (!PT.DataStore || !PT.Dropdowns) return;
 
     // Get all unique locations from existing sessions
     const sessions = PT.DataStore.getSessions();
@@ -192,89 +193,93 @@
       }
     });
 
-    // Clear existing options except the first one
-    while (locationSelect.children.length > 1) {
-      locationSelect.removeChild(locationSelect.lastChild);
-    }
-
-    // Add + Location option
-    const addNewOption = document.createElement('option');
-    addNewOption.value = '+ Location';
-    addNewOption.textContent = '+ Location';
-    locationSelect.appendChild(addNewOption);
+    // Create options array for SlimSelect
+    const options = [
+      { value: '', text: 'Select location...', placeholder: true },
+      { value: '+ Location', text: '+ Location' }
+    ];
 
     // Add existing locations in alphabetical order
     const sortedLocations = Array.from(locations).sort();
     sortedLocations.forEach(location => {
-      const option = document.createElement('option');
-      option.value = location;
-      option.textContent = location;
-      locationSelect.appendChild(option);
+      options.push({ value: location, text: location });
     });
+
+    // Initialize or update SlimSelect
+    PT.Dropdowns.setOptions('newSessionLocationSelect', options);
+    if (!PT.Dropdowns.get('newSessionLocationSelect')) {
+      PT.Dropdowns.init('newSessionLocationSelect', {
+        placeholder: 'Select location...',
+        settings: {
+          allowDeselect: true,
+          showSearch: false
+        },
+        events: {
+          afterChange: handleLocationChange
+        }
+      });
+    }
   }
 
   function handleLocationChange() {
-    const { locationSelect, locationInput } = getElements();
+    const { modal, locationSelect, locationInput } = getElements();
 
     if (!locationSelect || !locationInput) return;
 
     if (locationSelect.value === '+ Location') {
-      // Show input for new location
-      locationSelect.style.display = 'none';
+      // Completely hide the SlimSelect dropdown
+      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+      if (slimInstance) {
+        selectorId = slimInstance.settings.id
+        selectorMenu = modal.querySelector(`[aria-controls="${selectorId}"]`)
+        selectorMenu.style.display = 'none'
+      }
+
+      // Show the text input
       locationInput.style.display = 'block';
       locationInput.value = '';
-
       locationInput.focus();
-    } else {
-      // Use selected location
-      locationInput.style.display = 'none';
-      locationSelect.style.display = 'block';
     }
+    // Note: We don't need an else clause here because we only want to handle + Location selection
+    // Regular location selections are handled normally by SlimSelect
   }
 
   function handleLocationInputBlur() {
-    const { locationSelect, locationInput } = getElements();
+    const { locationInput } = getElements();
 
-    if (!locationSelect || !locationInput) return;
+    if (!locationInput) return;
 
     // Longer delay for iOS to handle virtual keyboard and focus properly
     setTimeout(() => {
       // Check if the input is still focused (user might have tapped back into it)
       if (document.activeElement === locationInput) return;
 
-      // Additional check for iOS - make sure we're not in the middle of text input
-      if (locationInput.value !== locationInput.defaultValue && document.activeElement !== locationInput) {
-        // User is actively typing, don't close yet
-        return;
-      }
-
       const newLocation = locationInput.value.trim();
 
-      if (newLocation) {
-        // Add new location to dropdown and select it
-        populateLocationDropdown();
-        PT.Dropdowns.setValue('newSessionLocationSelect', newLocation);
-      } else {
-        // No location entered, reset to empty selection
+      if (!newLocation) {
+        // No location entered, hide text input and show dropdown
+        locationInput.style.display = 'none';
+
+        // Show the SlimSelect dropdown again
+        const { modal } = getElements();
+        const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+        if (slimInstance) {
+          selectorId = slimInstance.settings.id;
+          selectorMenu = modal.querySelector(`[aria-controls="${selectorId}"]`);
+          if (selectorMenu) {
+            selectorMenu.style.removeProperty('display');
+          }
+        }
+
+        // Reset the dropdown to empty selection
         PT.Dropdowns.setValue('newSessionLocationSelect', '');
       }
-
-      // Switch back to dropdown
-      locationInput.style.display = 'none';
-      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
-      if (slimInstance && slimInstance.container) {
-        slimInstance.container.style.display = 'block';
-      }
+      // If there is text, keep the input visible - location will be saved when form is submitted
     }, 300);
   }
 
   function setupLocationHandlers() {
-    const { locationSelect, locationInput } = getElements();
-
-    if (locationSelect && !locationSelect.dataset.bound) {
-      locationSelect.addEventListener('change', handleLocationChange);
-      locationSelect.dataset.bound = 'true';
-    }
+    const { locationInput } = getElements();
 
     if (locationInput && !locationInput.dataset.bound) {
       // Use focusout instead of blur for better iOS compatibility
@@ -301,6 +306,7 @@
       locationInput.addEventListener('touchstart', (event) => {
         event.stopPropagation();
       });
+
 
       locationInput.dataset.bound = 'true';
     }
@@ -398,14 +404,21 @@
     }
 
     // Reset location dropdown/input
-    if (locationSelect && locationInput) {
-      PT.Dropdowns.setValue('newSessionLocationSelect', '');
+    if (locationInput) {
       locationInput.value = '';
-      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
-      if (slimInstance && slimInstance.container) {
-        slimInstance.container.style.display = 'block';
-      }
       locationInput.style.display = 'none';
+
+      // Show the SlimSelect dropdown
+      const { modal } = getElements();
+      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+      if (slimInstance) {
+        selectorId = slimInstance.settings.id;
+        selectorMenu = modal.querySelector(`[aria-controls="${selectorId}"]`);
+        if (selectorMenu) {
+          selectorMenu.style.removeProperty('display');
+        }
+      }
+      PT.Dropdowns.setValue('newSessionLocationSelect', '');
     }
 
     if (smallBlindInput) smallBlindInput.value = '';
@@ -535,16 +548,21 @@
       newSession = PT.DataStore.createLiveSession(0);
     } else {
       // Get location from dropdown or input
-      const { locationSelect, locationInput } = getElements();
+      const { locationInput } = getElements();
       let location = '';
 
-      // Check SlimSelect dropdown first
-      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
-      if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
-        const selectedValue = locationSelect.value;
-        location = selectedValue && selectedValue !== '+ Location' ? selectedValue : '';
-      } else if (locationInput && locationInput.style.display !== 'none') {
+      // Check if text input is visible (user entered custom location)
+      if (locationInput && locationInput.style.display !== 'none') {
         location = locationInput.value.trim();
+      } else {
+        // Check SlimSelect dropdown value
+        const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+        if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
+          const selectedValue = slimInstance.getSelected();
+          if (selectedValue && selectedValue.length > 0 && selectedValue[0].value !== '+ Location') {
+            location = selectedValue[0].value;
+          }
+        }
       }
 
       const smallBlind = coerceStake(smallBlindInput ? smallBlindInput.value : null);

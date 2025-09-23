@@ -664,7 +664,6 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      cursor: pointer;
       margin-bottom: 0;
       padding: 0.25rem 0;
       border-radius: 999px;
@@ -672,6 +671,15 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+    }
+
+    .toggle-wrapper {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      margin: 0;
+      padding: 0;
+      position: relative;
     }
 
     .toggle-input {
@@ -717,18 +725,24 @@
       user-select: none;
     }
 
+    .toggle-wrapper:focus-within .toggle-slider::before,
     .toggle-container:focus-within .toggle-slider::before {
       box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
 
+    .toggle-wrapper:focus-within + .toggle-label,
     .toggle-container:focus-within .toggle-label {
       color: var(--primary);
     }
 
     .toggle-container.form-group label,
     .form-group .toggle-container {
-      display: flex;
+      display: inline-flex;
       margin-bottom: 0;
+    }
+
+    .form-group .toggle-wrapper {
+      display: inline-flex;
     }
 
     /* Toggle controls in session viewer */
