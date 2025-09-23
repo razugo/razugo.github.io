@@ -13,9 +13,9 @@
     const width = window.innerWidth;
 
     // Responsive labels
-    const monthLabel = width >= 480 ? 'Month' : 'Mon';
-    const yearLabel = width >= 480 ? 'Year' : 'Yr';
-    const ampmLabel = width >= 480 ? 'AM/PM' : '';
+    const monthLabel = width >= 768 ? 'Month' : (width >= 480 ? 'Mon' : 'M');
+    const yearLabel = width >= 768 ? 'Year' : (width >= 480 ? 'Yr' : 'Y');
+    const ampmLabel = width >= 768 ? 'AM/PM' : (width >= 480 ? 'AM' : '');
 
     const timeSection = includeTime ? `
       <div class="datetime-section time-section">
@@ -118,14 +118,102 @@
       }
     });
 
-    // Increment/decrement buttons
+    // Increment/decrement buttons with iOS zoom prevention
     modal.addEventListener('click', handleFieldClick);
+
+    // Add touch event handlers for iOS zoom prevention
+    setupTouchEventHandlers(modal);
 
     // Escape key (only bind once globally)
     if (!initialized) {
       document.addEventListener('keydown', handleEscape);
       initialized = true;
     }
+  }
+
+  function setupTouchEventHandlers(modal) {
+    // Prevent iOS zoom on quick taps for increment/decrement buttons
+    const buttons = modal.querySelectorAll('.datetime-increment, .datetime-decrement');
+
+    buttons.forEach(button => {
+      let touchStartTime = 0;
+      let isTouching = false;
+      let longPressTimer = null;
+      let repeatTimer = null;
+
+      // Use touchstart/touchend to prevent iOS double-tap zoom
+      button.addEventListener('touchstart', (event) => {
+        event.preventDefault(); // Prevent default touch behaviors including zoom
+        touchStartTime = Date.now();
+        isTouching = true;
+
+        // Add visual feedback
+        button.style.opacity = '0.7';
+
+        // Set up long press for continuous increment/decrement
+        const field = button.dataset.field;
+        const isIncrement = button.classList.contains('datetime-increment');
+
+        // Immediate first action
+        if (isIncrement) {
+          incrementField(field);
+        } else {
+          decrementField(field);
+        }
+
+        // Start long press timer for continuous action
+        longPressTimer = setTimeout(() => {
+          if (isTouching) {
+            // Start repeating action
+            repeatTimer = setInterval(() => {
+              if (isTouching) {
+                if (isIncrement) {
+                  incrementField(field);
+                } else {
+                  decrementField(field);
+                }
+              } else {
+                clearInterval(repeatTimer);
+              }
+            }, 150); // Repeat every 150ms
+          }
+        }, 500); // Start repeating after 500ms hold
+
+      }, { passive: false });
+
+      button.addEventListener('touchend', (event) => {
+        event.preventDefault();
+
+        // Clear timers
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (repeatTimer) {
+          clearInterval(repeatTimer);
+          repeatTimer = null;
+        }
+
+        // Remove visual feedback
+        button.style.opacity = '';
+        isTouching = false;
+      }, { passive: false });
+
+      button.addEventListener('touchcancel', (event) => {
+        // Clear timers
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (repeatTimer) {
+          clearInterval(repeatTimer);
+          repeatTimer = null;
+        }
+
+        button.style.opacity = '';
+        isTouching = false;
+      });
+    });
   }
 
   function handleEscape(event) {
@@ -187,7 +275,9 @@
 
       case 'minute':
         const currentMinute = parseInt(valueElement.textContent);
-        const nextMinute = (currentMinute + 1) % 60;
+        // Smart increment: 5-minute increments on mobile for faster selection
+        const increment = window.innerWidth < 768 ? 5 : 1;
+        const nextMinute = (currentMinute + increment) % 60;
         valueElement.textContent = nextMinute.toString().padStart(2, '0');
         break;
 
@@ -232,7 +322,9 @@
 
       case 'minute':
         const currentMinute = parseInt(valueElement.textContent);
-        const prevMinute = currentMinute === 0 ? 59 : currentMinute - 1;
+        // Smart decrement: 5-minute decrements on mobile for faster selection
+        const decrement = window.innerWidth < 768 ? 5 : 1;
+        const prevMinute = currentMinute < decrement ? (60 - (decrement - currentMinute)) : currentMinute - decrement;
         valueElement.textContent = prevMinute.toString().padStart(2, '0');
         break;
 
@@ -293,9 +385,9 @@
     if (width >= 768) {
       monthDisplay = MONTHS[date.getMonth()]; // Full month: Jan, Feb, etc.
     } else if (width >= 480) {
-      monthDisplay = MONTHS[date.getMonth()].substring(0, 3); // Short: Jan, Feb
+      monthDisplay = MONTHS[date.getMonth()]; // Keep full month names on medium screens
     } else {
-      monthDisplay = (date.getMonth() + 1).toString(); // Numeric: 1, 2, etc.
+      monthDisplay = MONTHS[date.getMonth()]; // Keep readable month names even on small screens
     }
 
     if (monthElement) monthElement.textContent = monthDisplay;
@@ -303,8 +395,6 @@
     if (yearElement) {
       if (width >= 768) {
         yearElement.textContent = date.getFullYear().toString(); // Full year: 2025
-      } else if (width >= 480) {
-        yearElement.textContent = date.getFullYear().toString().substring(2); // Short year: 25
       } else {
         yearElement.textContent = date.getFullYear().toString().substring(2); // Short year: 25
       }
@@ -318,11 +408,7 @@
     if (hourElement) hourElement.textContent = hours.toString();
     if (minuteElement) minuteElement.textContent = date.getMinutes().toString().padStart(2, '0');
     if (ampmElement) {
-      if (width < 480) {
-        ampmElement.textContent = ampm.toLowerCase(); // Narrow: am/pm
-      } else {
-        ampmElement.textContent = ampm; // Wide/Medium: AM/PM
-      }
+      ampmElement.textContent = ampm; // Always use AM/PM for clarity
     }
   }
 

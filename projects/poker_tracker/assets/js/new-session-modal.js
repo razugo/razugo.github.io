@@ -53,11 +53,17 @@
               <div class="session-form-grid session-form-grid-time">
                 <div class="form-group">
                   <label for="newSessionStartTimeInput">Start Time</label>
-                  <input type="datetime-local" id="newSessionStartTimeInput" class="form-input datetime-picker-input">
+                  <div class="datetime-display-wrapper">
+                    <div class="datetime-display" id="newSessionStartTimeDisplay" onclick="document.getElementById('newSessionStartTimeInput').click()"></div>
+                    <input type="datetime-local" id="newSessionStartTimeInput" class="form-input datetime-picker-input" style="display: none;">
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="newSessionEndTimeInput">End Time</label>
-                  <input type="datetime-local" id="newSessionEndTimeInput" class="form-input datetime-picker-input">
+                  <div class="datetime-display-wrapper">
+                    <div class="datetime-display" id="newSessionEndTimeDisplay" onclick="document.getElementById('newSessionEndTimeInput').click()"></div>
+                    <input type="datetime-local" id="newSessionEndTimeInput" class="form-input datetime-picker-input" style="display: none;">
+                  </div>
                 </div>
               </div>
               <div class="form-group">
@@ -126,6 +132,50 @@
 
     // Set up location dropdown event listeners
     setupLocationHandlers();
+
+    // Set up datetime display update handlers
+    setupDateTimeHandlers();
+
+    // Set up window resize handler
+    setupResizeHandler();
+  }
+
+  function setupDateTimeHandlers() {
+    const startTimeInput = document.getElementById('newSessionStartTimeInput');
+    const endTimeInput = document.getElementById('newSessionEndTimeInput');
+
+    if (startTimeInput && !startTimeInput.dataset.boundDisplay) {
+      startTimeInput.addEventListener('change', () => {
+        updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+      });
+      startTimeInput.addEventListener('input', () => {
+        updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+      });
+      startTimeInput.dataset.boundDisplay = 'true';
+    }
+
+    if (endTimeInput && !endTimeInput.dataset.boundDisplay) {
+      endTimeInput.addEventListener('change', () => {
+        updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
+      });
+      endTimeInput.addEventListener('input', () => {
+        updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
+      });
+      endTimeInput.dataset.boundDisplay = 'true';
+    }
+  }
+
+  let resizeHandlerBound = false;
+  function setupResizeHandler() {
+    if (resizeHandlerBound) return;
+
+    window.addEventListener('resize', () => {
+      // Update datetime displays on resize to handle mobile/desktop formatting changes
+      updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+      updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
+    });
+
+    resizeHandlerBound = true;
   }
 
   function populateLocationDropdown() {
@@ -243,6 +293,54 @@
     return date.toISOString();
   }
 
+  function formatDateTimeForInput(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = num => String(num).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  function formatDateTimeForDisplay(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const isMobile = window.innerWidth < 768;
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+
+    hours = hours % 12;
+    if (hours === 0) hours = 12;
+
+    const timeStr = `${hours}:${minutes.toString().padStart(2, '0')}${ampm}`;
+
+    if (isMobile) {
+      return `${month}/${day} ${timeStr}`;
+    } else {
+      return `${month}/${day}/${year} ${timeStr}`;
+    }
+  }
+
+  function updateDateTimeDisplay(inputId, displayId) {
+    const input = document.getElementById(inputId);
+    const display = document.getElementById(displayId);
+
+    if (!input || !display) return;
+
+    if (input.value) {
+      display.textContent = formatDateTimeForDisplay(input.value);
+      display.classList.remove('empty');
+    } else {
+      display.textContent = 'Select date & time';
+      display.classList.add('empty');
+    }
+  }
+
   function resetForm() {
     const {
       liveToggle,
@@ -275,8 +373,14 @@
 
     if (smallBlindInput) smallBlindInput.value = '';
     if (bigBlindInput) bigBlindInput.value = '';
-    if (startTimeInput) startTimeInput.value = '';
-    if (endTimeInput) endTimeInput.value = '';
+    if (startTimeInput) {
+      startTimeInput.value = '';
+      updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+    }
+    if (endTimeInput) {
+      endTimeInput.value = '';
+      updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
+    }
     if (buyInInput) buyInInput.value = '';
     if (cashOutInput) cashOutInput.value = '';
     if (notesInput) notesInput.value = '';
@@ -299,9 +403,11 @@
         const pad = num => String(num).padStart(2, '0');
         const formattedNow = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
         startTimeInput.value = formattedNow;
+        updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
       } else {
         // Clear start time when live session is turned off
         startTimeInput.value = '';
+        updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
       }
     }
   }
@@ -353,6 +459,10 @@
     const openAsLive = Boolean(preToggleLive);
     liveToggle.checked = openAsLive;
     updateDetailsVisibility(openAsLive);
+
+    // Initialize datetime displays
+    updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+    updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
 
     modal.style.display = 'flex';
   }
