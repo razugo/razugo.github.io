@@ -236,20 +236,26 @@
 
     if (!locationSelect || !locationInput) return;
 
-    const newLocation = locationInput.value.trim();
+    // Add a small delay to prevent premature blur on mobile
+    setTimeout(() => {
+      // Check if the input is still focused (user might have tapped back into it)
+      if (document.activeElement === locationInput) return;
 
-    if (newLocation) {
-      // Add new location to dropdown and select it
-      populateLocationDropdown();
-      locationSelect.value = newLocation;
-    } else {
-      // No location entered, reset to empty selection
-      locationSelect.value = '';
-    }
+      const newLocation = locationInput.value.trim();
 
-    // Switch back to dropdown
-    locationInput.style.display = 'none';
-    locationSelect.style.display = 'block';
+      if (newLocation) {
+        // Add new location to dropdown and select it
+        populateLocationDropdown();
+        locationSelect.value = newLocation;
+      } else {
+        // No location entered, reset to empty selection
+        locationSelect.value = '';
+      }
+
+      // Switch back to dropdown
+      locationInput.style.display = 'none';
+      locationSelect.style.display = 'block';
+    }, 100);
   }
 
   function setupLocationHandlers() {
@@ -265,7 +271,12 @@
       locationInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
           event.preventDefault();
-          handleLocationInputBlur();
+          locationInput.blur();
+        }
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          locationInput.value = '';
+          locationInput.blur();
         }
       });
       locationInput.dataset.bound = 'true';

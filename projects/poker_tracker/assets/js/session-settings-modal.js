@@ -206,30 +206,36 @@
 
       if (!locationSelect || !locationInput) return;
 
-      const newLocation = locationInput.value.trim();
+      // Add a small delay to prevent premature blur on mobile
+      setTimeout(() => {
+        // Check if the input is still focused (user might have tapped back into it)
+        if (document.activeElement === locationInput) return;
 
-      if (newLocation) {
-        // Add new location to dropdown and select it
-        this.populateLocationDropdown();
-        locationSelect.value = newLocation;
+        const newLocation = locationInput.value.trim();
 
-        // Update the session
-        if (this.currentSessionId) {
-          this.handleFieldUpdates({ location: newLocation });
+        if (newLocation) {
+          // Add new location to dropdown and select it
+          this.populateLocationDropdown();
+          locationSelect.value = newLocation;
+
+          // Update the session
+          if (this.currentSessionId) {
+            this.handleFieldUpdates({ location: newLocation });
+          }
+        } else {
+          // No location entered, reset to empty selection
+          locationSelect.value = '';
+
+          // Update the session to clear location
+          if (this.currentSessionId) {
+            this.handleFieldUpdates({ location: null });
+          }
         }
-      } else {
-        // No location entered, reset to empty selection
-        locationSelect.value = '';
 
-        // Update the session to clear location
-        if (this.currentSessionId) {
-          this.handleFieldUpdates({ location: null });
-        }
-      }
-
-      // Switch back to dropdown
-      locationInput.style.display = 'none';
-      locationSelect.style.display = 'block';
+        // Switch back to dropdown
+        locationInput.style.display = 'none';
+        locationSelect.style.display = 'block';
+      }, 100);
     },
 
     showSessionSettingsModal(sessionId) {
@@ -409,7 +415,12 @@
         locationInput.addEventListener('keydown', (event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
-            this.handleLocationInputBlur();
+            locationInput.blur();
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            locationInput.value = '';
+            locationInput.blur();
           }
         });
       }

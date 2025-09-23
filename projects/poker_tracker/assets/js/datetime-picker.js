@@ -15,6 +15,9 @@
     // Responsive labels
     const monthLabel = width >= 768 ? 'Month' : (width >= 480 ? 'Mon' : 'M');
     const yearLabel = width >= 768 ? 'Year' : (width >= 480 ? 'Yr' : 'Y');
+    const dayLabel = width >= 480 ? 'Day' : 'D';
+    const hourLabel = width >= 480 ? 'Hour' : 'H';
+    const minuteLabel = width >= 480 ? 'Min' : 'M';
     const ampmLabel = width >= 768 ? 'AM/PM' : (width >= 480 ? 'AM' : '');
 
     const timeSection = includeTime ? `
@@ -23,13 +26,13 @@
           <button class="datetime-increment" data-field="hour" type="button">▲</button>
           <span class="datetime-value" data-field="hour">12</span>
           <button class="datetime-decrement" data-field="hour" type="button">▼</button>
-          <label class="datetime-label">Hour</label>
+          <label class="datetime-label">${hourLabel}</label>
         </div>
         <div class="datetime-field">
           <button class="datetime-increment" data-field="minute" type="button">▲</button>
           <span class="datetime-value" data-field="minute">00</span>
           <button class="datetime-decrement" data-field="minute" type="button">▼</button>
-          <label class="datetime-label">Min</label>
+          <label class="datetime-label">${minuteLabel}</label>
         </div>
         <div class="datetime-field">
           <button class="datetime-increment" data-field="ampm" type="button">▲</button>
@@ -50,6 +53,12 @@
             <div class="datetime-picker">
               <div class="datetime-section date-section${includeTime ? '' : ' date-only'}">
                 <div class="datetime-field">
+                  <button class="datetime-increment" data-field="year" type="button">▲</button>
+                  <span class="datetime-value" data-field="year">2025</span>
+                  <button class="datetime-decrement" data-field="year" type="button">▼</button>
+                  <label class="datetime-label">${yearLabel}</label>
+                </div>
+                <div class="datetime-field">
                   <button class="datetime-increment" data-field="month" type="button">▲</button>
                   <span class="datetime-value" data-field="month">Jan</span>
                   <button class="datetime-decrement" data-field="month" type="button">▼</button>
@@ -59,13 +68,7 @@
                   <button class="datetime-increment" data-field="day" type="button">▲</button>
                   <span class="datetime-value" data-field="day">1</span>
                   <button class="datetime-decrement" data-field="day" type="button">▼</button>
-                  <label class="datetime-label">Day</label>
-                </div>
-                <div class="datetime-field">
-                  <button class="datetime-increment" data-field="year" type="button">▲</button>
-                  <span class="datetime-value" data-field="year">2025</span>
-                  <button class="datetime-decrement" data-field="year" type="button">▼</button>
-                  <label class="datetime-label">${yearLabel}</label>
+                  <label class="datetime-label">${dayLabel}</label>
                 </div>
               </div>
               ${timeSection}
@@ -393,11 +396,7 @@
     if (monthElement) monthElement.textContent = monthDisplay;
     if (dayElement) dayElement.textContent = date.getDate().toString();
     if (yearElement) {
-      if (width >= 768) {
-        yearElement.textContent = date.getFullYear().toString(); // Full year: 2025
-      } else {
-        yearElement.textContent = date.getFullYear().toString().substring(2); // Short year: 25
-      }
+      yearElement.textContent = date.getFullYear().toString(); // Always show full year: 2025
     }
 
     let hours = date.getHours();
