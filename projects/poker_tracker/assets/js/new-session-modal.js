@@ -224,54 +224,12 @@
       locationInput.style.display = 'block';
       locationInput.value = '';
 
-      // iOS-specific focus handling
-      setTimeout(() => {
-        locationInput.focus();
-        // Double-focus for iOS Safari
-        setTimeout(() => {
-          if (document.activeElement !== locationInput) {
-            locationInput.focus();
-          }
-        }, 50);
-      }, 100);
+      locationInput.focus();
     } else {
       // Use selected location
       locationInput.style.display = 'none';
       locationSelect.style.display = 'block';
     }
-  }
-
-  function handleLocationInputBlur() {
-    const { locationSelect, locationInput } = getElements();
-
-    if (!locationSelect || !locationInput) return;
-
-    // Longer delay for iOS to handle virtual keyboard and focus properly
-    setTimeout(() => {
-      // Check if the input is still focused (user might have tapped back into it)
-      if (document.activeElement === locationInput) return;
-
-      // Additional check for iOS - make sure we're not in the middle of text input
-      if (locationInput.value !== locationInput.defaultValue && document.activeElement !== locationInput) {
-        // User is actively typing, don't close yet
-        return;
-      }
-
-      const newLocation = locationInput.value.trim();
-
-      if (newLocation) {
-        // Add new location to dropdown and select it
-        populateLocationDropdown();
-        locationSelect.value = newLocation;
-      } else {
-        // No location entered, reset to empty selection
-        locationSelect.value = '';
-      }
-
-      // Switch back to dropdown
-      locationInput.style.display = 'none';
-      locationSelect.style.display = 'block';
-    }, 300);
   }
 
   function setupLocationHandlers() {
@@ -283,8 +241,6 @@
     }
 
     if (locationInput && !locationInput.dataset.bound) {
-      // Use focusout instead of blur for better iOS compatibility
-      locationInput.addEventListener('focusout', handleLocationInputBlur);
 
       // Add input event to track active typing
       locationInput.addEventListener('input', () => {
@@ -301,11 +257,6 @@
           locationInput.value = '';
           locationInput.blur();
         }
-      });
-
-      // iOS-specific touch event to ensure input can receive focus
-      locationInput.addEventListener('touchstart', (event) => {
-        event.stopPropagation();
       });
 
       locationInput.dataset.bound = 'true';
