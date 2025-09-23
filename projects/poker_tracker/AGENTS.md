@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The poker tracker lives under `projects/poker_tracker` within the parent Jekyll site. Page-level experiences are plain HTML files (`index.html`, `bankroll/index.html`, `sessions/index.html`, `session/index.html`, `games/index.html`, `tools/index.html`, `tools/hand_strength/index.html`) that share the poker layout defined upstream. Shared UI is delivered via JS components under `assets/js/` (navigation, modals). Styling centralizes in `assets/styles/main.css`; keep new rules scoped with descriptive, kebab-case class names. Core data logic remains in `assets/js/data-store.js` with shared helpers in `assets/js/app.js`.
+The poker tracker lives under `projects/poker_tracker` within the parent Jekyll site. Page-level experiences are plain HTML files (`index.html`, `bankroll/index.html`, `sessions/index.html`, `session/index.html`, `tools/index.html`, `tools/data_magement/index.html`, `tools/hand_strength/index.html`) that share the poker layout defined upstream. Shared UI is delivered via JS components under `assets/js/` (navigation, modals). Styling centralizes in `assets/styles/main.css`; keep new rules scoped with descriptive, kebab-case class names. Core data logic remains in `assets/js/data-store.js` with shared helpers in `assets/js/app.js`.
 
 ## Build, Test, and Development Commands
 - `cd /Users/rwakugawa/Documents/razugo.github.io && bundle exec jekyll serve --livereload` serves `http://localhost:4000/projects/poker_tracker/` with auto-reloading pages.

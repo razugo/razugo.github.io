@@ -26,13 +26,13 @@ Builds the entire Jekyll site including this poker tracker project.
 
 ## Project Overview
 
-This is a poker hand tracking application built using Jekyll with modular components. It uses URL-based routing with separate pages for each section (dashboard, sessions, live tracking, games) while sharing common components and data layers.
+This is a poker hand tracking application built using Jekyll with modular components. It uses URL-based routing with separate pages for each section (dashboard, sessions, live tracking) while sharing common components and data layers.
 
 ## Architecture
 
 ### Jekyll Multi-Page Application
 - **Modular Structure**: Separate Jekyll pages for each section with shared layout and components
-- **URL Routing**: Each page has its own URL path (/, /bankroll, /sessions, /session, /games, /tools, /tools/hand_strength)
+- **URL Routing**: Each page has its own URL path (/, /bankroll, /sessions, /session, /tools, /tools/hand_strength)
 - **Shared Components**: Reusable components in `_includes/components/`
 - **Shared Data Layer**: Centralized data management in `_includes/scripts/data-store.js`
 
@@ -44,7 +44,6 @@ This is a poker hand tracking application built using Jekyll with modular compon
 - **Statistics Components**: Shared across dashboard and other pages
 
 ### Key Features
-- **Multi-Game Support**: Configurable poker games with different stakes and locations
 - **Session Management**: Track buy-ins, cash-outs, hands played, and VPIP statistics
 - **Live Session Mode**: Interactive poker grid for real-time hand tracking during play
 - **Tools Suite**: Hand strength analyzer and other poker utilities
@@ -53,28 +52,22 @@ This is a poker hand tracking application built using Jekyll with modular compon
 
 ## Data Structure
 
-### Games Object
-```javascript
-{
-  id: 'game-identifier',
-  name: 'Display Name',
-  location: 'Venue Name',
-  stakes: { smallBlind: number, bigBlind: number, currency: 'USD' },
-  defaultBuyIn: number
-}
-```
-
 ### Sessions Object
 ```javascript
 {
   id: 'session-identifier',
-  date: 'YYYY-MM-DD',
-  gameId: 'reference-to-game',
+  sessionDate: 'YYYY-MM-DD', // derived from startTime or fallback
+  startTime: 'ISO string', // when session started
+  endTime: 'ISO string', // when session ended (null for active sessions)
   buyIn: number,
   cashOut: number,
   hands: number,
   vpip: number, // percentage
-  duration: number, // minutes
+  durationHours: number, // calculated from start/end times when available
+  location: string, // optional location
+  smallBlind: number, // optional stake info
+  bigBlind: number, // optional stake info
+  notes: string, // optional session notes
   status: 'active' | 'completed'
 }
 ```
@@ -87,9 +80,9 @@ poker_tracker/
 ├── bankroll/index.html           # Bankroll analytics
 ├── sessions/index.html           # Sessions management page
 ├── session/index.html            # Individual session tracking page
-├── games/index.html              # Games management page
 └── tools/
     ├── index.html               # Tools overview page
+    ├── data_magement/index.html # Data import/export utilities
     └── hand_strength/index.html # Hand strength analysis tool
 
 assets/
@@ -99,7 +92,6 @@ assets/
     ├── app.js                   # Shared utilities
     ├── nav-bar.js               # Navigation component logic
     ├── new-session-modal.js     # New session modal component
-    ├── new-game-modal.js        # New game modal component
     └── session-settings-modal.js # Session settings modal component
 ```
 

@@ -21,7 +21,6 @@ nav_id: tools
       <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
       <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
       <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
-      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
       <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
     </ul>
     <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
@@ -227,13 +226,12 @@ nav_id: tools
 </script>
 
 <div data-component="new-session-modal"></div>
-<div data-component="new-game-modal"></div>
 
 <!-- Shared JavaScript -->
 <script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/datetime-picker.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
-<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
 </body>
 </html>

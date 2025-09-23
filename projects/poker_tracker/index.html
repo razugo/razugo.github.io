@@ -21,7 +21,6 @@ nav_id: dashboard
       <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
       <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
       <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
-      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
       <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
     </ul>
     <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
@@ -54,9 +53,8 @@ nav_id: dashboard
                 <table class="table recent-sessions-table">
                   <thead>
                     <tr>
-                      <th>Date</th>
-                      <th>Game</th>
-                      <th class="col-duration">Duration</th>
+                      <th>Start</th>
+                      <th class="col-end">End</th>
                       <th class="col-vpip">VPIP</th>
                       <th class="col-hands">Hands</th>
                       <th>P&L</th>
@@ -146,36 +144,21 @@ nav_id: dashboard
 
           if (tbody) {
             tbody.innerHTML = ordered.map(session => {
-              const game = PokerTracker.DataStore.getGame(session.gameId);
               const profit = (session.cashOut || 0) - (session.buyIn || 0);
               const handsCount = session.total || 0;
               const vpipValue = typeof session.vpip === 'number' ? session.vpip : 0;
               const hasHands = handsCount > 0;
-              const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-
-              let durationMinutes = 0;
-              if (typeof session.durationHours === 'number' && Number.isFinite(session.durationHours) && session.durationHours > 0) {
-                durationMinutes = session.durationHours * 60;
-              } else if (session.startTime && session.endTime) {
-                const start = new Date(session.startTime);
-                const end = new Date(session.endTime);
-                if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-                  durationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
-                }
-              } else if (session.startTime) {
-                const start = new Date(session.startTime);
-                if (!Number.isNaN(start.getTime())) {
-                  durationMinutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
-                }
-              } else if (handsCount > 0) {
-                durationMinutes = handsCount * 2;
-              }
+              const startDisplay = session.startTime
+                ? PokerTracker.Utils.formatDateTime(session.startTime)
+                : (PokerTracker.DataStore.getSessionDate(session) || '-');
+              const endDisplay = session.endTime
+                ? PokerTracker.Utils.formatDateTime(session.endTime)
+                : '-';
 
               return `
                 <tr>
-                  <td>${sessionDate || '-'}</td>
-                  <td>${game?.name || '-'}</td>
-                  <td class="col-duration">${durationMinutes > 0 ? PokerTracker.Utils.formatDuration(Math.round(durationMinutes)) : '-'}</td>
+                  <td>${startDisplay}</td>
+                  <td class="col-end">${endDisplay}</td>
                   <td class="col-vpip">${hasHands ? `${vpipValue.toFixed(1)}%` : '-'}</td>
                   <td class="col-hands">${handsCount}</td>
                   <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
@@ -186,24 +169,46 @@ nav_id: dashboard
 
           if (cardsContainer) {
             cardsContainer.innerHTML = ordered.map(session => {
-              const game = PokerTracker.DataStore.getGame(session.gameId);
               const profit = (session.cashOut || 0) - (session.buyIn || 0);
-              const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-              const baseName = session.name || game?.name || 'Session';
-              const handsCount = session.total || 0;
-              const hasHands = handsCount > 0;
-              const vpipValue = typeof session.vpip === 'number' ? session.vpip.toFixed(1) : '0.0';
+
+              // Format date as YYYY-MM-DD from start time
+              let dateDisplay = '-';
+              if (session.startTime) {
+                const startDate = new Date(session.startTime);
+                if (!isNaN(startDate.getTime())) {
+                  const year = startDate.getFullYear();
+                  const month = String(startDate.getMonth() + 1).padStart(2, '0');
+                  const day = String(startDate.getDate()).padStart(2, '0');
+                  dateDisplay = `${year}-${month}-${day}`;
+                }
+              } else {
+                const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+                if (sessionDate) {
+                  dateDisplay = sessionDate;
+                }
+              }
+
+              // Format location and stakes
+              let locationStakesDisplay = '';
+              if (session.location) {
+                locationStakesDisplay = session.location;
+                if (session.smallBlind && session.bigBlind) {
+                  locationStakesDisplay += ` ($${session.smallBlind}/$${session.bigBlind})`;
+                }
+              } else if (session.smallBlind && session.bigBlind) {
+                locationStakesDisplay = `$${session.smallBlind}/$${session.bigBlind}`;
+              } else {
+                locationStakesDisplay = '-';
+              }
 
               return `
                 <div class="session-card">
                   <div class="session-card-content">
                     <div class="session-card-top">
-                      <span class="session-card-title">${baseName}</span>
-                      <span class="session-card-game">${game?.name || '-'}</span>
+                      <span class="session-card-title">${locationStakesDisplay}</span>
                     </div>
                     <div class="session-card-bottom">
-                      <span class="session-card-date">${sessionDate || '-'}</span>
-                      <span class="session-card-meta">${hasHands ? `${vpipValue}% VPIP` : '-'}</span>
+                      <span class="session-card-meta">${dateDisplay}</span>
                       <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
                         ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
                       </span>
@@ -286,10 +291,9 @@ nav_id: dashboard
             cumulative += profit;
             cumulativeData.push(cumulative);
 
-            // Use session name or game name or date for better labels
-            const game = PokerTracker.DataStore.getGame(session.gameId);
+            // Use session date for chart labels
             const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-            const labelName = session.name || game?.name || sessionDate || `Session ${index + 1}`;
+            const labelName = sessionDate || `Session ${index + 1}`;
             labels.push(labelName);
           });
 
@@ -328,11 +332,11 @@ nav_id: dashboard
 
           const containerEl = tableEl.closest('.recent-sessions-table-container');
           const hideHands = window.matchMedia('(max-width: 1100px)').matches;
-          const hideDuration = window.matchMedia('(max-width: 900px)').matches;
+          const hideEnd = window.matchMedia('(max-width: 900px)').matches;
           const hideVpip = window.matchMedia('(max-width: 1000px)').matches;
 
           tableEl.dataset.hideHands = hideHands ? 'true' : 'false';
-          tableEl.dataset.hideDuration = hideDuration ? 'true' : 'false';
+          tableEl.dataset.hideEnd = hideEnd ? 'true' : 'false';
           tableEl.dataset.hideVpip = hideVpip ? 'true' : 'false';
 
           if (containerEl) {
@@ -342,14 +346,13 @@ nav_id: dashboard
 
       </script>
       <div data-component="new-session-modal"></div>
-      <div data-component="new-game-modal"></div>
 
       <!-- Shared JavaScript -->
       <script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
       <script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+      <script src="{{ '/projects/poker_tracker/assets/js/datetime-picker.js' | relative_url }}"></script>
       <script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
       <script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
-      <script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
     </main>
   </body>
 </html>

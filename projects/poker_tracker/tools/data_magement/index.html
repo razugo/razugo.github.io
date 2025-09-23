@@ -20,7 +20,6 @@ nav_id: tools
       <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
       <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
       <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
-      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
       <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
     </ul>
     <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
@@ -59,7 +58,7 @@ nav_id: tools
           <h3 class="card-title">PokerTracker Backup</h3>
         </div>
         <div class="card-content" style="display: flex; flex-direction: column; gap: 1.5rem;">
-          <p style="color: var(--text-secondary);">Export your PokerTracker games and sessions to a backup file or restore from a previous export.</p>
+          <p style="color: var(--text-secondary);">Export your PokerTracker sessions to a backup file or restore from a previous export.</p>
 
           <div class="data-backup" data-component="poker-backup">
             <div class="backup-actions" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
@@ -75,14 +74,13 @@ nav_id: tools
   </main>
 
 <div data-component="new-session-modal"></div>
-<div data-component="new-game-modal"></div>
 <div data-component="session-settings-modal"></div>
 
 <script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/datetime-picker.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
-<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/session-settings-modal.js' | relative_url }}"></script>
 
 <script>
@@ -119,6 +117,12 @@ nav_id: tools
           const parsed = parseDateString(value);
           if (!parsed) return null;
           return parsed.toISOString().split('T')[0];
+        };
+
+        const toISODateTime = value => {
+          const parsed = parseDateString(value);
+          if (!parsed) return null;
+          return parsed.toISOString();
         };
 
         const computeDuration = (startValue, endValue) => {
@@ -207,19 +211,29 @@ nav_id: tools
           const sessionDate = raw.sessionDate || toISODate(raw.created) || toISODate(raw.startTime) || toISODate(raw.endTime);
           const durationHours = computeDuration(raw.startTime, raw.endTime);
 
+          const trimmedLocation = typeof raw.location === 'string' ? raw.location.trim() : '';
           const stakes = {};
-          const smallBlind = coerceMoney(raw.smallBlind);
-          const bigBlind = coerceMoney(raw.bigBlind);
-          if (smallBlind > 0 || bigBlind > 0) {
-            stakes.smallBlind = smallBlind > 0 ? smallBlind : null;
-            stakes.bigBlind = bigBlind > 0 ? bigBlind : null;
+          const rawSmallBlind = coerceMoney(raw.smallBlind);
+          const rawBigBlind = coerceMoney(raw.bigBlind);
+          const normalizedSmallBlind = rawSmallBlind > 0 ? rawSmallBlind : null;
+          const normalizedBigBlind = rawBigBlind > 0 ? rawBigBlind : null;
+          if (normalizedSmallBlind !== null || normalizedBigBlind !== null) {
+            stakes.smallBlind = normalizedSmallBlind;
+            stakes.bigBlind = normalizedBigBlind;
             stakes.currency = 'USD';
           }
+
+          const startTime = toISODateTime(raw.startTime);
+          const endTime = toISODateTime(raw.endTime);
 
           const sessionRecord = {
             id: sessionId,
             name: raw.name || null,
-            gameId: raw.gameId || null,
+            location: trimmedLocation || null,
+            smallBlind: normalizedSmallBlind,
+            bigBlind: normalizedBigBlind,
+            startTime: startTime,
+            endTime: endTime,
             buyIn: coerceMoney(raw.buyIn),
             cashOut: coerceMoney(raw.cashOut),
             sessionDate: sessionDate || null,
@@ -365,13 +379,11 @@ nav_id: tools
         }
 
         const dataStore = PokerTracker.DataStore;
-        const games = dataStore.getAllGames ? dataStore.getAllGames() : safeArray(dataStore.games);
         const sessions = dataStore.getSessions ? dataStore.getSessions() : safeArray(dataStore.sessions);
 
         return {
           version: 'pokertracker.backup.v1',
           exportedAt: new Date().toISOString(),
-          games: safeArray(games),
           sessions: safeArray(sessions)
         };
       };
@@ -400,12 +412,11 @@ nav_id: tools
           throw new Error('File is not valid JSON.');
         }
 
-        if (!parsed || !Array.isArray(parsed.sessions) || !Array.isArray(parsed.games)) {
-          throw new Error('Backup must include sessions and games arrays.');
+        if (!parsed || !Array.isArray(parsed.sessions)) {
+          throw new Error('Backup must include a sessions array.');
         }
 
         return {
-          games: safeArray(parsed.games),
           sessions: safeArray(parsed.sessions)
         };
       };
@@ -415,7 +426,6 @@ nav_id: tools
           throw new Error('PokerTracker data store is not available.');
         }
 
-        PokerTracker.DataStore.games = safeArray(backup.games);
         PokerTracker.DataStore.sessions = safeArray(backup.sessions);
         PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
         PokerTracker.DataStore.notifyLiveSessionChange(null);
@@ -428,8 +438,7 @@ nav_id: tools
             const payload = buildBackupPayload();
             downloadBackup(payload);
             const sessionCount = payload.sessions.length;
-            const gameCount = payload.games.length;
-            updateBackupStatus(`Export complete. Saved ${sessionCount} session${sessionCount === 1 ? '' : 's'} and ${gameCount} game${gameCount === 1 ? '' : 's'}.`);
+            updateBackupStatus(`Export complete. Saved ${sessionCount} session${sessionCount === 1 ? '' : 's'}.`);
           } catch (err) {
             console.error(err);
             alert(err.message || 'Export failed.');
@@ -455,8 +464,7 @@ nav_id: tools
               const backup = parseBackup(event.target.result);
               applyBackup(backup);
               const sessionCount = backup.sessions.length;
-              const gameCount = backup.games.length;
-              alert(`Backup imported. ${sessionCount} session${sessionCount === 1 ? '' : 's'} and ${gameCount} game${gameCount === 1 ? '' : 's'} restored.`);
+              alert(`Backup imported. ${sessionCount} session${sessionCount === 1 ? '' : 's'} restored.`);
               updateBackupStatus('Import complete. Your data is saved locally.');
             } catch (err) {
               console.error(err);

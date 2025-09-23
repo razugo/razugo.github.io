@@ -23,7 +23,6 @@ nav_id: session
       <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
       <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
       <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
-      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
       <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
     </ul>
     <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
@@ -37,7 +36,7 @@ nav_id: session
     <div class="live-stats-content">
       <div class="stat-group stat-session">
         <span class="stat-label">Session</span>
-        <span class="stat-value session-name" id="sessionNameStat">Unnamed Session</span>
+        <span class="stat-value session-name" id="sessionNameStat">Current Session</span>
       </div>
       <div class="stat-group">
         <span class="stat-label">VPIP</span>
@@ -220,13 +219,12 @@ nav_id: session
 
     if (!session || !sessionData) return;
 
-    const game = PokerTracker.DataStore.getGame(session.gameId);
     const vpipPercent = sessionData.vpip.toFixed(1);
     const profit = (session.cashOut || 0) - (session.buyIn || 0);
 
     // Update live stats bar
-    const sessionName = session.name || (game ? game.name : 'Unnamed Session');
-    document.getElementById('sessionNameStat').textContent = sessionName;
+    const sessionDate = PokerTracker.DataStore.getSessionDate(session) || 'Current Session';
+    document.getElementById('sessionNameStat').textContent = sessionDate;
 
     document.getElementById('vpipStat').textContent = `${vpipPercent}% (${sessionData.totalPlayed}/${sessionData.total})`;
 
@@ -726,40 +724,6 @@ nav_id: session
       return;
     }
 
-   // Populate games dropdown (if it exists)
-   const gameSelect = document.getElementById('gameSelect');
-   if (gameSelect) {
-     const games = PokerTracker.DataStore.getAllGames();
-     console.log('Available games:', games);
-     console.log('Session gameId:', session.gameId);
-
-      const formatStake = value => {
-        const parsed = typeof value === 'number' ? value : parseFloat(value);
-        return Number.isFinite(parsed) && parsed > 0 ? PokerTracker.Utils.formatCurrency(parsed) : null;
-      };
-
-      const formatGameLabel = game => {
-        const stakes = game?.stakes || {};
-        const small = formatStake(stakes.smallBlind);
-        const big = formatStake(stakes.bigBlind);
-
-        if (small || big) {
-          return `${game.name} (${small || '—'}/${big || '—'})`;
-        }
-        return game.name;
-      };
-
-      games.forEach(game => {
-        if (!game) return;
-        const option = document.createElement('option');
-        option.value = game.id;
-        option.textContent = formatGameLabel(game);
-        gameSelect.appendChild(option);
-      });
-    } else {
-      console.log('gameSelect element not found - skipping game dropdown population');
-    }
-
     buildGrid();
     updateSessionStats();
     syncToggleState();
@@ -795,14 +759,6 @@ nav_id: session
     if (cashOutInput) {
       cashOutInput.addEventListener('change', function() {
         PokerTracker.DataStore.updateSession(currentSessionId, { cashOut: parseFloat(this.value) || 0 });
-        updateSessionStats();
-      });
-    }
-
-    const gameSelectForListener = document.getElementById('gameSelect');
-    if (gameSelectForListener) {
-      gameSelectForListener.addEventListener('change', function() {
-        PokerTracker.DataStore.updateSession(currentSessionId, { gameId: this.value });
         updateSessionStats();
       });
     }
@@ -935,7 +891,6 @@ nav_id: session
 </script>
 
 <div data-component="new-session-modal"></div>
-<div data-component="new-game-modal"></div>
 <div data-component="session-settings-modal"></div>
 
 <!-- Shared JavaScript -->
@@ -943,9 +898,9 @@ nav_id: session
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/datetime-picker.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
-<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/session-settings-modal.js' | relative_url }}"></script>
 
 <script>

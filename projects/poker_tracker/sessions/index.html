@@ -9,7 +9,6 @@ nav_id: sessions
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>{{ page.title | default: "PokerTracker" }}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.css">
   <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/main.css' | relative_url }}">
 </head>
@@ -22,7 +21,6 @@ nav_id: sessions
       <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
       <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
       <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
-      <li><a href="{{ '/projects/poker_tracker/games/' | relative_url }}" class="nav-link{% if page.nav_id == 'games' %} active{% endif %}" data-nav-id="games">Games</a></li>
       <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
     </ul>
     <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
@@ -42,22 +40,24 @@ nav_id: sessions
   <!-- Filters -->
   <div class="filters">
     <div class="filter-field">
-      <label class="filter-label" for="sessionSearch">Session Name</label>
-      <input type="text" class="filter-input" placeholder="Name contains" id="sessionSearch">
+      <label class="filter-label" for="dateFrom">From Date</label>
+      <input type="text" class="filter-input datetime-picker-input" id="dateFrom" placeholder="YYYY-MM-DD" autocomplete="off" readonly>
     </div>
     <div class="filter-field">
-      <label class="filter-label" for="gameFilter">Game</label>
-      <select class="filter-input" id="gameFilter">
+      <label class="filter-label" for="dateTo">To Date</label>
+      <input type="text" class="filter-input datetime-picker-input" id="dateTo" placeholder="YYYY-MM-DD" autocomplete="off" readonly>
+    </div>
+    <div class="filter-field">
+      <label class="filter-label" for="locationFilter">Location</label>
+      <select class="filter-input" id="locationFilter">
         <option value="" data-placeholder="true"></option>
       </select>
     </div>
     <div class="filter-field">
-      <label class="filter-label" for="dateFrom">From Date</label>
-      <input type="text" class="filter-input date-picker-input" id="dateFrom" placeholder="YYYY-MM-DD" autocomplete="off">
-    </div>
-    <div class="filter-field">
-      <label class="filter-label" for="dateTo">To Date</label>
-      <input type="text" class="filter-input date-picker-input" id="dateTo" placeholder="YYYY-MM-DD" autocomplete="off">
+      <label class="filter-label" for="stakesFilter">Stakes</label>
+      <select class="filter-input" id="stakesFilter">
+        <option value="" data-placeholder="true"></option>
+      </select>
     </div>
     <div class="filter-field">
       <label class="filter-label" for="profitFilter">Results</label>
@@ -68,7 +68,7 @@ nav_id: sessions
       </select>
     </div>
   <div class="filter-field filter-button">
-    <button type="button" class="btn btn-primary session-filter-apply" id="sessionFilterApplyBtn" aria-label="Apply session filters">Search</button>
+    <button type="button" class="btn btn-primary session-filter-apply" id="sessionFilterApplyBtn" aria-label="Apply session filters">Filter</button>
   </div>
 </div>
 
@@ -84,11 +84,9 @@ nav_id: sessions
         <thead>
           <tr>
             <th>Date</th>
-            <th>Session</th>
-            <th>Game</th>
+            <th>Location</th>
+            <th class="col-stake">Stakes</th>
             <th>Duration</th>
-            <th class="col-stake">Buy-in</th>
-            <th class="col-stake">Cash-out</th>
             <th>P&L</th>
             <th class="col-hands">Hands</th>
             <th>VPIP</th>
@@ -113,64 +111,34 @@ nav_id: sessions
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    let dateFromPicker = null;
-    let dateToPicker = null;
-
-    const syncDateFromConstraints = () => {
-      if (!PokerTracker?.DatePickers || !dateFromPicker || !dateToPicker) return;
-      const fromDate = dateFromPicker.selectedDates?.[0] || null;
-      dateToPicker.set('minDate', fromDate || null);
-
-      if (!fromDate) return;
-
-      const toDate = dateToPicker.selectedDates?.[0] || null;
-      if (toDate && toDate < fromDate) {
-        PokerTracker.DatePickers.setDate('dateTo', fromDate, true);
-      }
-    };
-
-    const syncDateToConstraints = () => {
-      if (!PokerTracker?.DatePickers || !dateFromPicker || !dateToPicker) return;
-      const toDate = dateToPicker.selectedDates?.[0] || null;
-      dateFromPicker.set('maxDate', toDate || null);
-
-      if (!toDate) return;
-
-      const fromDate = dateFromPicker.selectedDates?.[0] || null;
-      if (fromDate && fromDate > toDate) {
-        PokerTracker.DatePickers.setDate('dateFrom', toDate, true);
-      }
-    };
-
-    if (PokerTracker?.DatePickers) {
-      dateFromPicker = PokerTracker.DatePickers.initDateField('dateFrom', {
-        altInput: true,
-        altFormat: 'M j, Y',
-        altInputClass: 'filter-input flatpickr-alt-input',
-        clearLabel: 'Clear',
-        onChange: syncDateFromConstraints
-      });
-
-      dateToPicker = PokerTracker.DatePickers.initDateField('dateTo', {
-        altInput: true,
-        altFormat: 'M j, Y',
-        altInputClass: 'filter-input flatpickr-alt-input',
-        clearLabel: 'Clear',
-        onChange: syncDateToConstraints
-      });
-
-      syncDateFromConstraints();
-      syncDateToConstraints();
+    // Initialize custom date pickers for filters
+    if (window.PokerTracker && window.PokerTracker.DateTimePicker) {
+      PokerTracker.DateTimePicker.attachToInput('#dateFrom', { includeTime: false });
+      PokerTracker.DateTimePicker.attachToInput('#dateTo', { includeTime: false });
     }
 
+    // Populate filter dropdowns
+    populateLocationFilter();
+    populateStakesFilter();
+
     if (PokerTracker?.Dropdowns) {
-      PokerTracker.Dropdowns.init('gameFilter', {
-        placeholder: 'All games',
-        placeholderText: 'All games',
+      PokerTracker.Dropdowns.init('locationFilter', {
+        placeholder: 'All locations',
+        placeholderText: 'All locations',
         settings: {
           allowDeselect: true,
-          showSearch: true,
-          placeholderText: 'All games'
+          showSearch: false,
+          placeholderText: 'All locations'
+        }
+      });
+
+      PokerTracker.Dropdowns.init('stakesFilter', {
+        placeholder: 'All stakes',
+        placeholderText: 'All stakes',
+        settings: {
+          allowDeselect: true,
+          showSearch: false,
+          placeholderText: 'All stakes'
         }
       });
 
@@ -185,14 +153,12 @@ nav_id: sessions
       });
     }
 
-    populateGameFilter();
     renderSessions();
     setupFilters();
     checkActiveSession();
 
     document.addEventListener('pokertracker:live-session-change', function() {
       checkActiveSession();
-      populateGameFilter();
       applyFilters();
     });
 
@@ -214,48 +180,61 @@ nav_id: sessions
     renderSessionsSummary(orderedSessions);
 
     if (orderedSessions.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="10" class="sessions-empty">No sessions match the current filters.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="sessions-empty">No sessions match the current filters.</td></tr>';
       cardContainer.innerHTML = '<div class="sessions-empty">No sessions match the current filters.</div>';
       updateSessionsTableResponsiveState();
       return;
     }
 
     tbody.innerHTML = orderedSessions.map(session => {
-      const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
       const handsCount = session.total || 0;
       const vpip = (session.vpip || 0).toFixed(1);
-      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
-      let durationMinutes = 0;
-      if (typeof session.durationHours === 'number' && Number.isFinite(session.durationHours) && session.durationHours > 0) {
-        durationMinutes = session.durationHours * 60;
-      } else if (session.startTime && session.endTime) {
-        const start = new Date(session.startTime);
-        const end = new Date(session.endTime);
-        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-          durationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
+      // Format date as YYYY-MM-DD from start time
+      let dateDisplay = '-';
+      if (session.startTime) {
+        const startDate = new Date(session.startTime);
+        if (!isNaN(startDate.getTime())) {
+          const year = startDate.getFullYear();
+          const month = String(startDate.getMonth() + 1).padStart(2, '0');
+          const day = String(startDate.getDate()).padStart(2, '0');
+          dateDisplay = `${year}-${month}-${day}`;
         }
-      } else if (session.startTime) {
-        const start = new Date(session.startTime);
-        if (!Number.isNaN(start.getTime())) {
-          durationMinutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
+      } else {
+        const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+        if (sessionDate) {
+          dateDisplay = sessionDate;
         }
-      } else if (handsCount > 0) {
-        durationMinutes = handsCount * 2;
       }
 
-      const baseName = session.name || game?.name || 'Session';
-      const sessionLabel = baseName;
+      const locationDisplay = session.location || '-';
+
+      // Format stakes as $small/$big or '-' if not available
+      let stakesDisplay = '-';
+      if (session.smallBlind && session.bigBlind) {
+        stakesDisplay = `$${session.smallBlind}/$${session.bigBlind}`;
+      }
+
+      // Calculate duration from start and end times
+      let durationDisplay = '-';
+      if (session.startTime && session.endTime) {
+        const start = new Date(session.startTime);
+        const end = new Date(session.endTime);
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          const durationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
+          if (durationMinutes > 0) {
+            durationDisplay = PokerTracker.Utils.formatDuration(Math.round(durationMinutes));
+          }
+        }
+      }
 
       return `
         <tr>
-          <td>${sessionDate || '-'}</td>
-          <td>${sessionLabel || '-'}</td>
-          <td>${game?.name || '-'}</td>
-          <td>${durationMinutes > 0 ? PokerTracker.Utils.formatDuration(Math.round(durationMinutes)) : '-'}</td>
-          <td class="col-stake">${PokerTracker.Utils.formatCurrency(session.buyIn || 0)}</td>
-          <td class="col-stake">${PokerTracker.Utils.formatCurrency(session.cashOut || 0)}</td>
+          <td>${dateDisplay}</td>
+          <td>${locationDisplay}</td>
+          <td class="col-stake">${stakesDisplay}</td>
+          <td>${durationDisplay}</td>
           <td class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}</td>
           <td class="col-hands">${handsCount}</td>
           <td>${vpip}%</td>
@@ -269,20 +248,46 @@ nav_id: sessions
     }).join('');
 
     cardContainer.innerHTML = orderedSessions.map(session => {
-      const game = PokerTracker.DataStore.getGame(session.gameId);
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
-      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-      const baseName = session.name || game?.name || 'Session';
+
+      // Format date as YYYY-MM-DD from start time
+      let dateDisplay = '-';
+      if (session.startTime) {
+        const startDate = new Date(session.startTime);
+        if (!isNaN(startDate.getTime())) {
+          const year = startDate.getFullYear();
+          const month = String(startDate.getMonth() + 1).padStart(2, '0');
+          const day = String(startDate.getDate()).padStart(2, '0');
+          dateDisplay = `${year}-${month}-${day}`;
+        }
+      } else {
+        const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+        if (sessionDate) {
+          dateDisplay = sessionDate;
+        }
+      }
+
+      // Format location and stakes
+      let locationStakesDisplay = '';
+      if (session.location) {
+        locationStakesDisplay = session.location;
+        if (session.smallBlind && session.bigBlind) {
+          locationStakesDisplay += ` ($${session.smallBlind}/$${session.bigBlind})`;
+        }
+      } else if (session.smallBlind && session.bigBlind) {
+        locationStakesDisplay = `$${session.smallBlind}/$${session.bigBlind}`;
+      } else {
+        locationStakesDisplay = '-';
+      }
 
       return `
         <div class="session-card">
           <div class="session-card-content">
             <div class="session-card-top">
-              <span class="session-card-title">${baseName || '-'}</span>
-              <span class="session-card-game">${game?.name || '-'}</span>
+              <span class="session-card-title">${locationStakesDisplay}</span>
             </div>
             <div class="session-card-bottom">
-              <span class="session-card-date">${sessionDate || '-'}</span>
+              <span class="session-card-meta">${dateDisplay}</span>
               <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
                 ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
               </span>
@@ -298,6 +303,68 @@ nav_id: sessions
   }
 
   window.populateSessionsTable = renderSessions;
+
+  function populateLocationFilter() {
+    const locationSelect = document.getElementById('locationFilter');
+    if (!locationSelect) return;
+
+    const sessions = PokerTracker.DataStore.getSessions();
+    const locations = new Set();
+
+    sessions.forEach(session => {
+      if (session.location && session.location.trim()) {
+        locations.add(session.location.trim());
+      }
+    });
+
+    // Clear existing options except the first one
+    while (locationSelect.children.length > 1) {
+      locationSelect.removeChild(locationSelect.lastChild);
+    }
+
+    // Add locations in alphabetical order
+    const sortedLocations = Array.from(locations).sort();
+    sortedLocations.forEach(location => {
+      const option = document.createElement('option');
+      option.value = location;
+      option.textContent = location;
+      locationSelect.appendChild(option);
+    });
+  }
+
+  function populateStakesFilter() {
+    const stakesSelect = document.getElementById('stakesFilter');
+    if (!stakesSelect) return;
+
+    const sessions = PokerTracker.DataStore.getSessions();
+    const stakes = new Set();
+
+    sessions.forEach(session => {
+      if (session.smallBlind && session.bigBlind) {
+        const stakesString = `$${session.smallBlind}/$${session.bigBlind}`;
+        stakes.add(stakesString);
+      }
+    });
+
+    // Clear existing options except the first one
+    while (stakesSelect.children.length > 1) {
+      stakesSelect.removeChild(stakesSelect.lastChild);
+    }
+
+    // Sort stakes by small blind amount
+    const sortedStakes = Array.from(stakes).sort((a, b) => {
+      const aSmall = parseFloat(a.split('/')[0].substring(1));
+      const bSmall = parseFloat(b.split('/')[0].substring(1));
+      return aSmall - bSmall;
+    });
+
+    sortedStakes.forEach(stakesString => {
+      const option = document.createElement('option');
+      option.value = stakesString;
+      option.textContent = stakesString;
+      stakesSelect.appendChild(option);
+    });
+  }
 
   function renderSessionsSummary(sessions) {
     const summaryEl = document.getElementById('sessionsSummary');
@@ -396,20 +463,13 @@ nav_id: sessions
       applyButton.addEventListener('click', applyFilters);
     }
 
-    ['sessionSearch', 'dateFrom', 'dateTo'].forEach(id => {
+    ['dateFrom', 'dateTo'].forEach(id => {
       const input = document.getElementById(id);
       if (input) {
-        input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            applyFilters();
-          }
+        input.addEventListener('change', function(e) {
+          applyFilters();
         });
-      }
-
-      const picker = PokerTracker?.DatePickers?.get(id);
-      if (picker?.altInput) {
-        picker.altInput.addEventListener('keydown', function(e) {
+        input.addEventListener('keydown', function(e) {
           if (e.key === 'Enter') {
             e.preventDefault();
             applyFilters();
@@ -419,85 +479,17 @@ nav_id: sessions
     });
   }
 
-  function populateGameFilter() {
-    const gameSelect = document.getElementById('gameFilter');
-    if (!gameSelect) return;
-
-    const previousValue = gameSelect.value;
-    const games = PokerTracker.DataStore.getAllGames();
-    const sessions = PokerTracker.DataStore.getSessions();
-    const hasUngroupedSessions = sessions.some(session => !session.gameId);
-
-    const options = [];
-
-    games
-      .slice()
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .forEach(game => {
-        options.push({
-          text: game.name,
-          value: game.id
-        });
-      });
-
-    if (hasUngroupedSessions) {
-      options.push({ text: 'No Game', value: '__no_game__' });
-    }
-
-    if (PokerTracker?.Dropdowns) {
-      PokerTracker.Dropdowns.setOptions('gameFilter', options, previousValue || null);
-    } else {
-      gameSelect.innerHTML = '';
-
-      const blankOption = document.createElement('option');
-      blankOption.value = '';
-      blankOption.textContent = '';
-      blankOption.selected = !previousValue;
-      gameSelect.appendChild(blankOption);
-
-      options.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.text;
-        if (option.value === previousValue) {
-          opt.selected = true;
-        }
-        gameSelect.appendChild(opt);
-      });
-    }
-  }
-
   function getFilteredSessions() {
-    const nameFilter = document.getElementById('sessionSearch').value.trim().toLowerCase();
-    const gameFilter = document.getElementById('gameFilter').value;
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
+    const locationFilter = document.getElementById('locationFilter').value;
+    const stakesFilter = document.getElementById('stakesFilter').value;
     const profitFilter = document.getElementById('profitFilter').value;
 
     const sessions = PokerTracker.DataStore.getSessions();
-    const games = PokerTracker.DataStore.getAllGames();
-    const gamesById = {};
-    games.forEach(game => { gamesById[game.id] = game; });
 
     return sessions.filter(session => {
-      const game = gamesById[session.gameId] || null;
       const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-
-      if (nameFilter) {
-        const sessionName = (session.name || '').toLowerCase();
-        const gameName = (game?.name || '').toLowerCase();
-        if (!sessionName.includes(nameFilter) && !gameName.includes(nameFilter)) {
-          return false;
-        }
-      }
-
-      if (gameFilter) {
-        if (gameFilter === '__no_game__') {
-          if (session.gameId) return false;
-        } else if (session.gameId !== gameFilter) {
-          return false;
-        }
-      }
 
       if (dateFrom && (!sessionDate || sessionDate < dateFrom)) {
         return false;
@@ -505,6 +497,19 @@ nav_id: sessions
 
       if (dateTo && (!sessionDate || sessionDate > dateTo)) {
         return false;
+      }
+
+      if (locationFilter && session.location !== locationFilter) {
+        return false;
+      }
+
+      if (stakesFilter) {
+        const sessionStakes = (session.smallBlind && session.bigBlind)
+          ? `$${session.smallBlind}/$${session.bigBlind}`
+          : '';
+        if (sessionStakes !== stakesFilter) {
+          return false;
+        }
       }
 
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
@@ -562,24 +567,23 @@ nav_id: sessions
   }
 
   document.addEventListener('pokertracker:session-created', function() {
-    populateGameFilter();
+    populateLocationFilter();
+    populateStakesFilter();
     applyFilters();
     checkActiveSession();
   });
 </script>
 
 <div data-component="new-session-modal"></div>
-<div data-component="new-game-modal"></div>
 <div data-component="session-settings-modal"></div>
 
 <!-- Shared JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/datetime-picker.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
-<script src="{{ '/projects/poker_tracker/assets/js/new-game-modal.js' | relative_url }}"></script>
 <script src="{{ '/projects/poker_tracker/assets/js/session-settings-modal.js' | relative_url }}"></script>
 
 <script>

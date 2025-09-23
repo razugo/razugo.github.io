@@ -15,16 +15,21 @@
             <button class="modal-close" data-action="close">&times;</button>
           </div>
           <div class="modal-body">
-            <div class="session-form-grid session-form-grid-name-game">
-              <div class="form-group" data-field="sessionName">
-                <label for="modalSessionNameInput">Session Name</label>
-                <input type="text" id="modalSessionNameInput" class="form-input" placeholder="Enter session name">
+            <div class="form-group">
+              <label for="modalLocationSelect">Location</label>
+              <select id="modalLocationSelect" class="form-input">
+                <option value="">Select location...</option>
+              </select>
+              <input type="text" id="modalLocationInput" class="form-input" placeholder="Enter new location" style="display: none;">
+            </div>
+            <div class="session-form-grid session-form-grid-stakes">
+              <div class="form-group">
+                <label for="modalSmallBlindInput">Small Blind ($)</label>
+                <input type="number" id="modalSmallBlindInput" class="form-input" placeholder="0.00" step="0.01" min="0">
               </div>
               <div class="form-group">
-                <label for="modalGameSelect">Game</label>
-                <select id="modalGameSelect" class="form-input">
-                  <option value="">Select Game</option>
-                </select>
+                <label for="modalBigBlindInput">Big Blind ($)</label>
+                <input type="number" id="modalBigBlindInput" class="form-input" placeholder="0.00" step="0.01" min="0">
               </div>
             </div>
             <div class="session-form-grid session-form-grid-finance">
@@ -39,12 +44,18 @@
             </div>
             <div class="session-form-grid session-form-grid-time">
               <div class="form-group">
-                <label for="modalSessionDateInput">Session Date</label>
-                <input type="text" id="modalSessionDateInput" class="form-input date-picker-input" placeholder="YYYY-MM-DD" autocomplete="off">
+                <label for="modalStartTimeInput">Start Time</label>
+                <div class="datetime-display-wrapper">
+                  <div class="datetime-display" id="modalStartTimeDisplay" onclick="document.getElementById('modalStartTimeInput').click()"></div>
+                  <input type="datetime-local" id="modalStartTimeInput" class="form-input datetime-picker-input" style="display: none;">
+                </div>
               </div>
               <div class="form-group">
-                <label for="modalDurationInput">Duration (hrs)</label>
-                <input type="number" id="modalDurationInput" class="form-input" placeholder="0" step="0.25" min="0">
+                <label for="modalEndTimeInput">End Time</label>
+                <div class="datetime-display-wrapper">
+                  <div class="datetime-display" id="modalEndTimeDisplay" onclick="document.getElementById('modalEndTimeInput').click()"></div>
+                  <input type="datetime-local" id="modalEndTimeInput" class="form-input datetime-picker-input" style="display: none;">
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -119,28 +130,106 @@
     },
 
     initializeEnhancements() {
-      if (PT.Dropdowns && typeof PT.Dropdowns.init === 'function') {
-        PT.Dropdowns.init('modalGameSelect', {
-          placeholder: 'Select Game',
-          placeholderText: 'Select Game',
-          settings: {
-            allowDeselect: true,
-            showSearch: true,
-            placeholderText: 'Select Game'
-          }
-        });
-      }
-
-      if (PT.DatePickers && typeof PT.DatePickers.initDateField === 'function') {
-        PT.DatePickers.initDateField('modalSessionDateInput', {
-          altInput: true,
-          altFormat: 'M j, Y',
-          altInputClass: 'form-input flatpickr-alt-input',
-          clearLabel: 'Clear'
-        });
-      }
-
       this.ensureAutoSaveListeners();
+      this.populateLocationDropdown();
+
+      // Initialize custom datetime pickers for modal inputs
+      if (window.PokerTracker && window.PokerTracker.DateTimePicker) {
+        PokerTracker.DateTimePicker.attachToInput('#modalStartTimeInput', { includeTime: true });
+        PokerTracker.DateTimePicker.attachToInput('#modalEndTimeInput', { includeTime: true });
+      }
+    },
+
+    populateLocationDropdown() {
+      const locationSelect = document.getElementById('modalLocationSelect');
+      if (!locationSelect || !PT.DataStore) return;
+
+      // Get all unique locations from existing sessions
+      const sessions = PT.DataStore.getSessions();
+      const locations = new Set();
+
+      sessions.forEach(session => {
+        if (session.location && session.location.trim()) {
+          locations.add(session.location.trim());
+        }
+      });
+
+      // Clear existing options except the first one
+      while (locationSelect.children.length > 1) {
+        locationSelect.removeChild(locationSelect.lastChild);
+      }
+
+      // Add + Location option
+      const addNewOption = document.createElement('option');
+      addNewOption.value = '+ Location';
+      addNewOption.textContent = '+ Location';
+      locationSelect.appendChild(addNewOption);
+
+      // Add existing locations in alphabetical order
+      const sortedLocations = Array.from(locations).sort();
+      sortedLocations.forEach(location => {
+        const option = document.createElement('option');
+        option.value = location;
+        option.textContent = location;
+        locationSelect.appendChild(option);
+      });
+    },
+
+    handleLocationChange() {
+      const locationSelect = document.getElementById('modalLocationSelect');
+      const locationInput = document.getElementById('modalLocationInput');
+
+      if (!locationSelect || !locationInput) return;
+
+      if (locationSelect.value === '+ Location') {
+        // Show input for new location
+        locationSelect.style.display = 'none';
+        locationInput.style.display = 'block';
+        locationInput.value = '';
+        locationInput.focus();
+      } else {
+        // Use selected location
+        locationInput.style.display = 'none';
+        locationSelect.style.display = 'block';
+
+        // Update the session with selected location
+        if (this.currentSessionId) {
+          const location = locationSelect.value || null;
+          this.handleFieldUpdates({ location });
+        }
+      }
+    },
+
+    handleLocationInputBlur() {
+      const locationSelect = document.getElementById('modalLocationSelect');
+      const locationInput = document.getElementById('modalLocationInput');
+
+      if (!locationSelect || !locationInput) return;
+
+      const newLocation = locationInput.value.trim();
+
+      if (newLocation) {
+        // Add new location to dropdown and select it
+        this.populateLocationDropdown();
+        locationSelect.value = newLocation;
+
+        // Update the session
+        if (this.currentSessionId) {
+          this.handleFieldUpdates({ location: newLocation });
+        }
+      } else {
+        // No location entered, reset to empty selection
+        locationSelect.value = '';
+
+        // Update the session to clear location
+        if (this.currentSessionId) {
+          this.handleFieldUpdates({ location: null });
+        }
+      }
+
+      // Switch back to dropdown
+      locationInput.style.display = 'none';
+      locationSelect.style.display = 'block';
     },
 
     showSessionSettingsModal(sessionId) {
@@ -174,33 +263,42 @@
       const session = PT.DataStore.getSession(this.currentSessionId);
       if (!session) return;
 
-      const nameInput = document.getElementById('modalSessionNameInput');
+      const locationSelect = document.getElementById('modalLocationSelect');
+      const locationInput = document.getElementById('modalLocationInput');
+      const smallBlindInput = document.getElementById('modalSmallBlindInput');
+      const bigBlindInput = document.getElementById('modalBigBlindInput');
       const buyInInput = document.getElementById('modalBuyInInput');
       const cashOutInput = document.getElementById('modalCashOutInput');
       const notesInput = document.getElementById('modalSessionNotes');
-      const dateInput = document.getElementById('modalSessionDateInput');
-      const durationInput = document.getElementById('modalDurationInput');
+      const startTimeInput = document.getElementById('modalStartTimeInput');
+      const endTimeInput = document.getElementById('modalEndTimeInput');
 
-      if (nameInput) nameInput.value = session.name || '';
+      // Handle location dropdown/input
+      if (locationSelect && locationInput) {
+        this.populateLocationDropdown();
+        if (session.location) {
+          locationSelect.value = session.location;
+        } else {
+          locationSelect.value = '';
+        }
+        locationInput.style.display = 'none';
+        locationSelect.style.display = 'block';
+      }
+
+      if (smallBlindInput) smallBlindInput.value = session.smallBlind ?? '';
+      if (bigBlindInput) bigBlindInput.value = session.bigBlind ?? '';
       if (buyInInput) buyInInput.value = session.buyIn || '';
       if (cashOutInput) cashOutInput.value = session.cashOut || '';
       if (notesInput) notesInput.value = session.notes || '';
 
-      if (PT.DatePickers && PT.DatePickers.setDate) {
-        const dateValue = session.sessionDate ? new Date(`${session.sessionDate}T00:00:00`) : null;
-        PT.DatePickers.setDate('modalSessionDateInput', dateValue, false);
-      } else if (dateInput) {
-        dateInput.value = session.sessionDate || '';
+      if (startTimeInput) {
+        startTimeInput.value = this.formatDateTimeForInput(session.startTime);
+        this.updateDateTimeDisplay('modalStartTimeInput', 'modalStartTimeDisplay');
       }
-
-      if (durationInput) {
-        const duration = typeof session.durationHours === 'number' && Number.isFinite(session.durationHours)
-          ? session.durationHours
-          : '';
-        durationInput.value = duration === '' ? '' : duration;
+      if (endTimeInput) {
+        endTimeInput.value = this.formatDateTimeForInput(session.endTime);
+        this.updateDateTimeDisplay('modalEndTimeInput', 'modalEndTimeDisplay');
       }
-
-      this.populateGameSelect(session.gameId || '');
 
       const endBtn = document.getElementById('modalEndSessionBtn');
       if (endBtn && PT.DataStore) {
@@ -209,40 +307,72 @@
       }
     },
 
-    populateGameSelect(selectedValue) {
-      const gameSelect = document.getElementById('modalGameSelect');
-      if (!gameSelect || !PT.DataStore) return;
-
-      const games = PT.DataStore.getAllGames();
-      const options = [{ text: 'Select Game', value: '', placeholder: true }];
-
-      games.forEach(game => {
-        options.push({
-          text: game.name,
-          value: game.id
-        });
-      });
-
-      if (PT.Dropdowns && PT.Dropdowns.setOptions) {
-        PT.Dropdowns.setOptions('modalGameSelect', options, selectedValue);
-      } else {
-        gameSelect.innerHTML = '';
-        options.forEach(option => {
-          const opt = document.createElement('option');
-          opt.value = option.value;
-          opt.textContent = option.text;
-          if (option.value === selectedValue) {
-            opt.selected = true;
-          }
-          gameSelect.appendChild(opt);
-        });
-      }
-    },
-
     parseNumericInput(value) {
       if (value === '' || value === null || typeof value === 'undefined') return 0;
       const parsed = parseFloat(value);
       return Number.isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
+    },
+
+    parseStakeInput(value) {
+      if (value === '' || value === null || typeof value === 'undefined') return null;
+      const parsed = parseFloat(value);
+      if (!Number.isFinite(parsed) || parsed <= 0) return null;
+      return Math.round(parsed * 100) / 100;
+    },
+
+    formatDateTimeForInput(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      const pad = num => String(num).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    },
+
+    formatDateTimeForDisplay(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+
+      const isMobile = window.innerWidth < 768;
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear();
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      if (hours === 0) hours = 12;
+
+      const timeStr = `${hours}:${minutes.toString().padStart(2, '0')}${ampm}`;
+
+      if (isMobile) {
+        return `${month}/${day} ${timeStr}`;
+      } else {
+        return `${month}/${day}/${year} ${timeStr}`;
+      }
+    },
+
+    updateDateTimeDisplay(inputId, displayId) {
+      const input = document.getElementById(inputId);
+      const display = document.getElementById(displayId);
+
+      if (!input || !display) return;
+
+      if (input.value) {
+        display.textContent = this.formatDateTimeForDisplay(input.value);
+        display.classList.remove('empty');
+      } else {
+        display.textContent = 'Select date & time';
+        display.classList.add('empty');
+      }
+    },
+
+    normalizeDateTimeInput(value) {
+      if (!value) return null;
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return null;
+      return date.toISOString();
     },
 
     enforceCurrencyPrecision(input) {
@@ -266,11 +396,34 @@
     ensureAutoSaveListeners() {
       if (this.autoSaveListenersBound) return;
 
+      // Add location dropdown change listener
+      const locationSelect = document.getElementById('modalLocationSelect');
+      if (locationSelect) {
+        locationSelect.addEventListener('change', () => this.handleLocationChange());
+      }
+
+      // Add location input blur listener
+      const locationInput = document.getElementById('modalLocationInput');
+      if (locationInput) {
+        locationInput.addEventListener('blur', () => this.handleLocationInputBlur());
+        locationInput.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            this.handleLocationInputBlur();
+          }
+        });
+      }
+
       const fieldConfigs = [
         {
-          id: 'modalSessionNameInput',
+          id: 'modalSmallBlindInput',
           event: 'input',
-          getUpdates: element => ({ name: element.value.trim() })
+          getUpdates: element => ({ smallBlind: this.parseStakeInput(element.value) })
+        },
+        {
+          id: 'modalBigBlindInput',
+          event: 'input',
+          getUpdates: element => ({ bigBlind: this.parseStakeInput(element.value) })
         },
         {
           id: 'modalBuyInInput',
@@ -283,27 +436,19 @@
           getUpdates: element => ({ cashOut: this.parseNumericInput(element.value) })
         },
         {
-          id: 'modalGameSelect',
-          event: 'change',
-          getUpdates: element => ({ gameId: element.value || null })
-        },
-        {
-          id: 'modalSessionDateInput',
+          id: 'modalStartTimeInput',
           event: 'change',
           getUpdates: element => {
-            const value = element.value;
-            return value ? { sessionDate: value } : { sessionDate: null };
+            this.updateDateTimeDisplay('modalStartTimeInput', 'modalStartTimeDisplay');
+            return { startTime: this.normalizeDateTimeInput(element.value) };
           }
         },
         {
-          id: 'modalDurationInput',
-          event: 'input',
+          id: 'modalEndTimeInput',
+          event: 'change',
           getUpdates: element => {
-            const value = parseFloat(element.value);
-            if (Number.isNaN(value) || value < 0) {
-              return { durationHours: null };
-            }
-            return { durationHours: Math.round(value * 100) / 100 };
+            this.updateDateTimeDisplay('modalEndTimeInput', 'modalEndTimeDisplay');
+            return { endTime: this.normalizeDateTimeInput(element.value) };
           }
         },
         {
@@ -317,7 +462,7 @@
         const element = document.getElementById(config.id);
         if (!element) return;
 
-        if (config.id === 'modalBuyInInput' || config.id === 'modalCashOutInput') {
+        if (config.id === 'modalBuyInInput' || config.id === 'modalCashOutInput' || config.id === 'modalSmallBlindInput' || config.id === 'modalBigBlindInput') {
           this.enforceCurrencyPrecision(element);
         }
 
@@ -388,21 +533,27 @@
     saveSessionSettings() {
       if (!this.currentSessionId) return;
 
+      // Get location from dropdown or input
+      const locationSelect = document.getElementById('modalLocationSelect');
+      const locationInput = document.getElementById('modalLocationInput');
+      let location = null;
+
+      if (locationSelect && locationSelect.style.display !== 'none') {
+        location = locationSelect.value && locationSelect.value !== '+ Location' ? locationSelect.value : null;
+      } else if (locationInput && locationInput.style.display !== 'none') {
+        location = locationInput.value.trim() || null;
+      }
+
       const updates = {
-        name: document.getElementById('modalSessionNameInput')?.value.trim() || '',
+        location: location,
+        smallBlind: this.parseStakeInput(document.getElementById('modalSmallBlindInput')?.value),
+        bigBlind: this.parseStakeInput(document.getElementById('modalBigBlindInput')?.value),
         buyIn: this.parseNumericInput(document.getElementById('modalBuyInInput')?.value),
         cashOut: this.parseNumericInput(document.getElementById('modalCashOutInput')?.value),
-        gameId: document.getElementById('modalGameSelect')?.value || null,
+        startTime: this.normalizeDateTimeInput(document.getElementById('modalStartTimeInput')?.value),
+        endTime: this.normalizeDateTimeInput(document.getElementById('modalEndTimeInput')?.value),
         notes: document.getElementById('modalSessionNotes')?.value || ''
       };
-
-      const sessionDateValue = document.getElementById('modalSessionDateInput')?.value;
-      const durationValue = parseFloat(document.getElementById('modalDurationInput')?.value);
-
-      updates.sessionDate = sessionDateValue || null;
-      updates.durationHours = Number.isFinite(durationValue) && durationValue >= 0
-        ? Math.round(durationValue * 100) / 100
-        : null;
 
       this.handleFieldUpdates(updates);
     },
@@ -414,63 +565,16 @@
         return;
       }
 
-      const durationInput = document.getElementById('modalDurationInput');
-      const sessionDateField = document.getElementById('modalSessionDateInput');
-      const state = PT.DataStore.appState || {};
-      const activeSession = PT.DataStore.getActiveSession();
-      const isLiveSession = activeSession && activeSession.id === this.currentSessionId;
-
-      let durationHours = null;
-
-      if (isLiveSession) {
-        let suggested = null;
-        if (state.liveSessionStart) {
-          const liveStart = new Date(state.liveSessionStart);
-          if (!Number.isNaN(liveStart.getTime())) {
-            const minutes = Math.max(0, (Date.now() - liveStart.getTime()) / (1000 * 60));
-            if (minutes > 0) {
-              suggested = Math.round((minutes / 60) * 100) / 100;
-            }
-          }
-        }
-
-        const promptDefault = suggested !== null ? suggested.toFixed(2) : '';
-        const input = prompt('Enter session duration in hours (e.g., 3.5). Leave blank to keep unset.', promptDefault);
-        if (input === null) {
-          return;
-        }
-
-        if (input.trim() !== '') {
-          const parsed = parseFloat(input);
-          if (!Number.isFinite(parsed) || parsed < 0) {
-            alert('Please enter a valid non-negative number for duration.');
-            return;
-          }
-          durationHours = Math.round(parsed * 100) / 100;
-          if (durationInput) {
-            durationInput.value = durationHours;
-          }
-        }
-      } else if (durationInput) {
-        const parsed = parseFloat(durationInput.value);
-        if (Number.isFinite(parsed) && parsed >= 0) {
-          durationHours = Math.round(parsed * 100) / 100;
-        }
+      const endTimeIso = new Date().toISOString();
+      const endTimeInput = document.getElementById('modalEndTimeInput');
+      if (endTimeInput) {
+        endTimeInput.value = this.formatDateTimeForInput(endTimeIso);
+        this.updateDateTimeDisplay('modalEndTimeInput', 'modalEndTimeDisplay');
       }
 
-      const updates = {};
-      if (typeof durationHours === 'number') {
-        updates.durationHours = durationHours;
-      }
-      if (sessionDateField && sessionDateField.value) {
-        updates.sessionDate = sessionDateField.value;
-      }
+      this.handleFieldUpdates({ endTime: endTimeIso });
 
-      if (Object.keys(updates).length > 0) {
-        this.handleFieldUpdates(updates);
-      }
-
-      PT.DataStore.endActiveSession(this.currentSessionId, { durationHours });
+      PT.DataStore.endActiveSession(this.currentSessionId, { endTime: endTimeIso });
       this.closeSessionSettingsModal();
 
       if (typeof window.updateLiveSessionNavLink === 'function') {
@@ -496,6 +600,14 @@
         if (modal && modal.style.display === 'flex') {
           SessionModal.closeSessionSettingsModal();
         }
+      }
+    });
+
+    // Handle window resize to update datetime display formatting
+    window.addEventListener('resize', () => {
+      if (SessionModal.currentSessionId) {
+        SessionModal.updateDateTimeDisplay('modalStartTimeInput', 'modalStartTimeDisplay');
+        SessionModal.updateDateTimeDisplay('modalEndTimeInput', 'modalEndTimeDisplay');
       }
     });
   }

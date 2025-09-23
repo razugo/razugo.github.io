@@ -1,6 +1,23 @@
 // Shared App Utilities
 window.PokerTracker = window.PokerTracker || {};
 
+// Disable scroll wheel on number inputs globally
+document.addEventListener('DOMContentLoaded', function() {
+  // Prevent scroll wheel from changing number input values
+  document.addEventListener('wheel', function(e) {
+    if (e.target.type === 'number' && document.activeElement === e.target) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Alternative method: blur input when scrolling starts
+  document.addEventListener('wheel', function(e) {
+    if (e.target.type === 'number') {
+      e.target.blur();
+    }
+  });
+});
+
 PokerTracker.Utils = {
   // Format currency
   formatCurrency: function(amount) {
@@ -17,6 +34,56 @@ PokerTracker.Utils = {
     return `${hours}h ${mins}m`;
   },
 
+  formatDateTime: function(value, formatterOptions) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+    const options = Object.assign({
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }, formatterOptions || {});
+    return new Intl.DateTimeFormat('en-US', options).format(date);
+  },
+
+  // Responsive datetime formatting based on viewport
+  formatDateTimeResponsive: function(value) {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '-';
+
+    // Get current viewport width
+    const width = window.innerWidth;
+
+    if (width >= 768) {
+      // Wide: Sep 23, 2025 8:35AM
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(date);
+    } else if (width >= 480) {
+      // Medium: Sep 23 8:35AM
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(date);
+    } else {
+      // Narrow: 9/23 8:35a
+      const timeStr = new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: '2-digit'
+      }).format(date).toLowerCase().replace(' ', '');
+
+      return `${date.getMonth() + 1}/${date.getDate()} ${timeStr}`;
+    }
+  },
+
   // Session Management
   showNewSessionModal: function() {
     const startLive = confirm('Start a live session? (Cancel for regular session)');
@@ -26,11 +93,11 @@ PokerTracker.Utils = {
 
     let newSession;
     if (startLive) {
-      // Create live session with no game or buy-in
-      newSession = PokerTracker.DataStore.createLiveSession(null, 0);
+      // Create live session with default buy-in
+      newSession = PokerTracker.DataStore.createLiveSession(0);
     } else {
-      // Create regular session with no game or buy-in
-      newSession = PokerTracker.DataStore.createSession(null, 0);
+      // Create regular session with default buy-in
+      newSession = PokerTracker.DataStore.createSession(0);
     }
 
     // Update session name if provided
@@ -48,50 +115,6 @@ PokerTracker.Utils = {
     // Redirect to the session page
     const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '/projects/poker_tracker/session/';
     window.location.href = `${sessionRoute}?session_id=${newSession.id}`;
-  },
-
-  showNewGameModal: function() {
-    const gameName = prompt('Enter game name (e.g., "Aria 1/3"):');
-    if (!gameName || gameName.trim() === '') return;
-
-    const location = prompt('Enter location (e.g., "Aria Casino"):');
-    if (location === null) return;
-
-    const smallBlindInput = prompt('Enter small blind amount (optional):');
-    if (smallBlindInput === null) return;
-    const smallBlindAmount = smallBlindInput.trim() === '' ? null : parseFloat(smallBlindInput);
-    if (smallBlindInput.trim() !== '' && (isNaN(smallBlindAmount) || smallBlindAmount <= 0)) {
-      console.error('Invalid small blind amount');
-      return;
-    }
-
-    const bigBlindInput = prompt('Enter big blind amount (optional):');
-    if (bigBlindInput === null) return;
-    const bigBlindAmount = bigBlindInput.trim() === '' ? null : parseFloat(bigBlindInput);
-    if (bigBlindInput.trim() !== '' && (isNaN(bigBlindAmount) || bigBlindAmount <= 0)) {
-      console.error('Invalid big blind amount');
-      return;
-    }
-
-    if (smallBlindAmount !== null && bigBlindAmount !== null && bigBlindAmount <= smallBlindAmount) {
-      console.error('Big blind must be greater than small blind when both are provided');
-      return;
-    }
-
-    // Create the game
-    PokerTracker.DataStore.createGame(
-      gameName.trim(),
-      location.trim() || '-',
-      smallBlindAmount,
-      bigBlindAmount
-    );
-
-    console.error('Game created successfully!');
-
-    // Refresh the page if we're on games page
-    if (window.location.pathname.includes('games')) {
-      window.location.reload();
-    }
   }
 };
 

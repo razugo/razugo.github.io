@@ -7,7 +7,6 @@
     { id: 'dashboard', path: '/' },
     { id: 'bankroll', path: '/bankroll/' },
     { id: 'sessions', path: '/sessions/' },
-    { id: 'games', path: '/games/' },
     { id: 'tools', path: '/tools/' }
   ];
 
