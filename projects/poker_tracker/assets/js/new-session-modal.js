@@ -232,6 +232,42 @@
     }
   }
 
+  function handleLocationInputBlur() {
+    const { locationSelect, locationInput } = getElements();
+
+    if (!locationSelect || !locationInput) return;
+
+    // Longer delay for iOS to handle virtual keyboard and focus properly
+    setTimeout(() => {
+      // Check if the input is still focused (user might have tapped back into it)
+      if (document.activeElement === locationInput) return;
+
+      // Additional check for iOS - make sure we're not in the middle of text input
+      if (locationInput.value !== locationInput.defaultValue && document.activeElement !== locationInput) {
+        // User is actively typing, don't close yet
+        return;
+      }
+
+      const newLocation = locationInput.value.trim();
+
+      if (newLocation) {
+        // Add new location to dropdown and select it
+        populateLocationDropdown();
+        PT.Dropdowns.setValue('newSessionLocationSelect', newLocation);
+      } else {
+        // No location entered, reset to empty selection
+        PT.Dropdowns.setValue('newSessionLocationSelect', '');
+      }
+
+      // Switch back to dropdown
+      locationInput.style.display = 'none';
+      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+      if (slimInstance && slimInstance.container) {
+        slimInstance.container.style.display = 'block';
+      }
+    }, 300);
+  }
+
   function setupLocationHandlers() {
     const { locationSelect, locationInput } = getElements();
 
@@ -241,6 +277,8 @@
     }
 
     if (locationInput && !locationInput.dataset.bound) {
+      // Use focusout instead of blur for better iOS compatibility
+      locationInput.addEventListener('focusout', handleLocationInputBlur);
 
       // Add input event to track active typing
       locationInput.addEventListener('input', () => {
@@ -257,6 +295,11 @@
           locationInput.value = '';
           locationInput.blur();
         }
+      });
+
+      // iOS-specific touch event to ensure input can receive focus
+      locationInput.addEventListener('touchstart', (event) => {
+        event.stopPropagation();
       });
 
       locationInput.dataset.bound = 'true';
@@ -356,9 +399,12 @@
 
     // Reset location dropdown/input
     if (locationSelect && locationInput) {
-      locationSelect.value = '';
+      PT.Dropdowns.setValue('newSessionLocationSelect', '');
       locationInput.value = '';
-      locationSelect.style.display = 'block';
+      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+      if (slimInstance && slimInstance.container) {
+        slimInstance.container.style.display = 'block';
+      }
       locationInput.style.display = 'none';
     }
 
@@ -492,8 +538,11 @@
       const { locationSelect, locationInput } = getElements();
       let location = '';
 
-      if (locationSelect && locationSelect.style.display !== 'none') {
-        location = locationSelect.value && locationSelect.value !== '+ Location' ? locationSelect.value : '';
+      // Check SlimSelect dropdown first
+      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+      if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
+        const selectedValue = locationSelect.value;
+        location = selectedValue && selectedValue !== '+ Location' ? selectedValue : '';
       } else if (locationInput && locationInput.style.display !== 'none') {
         location = locationInput.value.trim();
       }

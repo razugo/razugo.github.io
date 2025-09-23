@@ -141,8 +141,7 @@
     },
 
     populateLocationDropdown() {
-      const locationSelect = document.getElementById('modalLocationSelect');
-      if (!locationSelect || !PT.DataStore) return;
+      if (!PT.DataStore || !PT.Dropdowns) return;
 
       // Get all unique locations from existing sessions
       const sessions = PT.DataStore.getSessions();
@@ -154,25 +153,29 @@
         }
       });
 
-      // Clear existing options except the first one
-      while (locationSelect.children.length > 1) {
-        locationSelect.removeChild(locationSelect.lastChild);
-      }
-
-      // Add + Location option
-      const addNewOption = document.createElement('option');
-      addNewOption.value = '+ Location';
-      addNewOption.textContent = '+ Location';
-      locationSelect.appendChild(addNewOption);
+      // Create options array for SlimSelect
+      const options = [
+        { value: '', text: 'Select location...', placeholder: true },
+        { value: '+ Location', text: '+ Location' }
+      ];
 
       // Add existing locations in alphabetical order
       const sortedLocations = Array.from(locations).sort();
       sortedLocations.forEach(location => {
-        const option = document.createElement('option');
-        option.value = location;
-        option.textContent = location;
-        locationSelect.appendChild(option);
+        options.push({ value: location, text: location });
       });
+
+      // Initialize or update SlimSelect
+      PT.Dropdowns.setOptions('modalLocationSelect', options);
+      if (!PT.Dropdowns.get('modalLocationSelect')) {
+        PT.Dropdowns.init('modalLocationSelect', {
+          placeholder: 'Select location...',
+          settings: {
+            allowDeselect: true,
+            showSearch: false
+          }
+        });
+      }
     },
 
     handleLocationChange() {
@@ -183,7 +186,10 @@
 
       if (locationSelect.value === '+ Location') {
         // Show input for new location
-        locationSelect.style.display = 'none';
+        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+        if (slimInstance && slimInstance.container) {
+          slimInstance.container.style.display = 'none';
+        }
         locationInput.style.display = 'block';
         locationInput.value = '';
 
@@ -200,7 +206,10 @@
       } else {
         // Use selected location
         locationInput.style.display = 'none';
-        locationSelect.style.display = 'block';
+        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+        if (slimInstance && slimInstance.container) {
+          slimInstance.container.style.display = 'block';
+        }
 
         // Update the session with selected location
         if (this.currentSessionId) {
@@ -232,7 +241,7 @@
         if (newLocation) {
           // Add new location to dropdown and select it
           this.populateLocationDropdown();
-          locationSelect.value = newLocation;
+          PT.Dropdowns.setValue('modalLocationSelect', newLocation);
 
           // Update the session
           if (this.currentSessionId) {
@@ -240,7 +249,7 @@
           }
         } else {
           // No location entered, reset to empty selection
-          locationSelect.value = '';
+          PT.Dropdowns.setValue('modalLocationSelect', '');
 
           // Update the session to clear location
           if (this.currentSessionId) {
@@ -250,7 +259,10 @@
 
         // Switch back to dropdown
         locationInput.style.display = 'none';
-        locationSelect.style.display = 'block';
+        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+        if (slimInstance && slimInstance.container) {
+          slimInstance.container.style.display = 'block';
+        }
       }, 300);
     },
 
@@ -299,12 +311,15 @@
       if (locationSelect && locationInput) {
         this.populateLocationDropdown();
         if (session.location) {
-          locationSelect.value = session.location;
+          PT.Dropdowns.setValue('modalLocationSelect', session.location);
         } else {
-          locationSelect.value = '';
+          PT.Dropdowns.setValue('modalLocationSelect', '');
         }
         locationInput.style.display = 'none';
-        locationSelect.style.display = 'block';
+        const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+        if (slimInstance && slimInstance.container) {
+          slimInstance.container.style.display = 'block';
+        }
       }
 
       if (smallBlindInput) smallBlindInput.value = session.smallBlind ?? '';
@@ -577,8 +592,11 @@
       const locationInput = document.getElementById('modalLocationInput');
       let location = null;
 
-      if (locationSelect && locationSelect.style.display !== 'none') {
-        location = locationSelect.value && locationSelect.value !== '+ Location' ? locationSelect.value : null;
+      // Check SlimSelect dropdown first
+      const slimInstance = PT.Dropdowns.get('modalLocationSelect');
+      if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
+        const selectedValue = locationSelect.value;
+        location = selectedValue && selectedValue !== '+ Location' ? selectedValue : null;
       } else if (locationInput && locationInput.style.display !== 'none') {
         location = locationInput.value.trim() || null;
       }
