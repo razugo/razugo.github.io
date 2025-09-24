@@ -89,8 +89,7 @@ PokerTracker.Utils = {
   showNewSessionModal: function() {
     const startLive = confirm('Start a live session? (Cancel for regular session)');
 
-    const sessionName = prompt('Enter session name (optional):');
-    if (sessionName === null) return; // User cancelled
+    // Session names removed
 
     let newSession;
     if (startLive) {
@@ -101,10 +100,7 @@ PokerTracker.Utils = {
       newSession = PokerTracker.DataStore.createSession(0);
     }
 
-    // Update session name if provided
-    if (sessionName && sessionName.trim() !== '') {
-      PokerTracker.DataStore.updateSession(newSession.id, { name: sessionName.trim() });
-    }
+    // Session name functionality removed
 
     console.error(`${startLive ? 'Live ' : ''}Session created successfully!`);
 

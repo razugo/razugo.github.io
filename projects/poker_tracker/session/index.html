@@ -36,7 +36,7 @@ nav_id: session
     <div class="live-stats-content">
       <div class="stat-group stat-session">
         <span class="stat-label">Session</span>
-        <span class="stat-value session-name" id="sessionNameStat">Current Session</span>
+        <span class="stat-value session-name" id="sessionNameStat">Session Details</span>
       </div>
       <div class="stat-group">
         <span class="stat-label">VPIP</span>
@@ -227,7 +227,7 @@ nav_id: session
 
     // Update live stats bar
     const sessionDate = PokerTracker.DataStore.getSessionDate(session) || 'Current Session';
-    document.getElementById('sessionNameStat').textContent = sessionDate;
+    document.getElementById('sessionNameStat').textContent = sessionDate || 'Session Details';
 
     document.getElementById('vpipStat').textContent = `${vpipPercent}% (${sessionData.totalPlayed}/${sessionData.total})`;
 
@@ -851,45 +851,7 @@ nav_id: session
     }
   }
 
-  function editSessionName() {
-    const titleElement = document.getElementById('sessionTitle');
-    const inputElement = document.getElementById('sessionNameInput');
-
-    inputElement.value = titleElement.textContent.replace('Session: ', '');
-    titleElement.style.display = 'none';
-    inputElement.style.display = 'block';
-    inputElement.focus();
-    inputElement.select();
-  }
-
-  function saveSessionName() {
-    const titleElement = document.getElementById('sessionTitle');
-    const inputElement = document.getElementById('sessionNameInput');
-
-    const newName = inputElement.value.trim() || 'Session Details';
-    titleElement.textContent = `Session: ${newName}`;
-
-    titleElement.style.display = 'block';
-    inputElement.style.display = 'none';
-
-    // Save to data store
-    if (currentSessionId) {
-      PokerTracker.DataStore.updateSession(currentSessionId, { name: newName });
-    }
-  }
-
-  function handleSessionNameKeypress(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      saveSessionName();
-    } else if (event.key === 'Escape') {
-      const titleElement = document.getElementById('sessionTitle');
-      const inputElement = document.getElementById('sessionNameInput');
-
-      titleElement.style.display = 'block';
-      inputElement.style.display = 'none';
-    }
-  }
+  // Session name functionality removed
 
 </script>
 

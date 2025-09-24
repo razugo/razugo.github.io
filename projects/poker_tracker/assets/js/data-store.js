@@ -1,6 +1,245 @@
 // Shared Data Store
 window.PokerTracker = window.PokerTracker || {};
 
+// PokerSession Class
+class PokerSession {
+  constructor(data = {}) {
+    // Core Identifiers
+    this.id = data.id || this._generateId();
+
+    // Financial Data
+    this.buyIn = this._validateNumber(data.buyIn, 0);
+    this.cashOut = this._validateNumber(data.cashOut, this.buyIn);
+
+    // Time & Date
+    this.sessionDate = this._validateDate(data.sessionDate);
+    this.startTime = this._validateDateTime(data.startTime);
+    this.endTime = this._validateDateTime(data.endTime);
+
+    // Location & Stakes
+    this.location = this._validateString(data.location);
+    this.smallBlind = this._validateStake(data.smallBlind);
+    this.bigBlind = this._validateStake(data.bigBlind);
+
+    // Hand Tracking Data
+    this.counts = this._validateObject(data.counts, {});
+    this.playedCounts = this._validateObject(data.playedCounts, {});
+    this.handHistory = this._validateArray(data.handHistory, []);
+    this.total = this._validateNumber(data.total, 0);
+    this.totalPlayed = this._validateNumber(data.totalPlayed, 0);
+    this.vpip = this._validateNumber(data.vpip, 0);
+
+    // Additional Data
+    this.notes = this._validateString(data.notes, '');
+
+    // Auto-compute sessionDate from startTime if missing
+    if (!this.sessionDate && this.startTime) {
+      this.sessionDate = new Date(this.startTime).toISOString().split('T')[0];
+    }
+  }
+
+  // Computed Properties (getters)
+  get profit() {
+    return (this.cashOut || 0) - (this.buyIn || 0);
+  }
+
+  get duration() {
+    if (!this.startTime || !this.endTime) return null;
+    const start = new Date(this.startTime);
+    const end = new Date(this.endTime);
+    return (end.getTime() - start.getTime()) / (1000 * 60 * 60); // hours
+  }
+
+  get hourlyRate() {
+    const duration = this.duration;
+    if (!duration || duration <= 0) return 0;
+    return this.profit / duration;
+  }
+
+  get vpipPercentage() {
+    if (this.total === 0) return 0;
+    return Math.round((this.totalPlayed / this.total) * 100);
+  }
+
+  get isLive() {
+    return !!this.startTime && !this.endTime;
+  }
+
+  get isCompleted() {
+    return !!this.endTime;
+  }
+
+  get bigBlindsWon() {
+    if (!this.bigBlind || this.bigBlind === 0) return 0;
+    return Math.round(this.profit / this.bigBlind);
+  }
+
+  get stake() {
+    if (!this.smallBlind || !this.bigBlind) return null;
+    return `${this.smallBlind}/${this.bigBlind}`;
+  }
+
+  // Validation Methods (private)
+  _generateId() {
+    return 'session-' + Date.now();
+  }
+
+  _validateNumber(value, defaultValue = 0) {
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    return Number.isFinite(num) ? num : defaultValue;
+  }
+
+  _validateStake(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    if (!Number.isFinite(num) || num <= 0) return null;
+    return Math.round(num * 100) / 100;
+  }
+
+  _validateString(value, defaultValue = null) {
+    if (value === null || value === undefined) return defaultValue;
+    const str = String(value).trim();
+    return str === '' ? defaultValue : str;
+  }
+
+  _validateDate(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString().split('T')[0];
+  }
+
+  _validateDateTime(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toISOString();
+  }
+
+  _validateObject(value, defaultValue = {}) {
+    return (value && typeof value === 'object' && !Array.isArray(value)) ? value : defaultValue;
+  }
+
+  _validateArray(value, defaultValue = []) {
+    return Array.isArray(value) ? value : defaultValue;
+  }
+
+  // Update Methods
+  updateFinancials({ buyIn, cashOut }) {
+    if (buyIn !== undefined) this.buyIn = this._validateNumber(buyIn, 0);
+    if (cashOut !== undefined) this.cashOut = this._validateNumber(cashOut, this.buyIn);
+    return this;
+  }
+
+  updateLocation(location) {
+    this.location = this._validateString(location);
+    return this;
+  }
+
+  updateStakes(smallBlind, bigBlind) {
+    if (smallBlind !== undefined) this.smallBlind = this._validateStake(smallBlind);
+    if (bigBlind !== undefined) this.bigBlind = this._validateStake(bigBlind);
+    return this;
+  }
+
+  updateTiming({ startTime, endTime, sessionDate }) {
+    if (startTime !== undefined) this.startTime = this._validateDateTime(startTime);
+    if (endTime !== undefined) this.endTime = this._validateDateTime(endTime);
+    if (sessionDate !== undefined) this.sessionDate = this._validateDate(sessionDate);
+
+    // Auto-update sessionDate if startTime changes
+    if (startTime && !this.sessionDate) {
+      this.sessionDate = new Date(this.startTime).toISOString().split('T')[0];
+    }
+    return this;
+  }
+
+  addHand(handData) {
+    this.handHistory.push(handData);
+    this.total += 1;
+
+    if (handData.played) {
+      this.totalPlayed += 1;
+      // Update VPIP
+      this.vpip = this.total > 0 ? Math.round((this.totalPlayed / this.total) * 100) : 0;
+    }
+
+    // Update counts
+    const hand = handData.hand;
+    if (hand) {
+      this.counts[hand] = (this.counts[hand] || 0) + 1;
+      if (handData.played) {
+        this.playedCounts[hand] = (this.playedCounts[hand] || 0) + 1;
+      }
+    }
+
+    return this;
+  }
+
+  endSession(cashOut = null) {
+    this.endTime = new Date().toISOString();
+    if (cashOut !== null) {
+      this.cashOut = this._validateNumber(cashOut, this.buyIn);
+    }
+    return this;
+  }
+
+  updateNotes(notes) {
+    this.notes = this._validateString(notes, '');
+    return this;
+  }
+
+  // Serialization
+  toJSON() {
+    return {
+      id: this.id,
+      buyIn: this.buyIn,
+      cashOut: this.cashOut,
+      sessionDate: this.sessionDate,
+      startTime: this.startTime,
+      endTime: this.endTime,
+      location: this.location,
+      smallBlind: this.smallBlind,
+      bigBlind: this.bigBlind,
+      counts: this.counts,
+      playedCounts: this.playedCounts,
+      handHistory: this.handHistory,
+      total: this.total,
+      totalPlayed: this.totalPlayed,
+      vpip: this.vpip,
+      notes: this.notes
+    };
+  }
+
+  // Static Methods
+  static fromJSON(data) {
+    return new PokerSession(data);
+  }
+
+  static validate(data) {
+    return data && typeof data === 'object' && typeof data.id === 'string';
+  }
+
+  static createNew(buyIn = 0) {
+    return new PokerSession({ buyIn, cashOut: buyIn });
+  }
+
+  static createLive(buyIn = 0) {
+    const now = new Date().toISOString();
+    const today = now.split('T')[0];
+
+    return new PokerSession({
+      buyIn,
+      cashOut: buyIn,
+      startTime: now,
+      sessionDate: today
+    });
+  }
+}
+
+// Make PokerSession available in the PokerTracker namespace
+PokerTracker.PokerSession = PokerSession;
+
 PokerTracker.DataStore = {
   // Initialize sessions from localStorage (merged with session data)
   get sessions() {
@@ -11,11 +250,19 @@ PokerTracker.DataStore = {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        const normalized = this.normalizeSessionsList(parsed);
-        if (normalized.changed) {
-          localStorage.setItem('poker-tracker-sessions', JSON.stringify(normalized.sessions));
-        }
-        return normalized.sessions;
+        // Convert to Session instances
+        const sessions = parsed.map(data => {
+          try {
+            return PokerSession.validate(data) ? PokerSession.fromJSON(data) : new PokerSession(data);
+          } catch (err) {
+            console.warn('Failed to create session from data:', data, err);
+            return new PokerSession(data);
+          }
+        });
+
+        // Save back to storage if any sessions were created from invalid data
+        this.sessions = sessions;
+        return sessions;
       } catch (err) {
         console.warn('Failed to parse sessions from storage', err);
         return [];
@@ -25,187 +272,18 @@ PokerTracker.DataStore = {
   },
 
   set sessions(value) {
-    const normalized = this.normalizeSessionsList(Array.isArray(value) ? value : []);
-    localStorage.setItem('poker-tracker-sessions', JSON.stringify(normalized.sessions));
-  },
-
-  normalizeSession: function(session) {
-    if (!session || typeof session !== 'object') {
-      return { session, changed: false };
-    }
-
-    const updated = { ...session };
-    let changed = false;
-
-    const normalizeLocation = value => {
-      if (value === null || typeof value === 'undefined') return null;
-      const stringValue = String(value).trim();
-      return stringValue === '' ? null : stringValue;
-    };
-
-    const normalizeStake = value => {
-      if (value === null || typeof value === 'undefined' || value === '') return null;
-      const numeric = typeof value === 'number' ? value : parseFloat(value);
-      if (!Number.isFinite(numeric) || numeric <= 0) return null;
-      return Math.round(numeric * 100) / 100;
-    };
-
-    const normalizeDateTime = value => {
-      if (value === null || typeof value === 'undefined' || value === '') return null;
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return null;
-      return date.toISOString();
-    };
-
-    const coerceDate = value => {
-      if (!value) return null;
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return null;
-      return date.toISOString().split('T')[0];
-    };
-
-    const normalizedStart = normalizeDateTime(updated.startTime);
-    if (normalizedStart !== updated.startTime) {
-      updated.startTime = normalizedStart;
-      changed = true;
-    }
-    if (typeof updated.startTime === 'undefined') {
-      updated.startTime = null;
-      changed = true;
-    }
-
-    const normalizedEnd = normalizeDateTime(updated.endTime);
-    if (normalizedEnd !== updated.endTime) {
-      updated.endTime = normalizedEnd;
-      changed = true;
-    }
-    if (typeof updated.endTime === 'undefined') {
-      updated.endTime = null;
-      changed = true;
-    }
-
-    if (typeof updated.sessionDate === 'string') {
-      const trimmed = updated.sessionDate.trim();
-      if (trimmed !== updated.sessionDate) {
-        updated.sessionDate = trimmed || null;
-        changed = true;
+    const sessionsArray = Array.isArray(value) ? value : [];
+    // Convert Session instances to plain objects for storage
+    const plainObjects = sessionsArray.map(session => {
+      if (session instanceof PokerSession) {
+        return session.toJSON();
       }
-    }
-
-    if (updated.startTime) {
-      const startDate = updated.startTime.split('T')[0];
-      if (updated.sessionDate !== startDate) {
-        updated.sessionDate = startDate;
-        changed = true;
-      }
-    } else {
-      if (!updated.sessionDate) {
-        const derivedDate = coerceDate(updated.endTime) || (typeof updated.date === 'string' ? updated.date : null);
-        if (derivedDate) {
-          updated.sessionDate = derivedDate;
-          changed = true;
-        }
-      }
-
-      if (typeof updated.sessionDate === 'undefined') {
-        updated.sessionDate = null;
-        changed = true;
-      }
-    }
-
-    const coerceDuration = value => {
-      if (value === null || typeof value === 'undefined') return null;
-      const numeric = typeof value === 'number' ? value : parseFloat(value);
-      if (!Number.isFinite(numeric) || numeric < 0) return null;
-      return Math.round(numeric * 100) / 100;
-    };
-
-    const hasDuration = typeof updated.durationHours === 'number' && Number.isFinite(updated.durationHours);
-    if (!hasDuration) {
-      let minutes = null;
-      if (updated.startTime && updated.endTime) {
-        const start = new Date(updated.startTime);
-        const end = new Date(updated.endTime);
-        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-          minutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
-        }
-      }
-
-      if (minutes === null && updated.startTime && !updated.endTime) {
-        const start = new Date(updated.startTime);
-        if (!Number.isNaN(start.getTime())) {
-          minutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
-        }
-      }
-
-      if (minutes !== null) {
-        const hours = Math.round((minutes / 60) * 100) / 100;
-        updated.durationHours = hours;
-        changed = true;
-      }
-    } else {
-      const normalizedDuration = coerceDuration(updated.durationHours);
-      if (normalizedDuration !== updated.durationHours) {
-        updated.durationHours = normalizedDuration;
-        changed = true;
-      }
-    }
-
-    if (!hasDuration && typeof updated.durationHours === 'undefined') {
-      updated.durationHours = null;
-      changed = true;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(updated, 'location')) {
-      const normalizedLocation = normalizeLocation(updated.location);
-      if (normalizedLocation !== updated.location) {
-        updated.location = normalizedLocation;
-        changed = true;
-      }
-    } else {
-      updated.location = null;
-      changed = true;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(updated, 'smallBlind')) {
-      const normalizedSmall = normalizeStake(updated.smallBlind);
-      if (normalizedSmall !== updated.smallBlind) {
-        updated.smallBlind = normalizedSmall;
-        changed = true;
-      }
-    } else {
-      updated.smallBlind = null;
-      changed = true;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(updated, 'bigBlind')) {
-      const normalizedBig = normalizeStake(updated.bigBlind);
-      if (normalizedBig !== updated.bigBlind) {
-        updated.bigBlind = normalizedBig;
-        changed = true;
-      }
-    } else {
-      updated.bigBlind = null;
-      changed = true;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(updated, 'gameId')) {
-      delete updated.gameId;
-      changed = true;
-    }
-
-    return { session: updated, changed };
-  },
-
-  normalizeSessionsList: function(list) {
-    let changed = false;
-    const normalized = (Array.isArray(list) ? list : []).map(item => {
-      const result = this.normalizeSession(item);
-      if (result.changed) changed = true;
-      return result.session;
+      return session;
     });
-    return { sessions: normalized, changed };
+    localStorage.setItem('poker-tracker-sessions', JSON.stringify(plainObjects));
   },
+
+  // Old normalization methods removed - now handled by PokerSession class
 
   // App state (including live session ID)
   get appState() {
@@ -254,58 +332,40 @@ PokerTracker.DataStore = {
     let totalProfit = 0;
     let totalHands = 0;
     let totalVpip = 0;
-    let totalMinutes = 0;
+    let totalHours = 0;
     let winningSessions = 0;
     let validVpipSessions = 0;
     let validTimeSessions = 0;
 
     sessions.forEach(session => {
-      // Calculate profit
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
-      totalProfit += profit;
+      // Use PokerSession computed properties
+      totalProfit += session.profit;
 
-      if (profit > 0) winningSessions++;
+      if (session.profit > 0) winningSessions++;
 
-      // Get session data for hands and VPIP calculation
-      const sessionData = this.getSessionData(session.id);
-      totalHands += sessionData.total;
+      // Use session hand tracking data
+      totalHands += session.total || 0;
 
-      if (sessionData.total > 0) {
-        totalVpip += sessionData.vpip;
+      if ((session.total || 0) > 0) {
+        totalVpip += session.vpip || 0;
         validVpipSessions++;
       }
 
-      // Calculate duration from stored duration or fallback estimates
-      const durationHours = typeof session.durationHours === 'number' && Number.isFinite(session.durationHours)
-        ? Math.max(0, session.durationHours)
-        : null;
-
-      if (durationHours !== null) {
-        const minutes = durationHours * 60;
-        totalMinutes += minutes;
-        if (minutes > 0) {
-          validTimeSessions++;
-        }
-      } else if (session.startTime && session.endTime) {
-        const start = new Date(session.startTime);
-        const end = new Date(session.endTime);
-        if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
-          const minutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
-          if (minutes > 0) {
-            totalMinutes += minutes;
-            validTimeSessions++;
-          }
-        }
-      } else if (sessionData.total > 0) {
+      // Use PokerSession duration computed property
+      const sessionHours = session.duration;
+      if (sessionHours !== null && sessionHours > 0) {
+        totalHours += sessionHours;
+        validTimeSessions++;
+      } else if ((session.total || 0) > 0) {
         // Estimate 2 minutes per hand if no time data
-        totalMinutes += sessionData.total * 2;
+        totalHours += (session.total * 2) / 60;
         validTimeSessions++;
       }
     });
 
     const winRate = ((winningSessions / totalSessions) * 100).toFixed(1);
     const avgVpip = validVpipSessions > 0 ? (totalVpip / validVpipSessions).toFixed(1) : '0.0';
-    const hourlyRate = totalMinutes > 0 ? (totalProfit / (totalMinutes / 60)).toFixed(2) : '0.00';
+    const hourlyRate = totalHours > 0 ? (totalProfit / totalHours).toFixed(2) : '0.00';
 
     return {
       totalProfit,
@@ -323,27 +383,7 @@ PokerTracker.DataStore = {
   },
 
   createSession: function(buyIn = 0) {
-    const sessionId = 'session-' + Date.now();
-    const newSession = {
-      id: sessionId,
-      buyIn: buyIn,
-      cashOut: buyIn,
-      sessionDate: null,
-      durationHours: null,
-      startTime: null,
-      endTime: null,
-      location: null,
-      smallBlind: null,
-      bigBlind: null,
-      // Session data (merged)
-      counts: {},
-      playedCounts: {},
-      handHistory: [],
-      total: 0,
-      totalPlayed: 0,
-      vpip: 0,
-      notes: ''
-    };
+    const newSession = PokerSession.createNew(buyIn);
 
     const sessions = this.sessions;
     sessions.push(newSession);
@@ -359,81 +399,55 @@ PokerTracker.DataStore = {
     const sessions = this.sessions;
     const sessionIndex = sessions.findIndex(s => s.id === sessionId);
     if (sessionIndex !== -1) {
-      const current = sessions[sessionIndex];
-      const nextUpdates = { ...updates };
+      let session = sessions[sessionIndex];
 
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'sessionDate')) {
-        const rawValue = nextUpdates.sessionDate;
-        const value = typeof rawValue === 'string' ? rawValue.trim() : rawValue;
-        if (!value) {
-          nextUpdates.sessionDate = null;
-        } else {
-          const parsed = new Date(value);
-          nextUpdates.sessionDate = Number.isNaN(parsed.getTime())
-            ? (typeof value === 'string' ? value : current.sessionDate)
-            : parsed.toISOString().split('T')[0];
+      // If it's not a Session instance, convert it
+      if (!(session instanceof PokerSession)) {
+        session = new PokerSession(session);
+        sessions[sessionIndex] = session;
+      }
+
+      // Apply updates using Session methods for validation
+      if (updates.buyIn !== undefined || updates.cashOut !== undefined) {
+        session.updateFinancials(updates);
+      }
+
+      if (updates.location !== undefined) {
+        session.updateLocation(updates.location);
+      }
+
+      if (updates.smallBlind !== undefined || updates.bigBlind !== undefined) {
+        session.updateStakes(updates.smallBlind, updates.bigBlind);
+      }
+
+      if (updates.startTime !== undefined || updates.endTime !== undefined || updates.sessionDate !== undefined) {
+        session.updateTiming(updates);
+      }
+
+      if (updates.notes !== undefined) {
+        session.updateNotes(updates.notes);
+      }
+
+      // Handle direct property updates for any remaining fields
+      Object.keys(updates).forEach(key => {
+        if (!['buyIn', 'cashOut', 'location', 'smallBlind', 'bigBlind', 'startTime', 'endTime', 'sessionDate', 'notes'].includes(key)) {
+          session[key] = updates[key];
         }
-      }
+      });
 
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'durationHours')) {
-        const numeric = typeof nextUpdates.durationHours === 'number'
-          ? nextUpdates.durationHours
-          : parseFloat(nextUpdates.durationHours);
-        nextUpdates.durationHours = Number.isFinite(numeric) && numeric >= 0
-          ? Math.round(numeric * 100) / 100
-          : null;
-      }
-
-      const normalizeDateTimeValue = value => {
-        if (value === null || typeof value === 'undefined' || value === '') return null;
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return null;
-        return date.toISOString();
-      };
-
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'startTime')) {
-        nextUpdates.startTime = normalizeDateTimeValue(nextUpdates.startTime);
-      }
-
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'endTime')) {
-        nextUpdates.endTime = normalizeDateTimeValue(nextUpdates.endTime);
-      }
-
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'location')) {
-        const trimmed = typeof nextUpdates.location === 'string' ? nextUpdates.location.trim() : nextUpdates.location;
-        nextUpdates.location = trimmed === '' ? null : trimmed;
-      }
-
-      const normalizeStakeUpdate = value => {
-        if (value === null || typeof value === 'undefined' || value === '') return null;
-        const numeric = typeof value === 'number' ? value : parseFloat(value);
-        if (!Number.isFinite(numeric) || numeric <= 0) return null;
-        return Math.round(numeric * 100) / 100;
-      };
-
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'smallBlind')) {
-        nextUpdates.smallBlind = normalizeStakeUpdate(nextUpdates.smallBlind);
-      }
-
-      if (Object.prototype.hasOwnProperty.call(nextUpdates, 'bigBlind')) {
-        nextUpdates.bigBlind = normalizeStakeUpdate(nextUpdates.bigBlind);
-      }
-
-      const merged = { ...current, ...nextUpdates };
-      const normalized = this.normalizeSession(merged);
-      sessions[sessionIndex] = normalized.session;
       this.sessions = sessions;
 
+      // Update live session state if needed
       const state = this.appState;
       if (state.liveSessionId === sessionId) {
-        if (normalized.session.endTime) {
+        if (session.endTime) {
           state.liveSessionId = null;
           state.liveSessionStart = null;
           this.appState = state;
           this.notifyLiveSessionChange(null);
-        } else if (normalized.session.startTime) {
-          if (state.liveSessionStart !== normalized.session.startTime) {
-            state.liveSessionStart = normalized.session.startTime;
+        } else if (session.startTime) {
+          if (state.liveSessionStart !== session.startTime) {
+            state.liveSessionStart = session.startTime;
             this.appState = state;
           }
         }
@@ -442,7 +456,7 @@ PokerTracker.DataStore = {
       // Notify all pages that session data has changed
       this.notifySessionDataChange(sessionId);
 
-      return normalized.session;
+      return session;
     }
     return null;
   },
@@ -522,30 +536,7 @@ PokerTracker.DataStore = {
     // End any existing live session first
     this.endActiveSession();
 
-    const sessionId = 'session-' + Date.now();
-    const today = new Date().toISOString().split('T')[0];
-    const startTimestamp = new Date().toISOString();
-
-    const newSession = {
-      id: sessionId,
-      buyIn: buyIn,
-      cashOut: buyIn,
-      sessionDate: today,
-      durationHours: null,
-      startTime: startTimestamp,
-      endTime: null,
-      location: null,
-      smallBlind: null,
-      bigBlind: null,
-      // Session data (merged)
-      counts: {},
-      playedCounts: {},
-      handHistory: [],
-      total: 0,
-      totalPlayed: 0,
-      vpip: 0,
-      notes: ''
-    };
+    const newSession = PokerSession.createLive(buyIn);
 
     const sessions = this.sessions;
     sessions.push(newSession);
@@ -553,11 +544,11 @@ PokerTracker.DataStore = {
 
     // Set as live session in app state
     const state = this.appState;
-    state.liveSessionId = sessionId;
-    state.liveSessionStart = startTimestamp;
+    state.liveSessionId = newSession.id;
+    state.liveSessionStart = newSession.startTime;
     this.appState = state;
 
-    this.notifyLiveSessionChange(sessionId);
+    this.notifyLiveSessionChange(newSession.id);
 
     return newSession;
   },
@@ -572,41 +563,25 @@ PokerTracker.DataStore = {
       const sessionIndex = sessions.findIndex(s => s.id === targetSessionId);
 
       if (sessionIndex !== -1) {
-        const sessionRecord = sessions[sessionIndex];
+        let session = sessions[sessionIndex];
 
-        const parseDuration = value => {
-          if (value === null || typeof value === 'undefined') return null;
-          const numeric = typeof value === 'number' ? value : parseFloat(value);
-          if (!Number.isFinite(numeric) || numeric < 0) return null;
-          return Math.round(numeric * 100) / 100;
-        };
-
-        const normalizeDateTimeValue = value => {
-          if (value === null || typeof value === 'undefined' || value === '') return null;
-          const date = new Date(value);
-          if (Number.isNaN(date.getTime())) return null;
-          return date.toISOString();
-        };
-
-        const updatedSession = { ...sessionRecord };
-        if (!updatedSession.startTime && state.liveSessionStart) {
-          updatedSession.startTime = state.liveSessionStart;
+        // Ensure it's a PokerSession instance
+        if (!(session instanceof PokerSession)) {
+          session = new PokerSession(session);
+          sessions[sessionIndex] = session;
         }
 
-        if (Object.prototype.hasOwnProperty.call(options, 'durationHours')) {
-          const normalizedDuration = parseDuration(options.durationHours);
-          if (normalizedDuration !== null) {
-            updatedSession.durationHours = normalizedDuration;
-          }
+        // Set startTime if missing and we have it in state
+        if (!session.startTime && state.liveSessionStart) {
+          session.updateTiming({ startTime: state.liveSessionStart });
         }
 
-        const resolvedEndTime = normalizeDateTimeValue(options.endTime) || new Date().toISOString();
-        updatedSession.endTime = resolvedEndTime;
+        // End the session using PokerSession method
+        const endTime = options.endTime || new Date().toISOString();
+        session.updateTiming({ endTime });
 
-        const normalized = this.normalizeSession(updatedSession);
-        sessions[sessionIndex] = normalized.session;
         this.sessions = sessions;
-        endedSession = normalized.session;
+        endedSession = session;
       }
     }
 
@@ -677,7 +652,7 @@ PokerTracker.DataStore = {
     const sessionData = this.getSessionData(sessionId);
 
     // Generate unique hand ID
-    const handId = `hand-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const handId = `hand-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 
     // Add to hand history
     const handEntry = {

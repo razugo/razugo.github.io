@@ -126,7 +126,7 @@
       liveSessionLink.classList.add('live-session-active');
       liveSessionLink.style.opacity = '1';
       liveSessionLink.style.pointerEvents = 'auto';
-      liveSessionLink.title = `Active session: ${activeSession.name || 'Unnamed Session'}`;
+      liveSessionLink.title = `Active session: ${PT.DataStore.getSessionDate(activeSession) || 'Live Session'}`;
     } else {
       liveSessionLink.textContent = '+ Live Session';
       liveSessionLink.href = '#';
@@ -165,12 +165,8 @@
       return;
     }
 
-    const sessionName = prompt('Enter a name for this live session:');
-    if (!sessionName) return;
-
     try {
       const newSession = PT.DataStore.createLiveSession();
-      PT.DataStore.updateSession(newSession.id, { name: sessionName });
       refreshAllNavs();
       window.location.href = `${sessionRoute}?session_id=${newSession.id}`;
     } catch (error) {

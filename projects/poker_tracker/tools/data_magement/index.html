@@ -199,7 +199,7 @@ nav_id: tools
         const convertSession = raw => {
           if (!raw || typeof raw !== 'object') return null;
 
-          const sessionId = raw.id || `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          const sessionId = raw.id || `session-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
           const hands = Array.isArray(raw.hands) ? raw.hands : [];
           const handHistory = hands
             .map((hand, index) => convertHand(sessionId, hand, index))
@@ -224,25 +224,21 @@ nav_id: tools
           const vpipValue = Number.isFinite(rawVpip) ? rawVpip : (totalHands > 0 ? ((totalPlayed / totalHands) * 100) : 0);
 
           const sessionDate = raw.sessionDate || null;
-          const durationHours = null;
-
           const trimmedLocation = typeof raw.location === 'string' && raw.location.trim() ? raw.location.trim() : null;
-
           const startTime = raw.startTime ? toISODateTime(raw.startTime) : null;
           const endTime = raw.endTime ? toISODateTime(raw.endTime) : null;
 
-          const sessionRecord = {
+          // Create PokerSession data object (removing deprecated fields like name, durationHours)
+          const sessionData = {
             id: sessionId,
-            name: raw.name || null,
             location: trimmedLocation,
-            smallBlind: raw.smallBlind ? coerceMoney(raw.smallBlind) : null,
-            bigBlind: raw.bigBlind ? coerceMoney(raw.bigBlind) : null,
+            smallBlind: raw.smallBlind ? coerceMoneyOrNull(raw.smallBlind) : null,
+            bigBlind: raw.bigBlind ? coerceMoneyOrNull(raw.bigBlind) : null,
             startTime: startTime,
             endTime: endTime,
             buyIn: coerceMoney(raw.buyIn),
             cashOut: coerceMoney(raw.cashOut),
             sessionDate: sessionDate,
-            durationHours: durationHours,
             counts: counts,
             playedCounts: playedCounts,
             handHistory: handHistory,
@@ -252,7 +248,13 @@ nav_id: tools
             notes: raw.notes || ''
           };
 
-          return sessionRecord;
+          // Create PokerSession instance which will validate and normalize the data
+          try {
+            return new PokerTracker.PokerSession(sessionData);
+          } catch (err) {
+            console.warn('Failed to create PokerSession from imported data:', err, sessionData);
+            return null;
+          }
         };
 
         const parseExport = contents => {
@@ -297,8 +299,19 @@ nav_id: tools
             : [];
 
           const mergedMap = new Map();
+
+          // Add existing sessions to map (ensure they're PokerSession instances)
           existingSessions.forEach(session => {
             if (session && session.id) {
+              // Convert to PokerSession if needed
+              if (!(session instanceof PokerTracker.PokerSession)) {
+                try {
+                  session = new PokerTracker.PokerSession(session);
+                } catch (err) {
+                  console.warn('Failed to convert existing session to PokerSession:', err, session);
+                  return;
+                }
+              }
               mergedMap.set(session.id, session);
             }
           });
@@ -308,7 +321,7 @@ nav_id: tools
           importedSessions.forEach(session => {
             if (!session || !session.id) return;
             if (!mergedMap.has(session.id)) {
-              // Only add sessions that don't already exist
+              // Only add sessions that don't already exist (they're already PokerSession instances)
               mergedMap.set(session.id, session);
               newCount++;
             } else {
@@ -397,10 +410,18 @@ nav_id: tools
         const dataStore = PokerTracker.DataStore;
         const sessions = dataStore.getSessions ? dataStore.getSessions() : safeArray(dataStore.sessions);
 
+        // Convert PokerSession instances to plain objects for export
+        const plainSessions = sessions.map(session => {
+          if (session instanceof PokerTracker.PokerSession) {
+            return session.toJSON();
+          }
+          return session;
+        });
+
         return {
           version: 'pokertracker.backup.v1',
           exportedAt: new Date().toISOString(),
-          sessions: safeArray(sessions)
+          sessions: safeArray(plainSessions)
         };
       };
 
@@ -442,11 +463,26 @@ nav_id: tools
           throw new Error('PokerTracker data store is not available.');
         }
 
-        // Normalize imported sessions to ensure data consistency
+        // Convert raw session data to PokerSession instances, filtering out invalid sessions
         const rawSessions = safeArray(backup.sessions);
-        const normalized = PokerTracker.DataStore.normalizeSessionsList(rawSessions);
+        const validatedSessions = rawSessions
+          .map(sessionData => {
+            try {
+              // Create PokerSession instance which will validate and normalize the data
+              // This automatically discards any extra fields not recognized by PokerSession
+              return new PokerTracker.PokerSession(sessionData);
+            } catch (err) {
+              console.warn('Failed to create PokerSession from backup data:', err, sessionData);
+              return null;
+            }
+          })
+          .filter(Boolean);
 
-        PokerTracker.DataStore.sessions = normalized.sessions;
+        if (validatedSessions.length === 0) {
+          throw new Error('No valid sessions found in backup.');
+        }
+
+        PokerTracker.DataStore.sessions = validatedSessions;
         PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
         PokerTracker.DataStore.notifyLiveSessionChange(null);
 

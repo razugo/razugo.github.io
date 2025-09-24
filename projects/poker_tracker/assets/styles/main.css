@@ -3565,3 +3565,248 @@
         padding: 20px;
       }
     }
+
+    /* =====================================
+       BANKROLL DASHBOARD STYLES
+       ===================================== */
+
+    /* Session Filters - Matching session page styling */
+    .session-filters {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      background: var(--surface);
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius);
+      margin-bottom: 2rem;
+      border: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .session-filters .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .session-filters .filter-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .session-filters .filter-input,
+    .session-filters .filter-select {
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      transition: all 0.2s ease;
+    }
+
+    .session-filters .filter-input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.7;
+    }
+
+    .session-filters .filter-input:focus,
+    .session-filters .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    .filter-btn {
+      background: var(--primary);
+      color: white;
+      border: 1px solid var(--primary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    /* KPI Cards Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .kpi-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .kpi-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .kpi-value.positive {
+      color: var(--success);
+    }
+
+    .kpi-value.negative {
+      color: var(--danger);
+    }
+
+    .kpi-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Charts Container */
+    .charts-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .chart-card .card-header {
+      background: var(--background);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chart-card .card-content {
+      padding: 1.5rem;
+    }
+
+    .chart-card .card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 400px;
+      width: 100%;
+    }
+
+    .chart-container-small {
+      height: 250px;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .session-filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .session-filters .filter-group {
+        min-width: auto;
+        flex: none;
+      }
+
+      .filter-btn {
+        margin-top: 0.5rem;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .kpi-card {
+        padding: 1rem;
+      }
+
+      .kpi-value {
+        font-size: 1.5rem;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .chart-container {
+        height: 300px;
+      }
+
+      .chart-container-small {
+        height: 200px;
+      }
+
+      .chart-card .card-content {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .kpi-card {
+        padding: 0.75rem;
+      }
+
+      .kpi-value {
+        font-size: 1.25rem;
+      }
+
+      .chart-container {
+        height: 250px;
+      }
+
+      .chart-container-small {
+        height: 180px;
+      }
+    }

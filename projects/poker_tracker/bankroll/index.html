@@ -30,145 +30,103 @@ nav_id: bankroll
 
   <main>
     <div class="container">
-      <h1>Bankroll</h1>
+      <h1>Bankroll Dashboard</h1>
 
-      <!-- Key Statistics -->
-      <div class="bankroll-stats-grid">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Performance</h3>
-          </div>
-          <div class="card-content">
-            <div class="stat-row">
-              <span class="stat-label">Total Profit</span>
-              <span class="stat-value" id="totalProfitStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Win Rate</span>
-              <span class="stat-value" id="winRateStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Hourly Rate</span>
-              <span class="stat-value" id="hourlyRateStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Best Session</span>
-              <span class="stat-value" id="bestSessionStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Worst Session</span>
-              <span class="stat-value" id="worstSessionStat">-</span>
-            </div>
-          </div>
+      <!-- Filters -->
+      <div class="session-filters">
+        <div class="filter-group">
+          <label>FROM DATE</label>
+          <input type="text" id="dateFromFilter" class="filter-input" placeholder="YYYY-MM-DD">
         </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Volume</h3>
-          </div>
-          <div class="card-content">
-            <div class="stat-row">
-              <span class="stat-label">Total Sessions</span>
-              <span class="stat-value" id="totalSessionsStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Total Hands</span>
-              <span class="stat-value" id="totalHandsStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Total Hours</span>
-              <span class="stat-value" id="totalHoursStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Avg Session Time</span>
-              <span class="stat-value" id="avgSessionTimeStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Avg VPIP</span>
-              <span class="stat-value" id="avgVpipStat">-</span>
-            </div>
-          </div>
+        <div class="filter-group">
+          <label>TO DATE</label>
+          <input type="text" id="dateToFilter" class="filter-input" placeholder="YYYY-MM-DD">
         </div>
+        <div class="filter-group">
+          <label>LOCATION</label>
+          <select id="locationFilter" class="filter-select">
+            <option value="">All locations</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>STAKES</label>
+          <select id="stakesFilter" class="filter-select">
+            <option value="">All stakes</option>
+          </select>
+        </div>
+        <button id="filterButton" class="filter-btn">Filter</button>
+      </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Trends</h3>
-          </div>
-          <div class="card-content">
-            <div class="stat-row">
-              <span class="stat-label">Current Streak</span>
-              <span class="stat-value" id="currentStreakStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Longest Win Streak</span>
-              <span class="stat-value" id="longestWinStreakStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Longest Lose Streak</span>
-              <span class="stat-value" id="longestLoseStreakStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">Days Since Last Session</span>
-              <span class="stat-value" id="daysSinceLastStat">-</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-label">This Month P&L</span>
-              <span class="stat-value" id="thisMonthPnlStat">-</span>
-            </div>
-          </div>
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Profit</div>
+          <div class="kpi-value" id="totalProfitKPI">$0</div>
+          <div class="kpi-subtitle" id="totalProfitBBKPI">0 BB</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Hourly Win Rate</div>
+          <div class="kpi-value" id="hourlyWinRateKPI">$0/hr</div>
+          <div class="kpi-subtitle" id="hourlyWinRateBBKPI">0 BB/hr</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Total Sessions</div>
+          <div class="kpi-value" id="totalSessionsKPI">0</div>
+          <div class="kpi-subtitle" id="totalHoursKPI">0 hours played</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Overall Winrate</div>
+          <div class="kpi-value" id="overallWinrateKPI">0 BB/hr</div>
+          <div class="kpi-subtitle" id="winPercentKPI">0% win rate</div>
         </div>
       </div>
 
-      <!-- Main Bankroll Chart -->
-      <div class="card bankroll-chart-card">
-        <div class="card-header">
-          <h2 class="card-title">Bankroll Progress</h2>
-          <div class="bankroll-chart-controls">
-            <label for="chartGroupingSelect" class="bankroll-chart-label">Type</label>
-            <select id="chartGroupingSelect" class="form-input bankroll-type-select">
-              <option value="session" selected>Session</option>
-              <option value="date">Date</option>
-            </select>
-          </div>
-        </div>
-        <div class="card-content">
-          <div class="chart-container">
-            <canvas id="mainBankrollChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Time Period Filters -->
-      <div class="time-period-filters" id="timePeriodFilters">
-        <button class="time-filter-btn" data-period="1W">1W</button>
-        <button class="time-filter-btn" data-period="1M">1M</button>
-        <button class="time-filter-btn" data-period="3M">3M</button>
-        <button class="time-filter-btn" data-period="YTD">YTD</button>
-        <button class="time-filter-btn" data-period="1Y">1Y</button>
-        <button class="time-filter-btn" data-period="3Y">3Y</button>
-        <button class="time-filter-btn active" data-period="MAX">MAX</button>
-      </div>
-
-      <!-- Secondary Charts -->
-      <div class="secondary-charts-grid">
-        <div class="card">
+      <!-- Charts -->
+      <div class="charts-container">
+        <!-- Bankroll Over Time -->
+        <div class="card chart-card">
           <div class="card-header">
-            <h3 class="card-title">Monthly Performance</h3>
+            <h2 class="card-title">Bankroll Over Time</h2>
           </div>
           <div class="card-content">
-            <div class="chart-container chart-container-small">
-              <canvas id="monthlyChart"></canvas>
+            <div class="chart-container">
+              <canvas id="bankrollOverTimeChart"></canvas>
             </div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Session Distribution</h3>
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">Profit by Room</h3>
+            </div>
+            <div class="card-content">
+              <div class="chart-container chart-container-small">
+                <canvas id="profitByRoomChart"></canvas>
+              </div>
+            </div>
           </div>
-          <div class="card-content">
-            <div class="chart-container chart-container-small">
-              <canvas id="sessionDistributionChart"></canvas>
+
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">Hourly by Stake</h3>
+            </div>
+            <div class="card-content">
+              <div class="chart-container chart-container-small">
+                <canvas id="hourlyByStakeChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">Profit by Day of Week</h3>
+            </div>
+            <div class="card-content">
+              <div class="chart-container chart-container-small">
+                <canvas id="profitByDayChart"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -177,467 +135,336 @@ nav_id: bankroll
   </main>
 
 <script>
-  let currentTimePeriod = 'MAX';
-  let currentChartGrouping = 'session';
-  let mainChart = null;
-  let monthlyChart = null;
-  let distributionChart = null;
+  let bankrollOverTimeChart = null;
+  let profitByRoomChart = null;
+  let hourlyByStakeChart = null;
+  let profitByDayChart = null;
+
+  const currentFilters = {
+    dateFrom: '',
+    dateTo: '',
+    location: '',
+    stakes: ''
+  };
 
   document.addEventListener('DOMContentLoaded', function() {
+    populateFilterOptions();
     setupEventListeners();
-    updateBankrollData();
+    updateDashboard();
   });
 
   document.addEventListener('pokertracker:session-data-change', function() {
-    updateBankrollData();
+    updateDashboard();
   });
 
   function setupEventListeners() {
-    // Time period filter buttons
-    document.querySelectorAll('.time-filter-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.time-filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        currentTimePeriod = this.dataset.period;
-        updateBankrollData();
-      });
+    // Filter event listeners
+    document.getElementById('dateFromFilter').addEventListener('input', (e) => {
+      currentFilters.dateFrom = e.target.value;
     });
 
-    const groupingSelect = document.getElementById('chartGroupingSelect');
-    if (groupingSelect) {
-      groupingSelect.value = currentChartGrouping;
-      groupingSelect.addEventListener('change', function() {
-        currentChartGrouping = this.value || 'session';
-        updateMainChart();
-      });
-    }
-  }
+    document.getElementById('dateToFilter').addEventListener('input', (e) => {
+      currentFilters.dateTo = e.target.value;
+    });
 
-  function updateBankrollData() {
-    const sessions = getFilteredSessions(currentTimePeriod);
-    updateBankrollStats(sessions);
-    updateMainChart(sessions);
-    updateMonthlyChart(sessions);
-    updateSessionDistributionChart(sessions);
-  }
+    document.getElementById('locationFilter').addEventListener('change', (e) => {
+      currentFilters.location = e.target.value;
+    });
 
-  function getFilteredSessions(period) {
-    const allSessions = PokerTracker.DataStore.getSessions();
-    if (period === 'MAX') return allSessions;
+    document.getElementById('stakesFilter').addEventListener('change', (e) => {
+      currentFilters.stakes = e.target.value;
+    });
 
-    const now = new Date();
-    let startDate = new Date();
 
-    switch(period) {
-      case '1W':
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case '1M':
-        startDate.setMonth(now.getMonth() - 1);
-        break;
-      case '3M':
-        startDate.setMonth(now.getMonth() - 3);
-        break;
-      case 'YTD':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      case '1Y':
-        startDate.setFullYear(now.getFullYear() - 1);
-        break;
-      case '3Y':
-        startDate.setFullYear(now.getFullYear() - 3);
-        break;
-    }
-
-    return allSessions.filter(session => {
-      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-      return sessionDate && new Date(sessionDate) >= startDate;
+    document.getElementById('filterButton').addEventListener('click', () => {
+      updateDashboard();
     });
   }
 
-  function updateBankrollStats(sessions) {
-    const stats = calculateBankrollStats(sessions);
-
-    document.getElementById('totalProfitStat').textContent = PokerTracker.Utils.formatCurrency(stats.totalProfit);
-    document.getElementById('totalProfitStat').className = `stat-value ${stats.totalProfit >= 0 ? 'positive' : 'negative'}`;
-
-    document.getElementById('winRateStat').textContent = `${stats.winRate}%`;
-    document.getElementById('hourlyRateStat').textContent = PokerTracker.Utils.formatCurrency(stats.hourlyRate);
-    document.getElementById('hourlyRateStat').className = `stat-value ${stats.hourlyRate >= 0 ? 'positive' : 'negative'}`;
-
-    document.getElementById('bestSessionStat').textContent = PokerTracker.Utils.formatCurrency(stats.bestSession);
-    document.getElementById('bestSessionStat').className = 'stat-value positive';
-
-    document.getElementById('worstSessionStat').textContent = PokerTracker.Utils.formatCurrency(stats.worstSession);
-    document.getElementById('worstSessionStat').className = 'stat-value negative';
-
-    document.getElementById('totalSessionsStat').textContent = stats.totalSessions.toLocaleString();
-    document.getElementById('totalHandsStat').textContent = stats.totalHands.toLocaleString();
-    document.getElementById('totalHoursStat').textContent = `${stats.totalHours}h`;
-    document.getElementById('avgSessionTimeStat').textContent = stats.avgSessionTime;
-    document.getElementById('avgVpipStat').textContent = `${stats.avgVpip}%`;
-
-    document.getElementById('currentStreakStat').textContent = stats.currentStreak;
-    document.getElementById('longestWinStreakStat').textContent = `${stats.longestWinStreak} sessions`;
-    document.getElementById('longestLoseStreakStat').textContent = `${stats.longestLoseStreak} sessions`;
-    document.getElementById('daysSinceLastStat').textContent = `${stats.daysSinceLast} days`;
-    document.getElementById('thisMonthPnlStat').textContent = PokerTracker.Utils.formatCurrency(stats.thisMonthPnl);
-    document.getElementById('thisMonthPnlStat').className = `stat-value ${stats.thisMonthPnl >= 0 ? 'positive' : 'negative'}`;
+  function updateDashboard() {
+    const filteredSessions = getFilteredSessions();
+    updateKPIs(filteredSessions);
+    updateCharts(filteredSessions);
   }
 
-  function calculateBankrollStats(sessions) {
-    // Calculate comprehensive bankroll statistics
-    const totalProfit = sessions.reduce((sum, s) => sum + ((s.cashOut || 0) - (s.buyIn || 0)), 0);
-    const totalSessions = sessions.length;
-    const winningSessions = sessions.filter(s => ((s.cashOut || 0) - (s.buyIn || 0)) > 0).length;
-    const winRate = totalSessions > 0 ? Math.round((winningSessions / totalSessions) * 100) : 0;
+  function populateFilterOptions() {
+    const sessions = PokerTracker.DataStore.getSessions();
 
-    const totalHands = sessions.reduce((sum, s) => sum + (s.total || 0), 0);
-    const totalPlayedHands = sessions.reduce((sum, s) => sum + (s.totalPlayed || 0), 0);
-    const avgVpip = totalHands > 0 ? Math.round((totalPlayedHands / totalHands) * 100) : 0;
+    // Populate locations
+    const locations = [...new Set(sessions.map(s => s.location).filter(Boolean))].sort();
+    const locationSelect = document.getElementById('locationFilter');
+    locationSelect.innerHTML = '<option value="">All locations</option>';
+    locations.forEach(location => {
+      const option = document.createElement('option');
+      option.value = location;
+      option.textContent = location;
+      locationSelect.appendChild(option);
+    });
 
-    // Calculate total hours
-    let totalMinutes = 0;
-    sessions.forEach(session => {
-      if (typeof session.durationHours === 'number' && session.durationHours > 0) {
-        totalMinutes += session.durationHours * 60;
-      } else if (session.total > 0) {
-        totalMinutes += session.total * 2; // fallback estimation
+    // Populate stakes
+    const stakes = [...new Set(sessions.map(s => {
+      if (s.smallBlind && s.bigBlind) {
+        return `${s.smallBlind}/${s.bigBlind}`;
       }
+      return null;
+    }).filter(Boolean))].sort((a, b) => {
+      const [aSmall] = a.split('/').map(Number);
+      const [bSmall] = b.split('/').map(Number);
+      return aSmall - bSmall;
     });
-    const totalHours = Math.round(totalMinutes / 60);
+
+    const stakesSelect = document.getElementById('stakesFilter');
+    stakesSelect.innerHTML = '<option value="">All stakes</option>';
+    stakes.forEach(stake => {
+      const option = document.createElement('option');
+      option.value = stake;
+      option.textContent = `$${stake}`;
+      stakesSelect.appendChild(option);
+    });
+  }
+
+  function getFilteredSessions() {
+    let sessions = PokerTracker.DataStore.getSessions();
+
+    // Filter by stakes
+    if (currentFilters.stakes) {
+      sessions = sessions.filter(session => {
+        if (!session.smallBlind || !session.bigBlind) return false;
+        const stake = `${session.smallBlind}/${session.bigBlind}`;
+        return stake === currentFilters.stakes;
+      });
+    }
+
+    // Filter by location
+    if (currentFilters.location) {
+      sessions = sessions.filter(session => session.location === currentFilters.location);
+    }
+
+    // Filter by date range
+    if (currentFilters.dateFrom || currentFilters.dateTo) {
+      sessions = sessions.filter(session => {
+        const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+        if (!sessionDate) return false;
+
+        const date = new Date(sessionDate);
+
+        if (currentFilters.dateFrom && date < new Date(currentFilters.dateFrom)) {
+          return false;
+        }
+
+        if (currentFilters.dateTo && date > new Date(currentFilters.dateTo)) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+
+    return sessions;
+  }
+
+  function updateKPIs(sessions) {
+    const stats = calculateStats(sessions);
+
+    // Total Profit
+    document.getElementById('totalProfitKPI').textContent = PokerTracker.Utils.formatCurrency(stats.totalProfit);
+    document.getElementById('totalProfitKPI').className = `kpi-value ${stats.totalProfit >= 0 ? 'positive' : 'negative'}`;
+    document.getElementById('totalProfitBBKPI').textContent = `${stats.totalProfitBB} BB`;
+
+    // Hourly Win Rate
+    document.getElementById('hourlyWinRateKPI').textContent = `${PokerTracker.Utils.formatCurrency(stats.hourlyRate)}/hr`;
+    document.getElementById('hourlyWinRateKPI').className = `kpi-value ${stats.hourlyRate >= 0 ? 'positive' : 'negative'}`;
+    document.getElementById('hourlyWinRateBBKPI').textContent = `${stats.hourlyRateBB} BB/hr`;
+
+    // Total Sessions
+    document.getElementById('totalSessionsKPI').textContent = stats.totalSessions;
+    document.getElementById('totalHoursKPI').textContent = `${stats.totalHours} hours played`;
+
+    // Overall Winrate
+    document.getElementById('overallWinrateKPI').textContent = `${stats.hourlyRateBB} BB/hr`;
+    document.getElementById('overallWinrateKPI').className = `kpi-value ${stats.hourlyRateBB >= 0 ? 'positive' : 'negative'}`;
+    document.getElementById('winPercentKPI').textContent = `${stats.winRate}% win rate`;
+  }
+
+  function calculateStats(sessions) {
+    const totalSessions = sessions.length;
+
+    if (totalSessions === 0) {
+      return {
+        totalProfit: 0,
+        totalProfitBB: 0,
+        hourlyRate: 0,
+        hourlyRateBB: 0,
+        totalSessions: 0,
+        totalHours: 0,
+        winRate: 0
+      };
+    }
+
+    // Calculate total profit from all sessions
+    const totalProfit = sessions.reduce((sum, session) => {
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      return sum + profit;
+    }, 0);
+
+    // Calculate total hours from startTime/endTime
+    const totalHours = sessions.reduce((sum, session) => {
+      if (session.startTime && session.endTime) {
+        const startTime = new Date(session.startTime);
+        const endTime = new Date(session.endTime);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const durationHours = durationMs / (1000 * 60 * 60);
+        if (durationHours > 0) {
+          return sum + durationHours;
+        }
+      }
+      // Fallback: estimate from hand count if no start/end time
+      if (session.total && session.total > 0) {
+        return sum + (session.total * 2 / 60); // Assume 2 minutes per hand
+      }
+      return sum;
+    }, 0);
+
+    // Calculate hourly rate
     const hourlyRate = totalHours > 0 ? totalProfit / totalHours : 0;
 
-    const avgSessionTime = totalSessions > 0 ? PokerTracker.Utils.formatDuration(Math.round(totalMinutes / totalSessions)) : '-';
+    // Calculate big blind stats (using weighted average based on hours played)
+    let totalBBWeighted = 0;
+    let totalWeightedHours = 0;
 
-    const profits = sessions.map(s => (s.cashOut || 0) - (s.buyIn || 0));
-    const bestSession = profits.length > 0 ? Math.max(...profits) : 0;
-    const worstSession = profits.length > 0 ? Math.min(...profits) : 0;
+    sessions.forEach(session => {
+      if (session.bigBlind && session.startTime && session.endTime) {
+        const startTime = new Date(session.startTime);
+        const endTime = new Date(session.endTime);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const sessionHours = durationMs / (1000 * 60 * 60);
+        if (sessionHours > 0) {
+          totalBBWeighted += session.bigBlind * sessionHours;
+          totalWeightedHours += sessionHours;
+        }
+      }
+    });
 
-    // Calculate streaks
+    // If no weighted data available, use simple average
+    const avgBB = totalWeightedHours > 0
+      ? totalBBWeighted / totalWeightedHours
+      : sessions.filter(s => s.bigBlind).reduce((sum, s, _, arr) => sum + s.bigBlind / arr.length, 0) || 2;
+
+    const totalProfitBB = Math.round(totalProfit / avgBB);
+    const hourlyRateBB = totalHours > 0 ? Math.round((hourlyRate / avgBB) * 10) / 10 : 0;
+
+    // Calculate win rate (percentage of winning sessions)
+    const winningSessions = sessions.filter(session => {
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      return profit > 0;
+    }).length;
+
+    const winRate = Math.round((winningSessions / totalSessions) * 100);
+
+    return {
+      totalProfit: Math.round(totalProfit * 100) / 100,
+      totalProfitBB,
+      hourlyRate: Math.round(hourlyRate * 100) / 100,
+      hourlyRateBB,
+      totalSessions,
+      totalHours: Math.round(totalHours * 10) / 10,
+      winRate
+    };
+  }
+
+  function updateCharts(sessions) {
+    updateBankrollOverTimeChart(sessions);
+    updateProfitByRoomChart(sessions);
+    updateHourlyByStakeChart(sessions);
+    updateProfitByDayChart(sessions);
+  }
+
+  function updateBankrollOverTimeChart(sessions) {
+    const canvas = document.getElementById('bankrollOverTimeChart');
+    if (!canvas) return;
+
+    if (bankrollOverTimeChart) {
+      bankrollOverTimeChart.destroy();
+    }
+
     const sortedSessions = sessions.slice().sort((a, b) =>
       PokerTracker.DataStore.getSessionSortValue(a) - PokerTracker.DataStore.getSessionSortValue(b)
     );
 
-    let currentStreak = 0;
-    let longestWinStreak = 0;
-    let longestLoseStreak = 0;
-    let currentWinStreak = 0;
-    let currentLoseStreak = 0;
+    const labels = [];
+    const data = [];
+    let cumulative = 0;
 
-    if (sortedSessions.length > 0) {
-      const lastSession = sortedSessions[sortedSessions.length - 1];
-      const lastProfit = (lastSession.cashOut || 0) - (lastSession.buyIn || 0);
-      currentStreak = lastProfit > 0 ? 'W' : lastProfit < 0 ? 'L' : 'T';
-
-      sortedSessions.forEach(session => {
-        const profit = (session.cashOut || 0) - (session.buyIn || 0);
-        if (profit > 0) {
-          currentWinStreak++;
-          currentLoseStreak = 0;
-          longestWinStreak = Math.max(longestWinStreak, currentWinStreak);
-        } else if (profit < 0) {
-          currentLoseStreak++;
-          currentWinStreak = 0;
-          longestLoseStreak = Math.max(longestLoseStreak, currentLoseStreak);
-        }
-      });
-    }
-
-    // Days since last session
-    let daysSinceLast = 0;
-    if (sortedSessions.length > 0) {
-      const lastSessionDate = PokerTracker.DataStore.getSessionDate(sortedSessions[sortedSessions.length - 1]);
-      if (lastSessionDate) {
-        const daysDiff = Math.floor((new Date() - new Date(lastSessionDate)) / (1000 * 60 * 60 * 24));
-        daysSinceLast = daysDiff;
-      }
-    }
-
-    // This month P&L
-    const now = new Date();
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const thisMonthSessions = sessions.filter(session => {
+    sortedSessions.forEach((session, index) => {
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      cumulative += profit;
       const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-      return sessionDate && new Date(sessionDate) >= thisMonthStart;
+      labels.push(sessionDate ? new Date(sessionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : `Session ${index + 1}`);
+      data.push(cumulative);
     });
-    const thisMonthPnl = thisMonthSessions.reduce((sum, s) => sum + ((s.cashOut || 0) - (s.buyIn || 0)), 0);
 
-    return {
-      totalProfit,
-      winRate,
-      hourlyRate,
-      bestSession,
-      worstSession,
-      totalSessions,
-      totalHands,
-      totalHours,
-      avgSessionTime,
-      avgVpip,
-      currentStreak,
-      longestWinStreak,
-      longestLoseStreak,
-      daysSinceLast,
-      thisMonthPnl
-    };
-  }
-
-  function updateMainChart(sessions = null) {
-    if (!sessions) sessions = getFilteredSessions(currentTimePeriod);
-
-    const canvas = document.getElementById('mainBankrollChart');
-    if (!canvas) return;
-
-    if (mainChart) {
-      mainChart.destroy();
-      mainChart = null;
-    }
-
-    const context = canvas.getContext('2d');
-    if (!context) return;
-
-    const { labels, data } = buildCumulativeSeries(sessions, currentChartGrouping);
-    const values = data.length ? [0, ...data] : [0];
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
-    const valueRange = maxValue - minValue;
-    const padding = valueRange === 0
-      ? Math.max(Math.abs(maxValue) * 0.15, 50)
-      : Math.max(valueRange * 0.12, 50);
-    const suggestedMin = minValue - padding;
-    const suggestedMax = maxValue + padding;
-
-    const lineColor = '#1d4ed8';
-    const fillColor = 'rgba(37, 99, 235, 0.16)';
-
-    mainChart = new Chart(context, {
+    bankrollOverTimeChart = new Chart(canvas, {
       type: 'line',
       data: {
         labels,
         datasets: [{
           label: 'Cumulative P&L',
           data,
-          borderColor: lineColor,
-          borderWidth: 3,
-          backgroundColor: fillColor,
+          borderColor: '#1d4ed8',
+          backgroundColor: 'rgba(37, 99, 235, 0.1)',
           fill: true,
-          tension: 0,
-          pointRadius: 0,
-          pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#0f172a',
-          pointHoverBorderColor: lineColor,
-          pointHoverBorderWidth: 2,
-          pointHitRadius: 12
+          tension: 0.1
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: {
-          intersect: false,
-          mode: 'index'
-        },
-        animation: {
-          duration: 650,
-          easing: 'easeOutQuart'
-        },
         scales: {
           y: {
-            beginAtZero: false,
-            suggestedMin,
-            suggestedMax,
             ticks: {
-              color: 'rgba(71, 85, 105, 0.85)',
               callback: function(value) {
-                return formatCurrencyCompact(value);
-              },
-              maxTicksLimit: 6
-            },
-            grid: {
-              color: 'rgba(148, 163, 184, 0.2)',
-              drawBorder: false
-            }
-          },
-          x: {
-            ticks: {
-              color: 'rgba(100, 116, 139, 0.85)',
-              maxRotation: 0,
-              autoSkip: true,
-              maxTicksLimit: 8
-            },
-            grid: {
-              color: 'rgba(148, 163, 184, 0.12)',
-              drawBorder: false
+                return PokerTracker.Utils.formatCurrency(value);
+              }
             }
           }
         },
         plugins: {
           legend: {
             display: false
-          },
-          tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.92)',
-            borderColor: 'rgba(30, 64, 175, 0.6)',
-            borderWidth: 1,
-            padding: 12,
-            displayColors: false,
-            titleColor: '#e2e8f0',
-            bodyColor: '#e2e8f0',
-            callbacks: {
-              title: function(contextItems) {
-                return contextItems?.[0]?.label || '';
-              },
-              label: function(context) {
-                const value = context.parsed?.y || 0;
-                return `Total: ${PokerTracker.Utils.formatCurrency(value)}`;
-              },
-              afterLabel: function(context) {
-                const value = context.parsed?.y || 0;
-                const allPoints = context.dataset?.data || [];
-                const previous = context.dataIndex > 0 ? (allPoints[context.dataIndex - 1] || 0) : 0;
-                const delta = value - previous;
-                if (delta === 0) return '';
-                const sign = delta >= 0 ? '+' : '';
-                return `Change: ${sign}${PokerTracker.Utils.formatCurrency(delta)}`;
-              }
-            }
           }
         }
       }
     });
   }
 
-  function formatCurrencyCompact(value) {
-    const numeric = Number(value) || 0;
-    const formatted = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(Math.abs(numeric));
-    return numeric < 0 ? `-${formatted}` : formatted;
-  }
+  function updateProfitByRoomChart(sessions) {
+    const canvas = document.getElementById('profitByRoomChart');
+    if (!canvas) return;
 
-  function buildCumulativeSeries(sessions, grouping) {
-    const labels = [];
-    const data = [];
-
-    if (!Array.isArray(sessions) || sessions.length === 0) {
-      return { labels: ['Start'], data: [0] };
+    if (profitByRoomChart) {
+      profitByRoomChart.destroy();
     }
 
-    const sortedSessions = sessions.slice().sort((a, b) =>
-      PokerTracker.DataStore.getSessionSortValue(a) - PokerTracker.DataStore.getSessionSortValue(b)
-    );
-
-    if (grouping === 'date') {
-      const dailyTotals = new Map();
-      sortedSessions.forEach(session => {
-        const dayKey = PokerTracker.DataStore.getSessionDate(session) || '__undated__';
-        const profit = (session.cashOut || 0) - (session.buyIn || 0);
-        dailyTotals.set(dayKey, (dailyTotals.get(dayKey) || 0) + profit);
-      });
-
-      const orderedDays = Array.from(dailyTotals.keys())
-        .filter(key => key !== '__undated__')
-        .sort();
-      const undatedTotal = dailyTotals.has('__undated__') ? dailyTotals.get('__undated__') : null;
-      let cumulative = 0;
-      orderedDays.forEach(dayKey => {
-        cumulative += dailyTotals.get(dayKey) || 0;
-        labels.push(formatDateLabel(dayKey));
-        data.push(Number(cumulative.toFixed(2)));
-      });
-
-      if (undatedTotal !== null) {
-        cumulative += undatedTotal;
-        labels.push('Undated Sessions');
-        data.push(Number(cumulative.toFixed(2)));
-      }
-    } else {
-      let cumulative = 0;
-      sortedSessions.forEach((session, index) => {
-        const profit = (session.cashOut || 0) - (session.buyIn || 0);
-        cumulative += profit;
-        labels.push(formatSessionLabel(index + 1, PokerTracker.DataStore.getSessionDate(session)));
-        data.push(Number(cumulative.toFixed(2)));
-      });
-    }
-
-    return { labels, data };
-  }
-
-  function formatSessionLabel(position, dateStr) {
-    if (!dateStr) {
-      return `Session ${position}`;
-    }
-    const parsed = toDateFromYmd(dateStr);
-    const formatted = parsed.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-    return `Session ${position} (${formatted})`;
-  }
-
-  function formatDateLabel(dateStr) {
-    if (!dateStr) {
-      return 'Date unavailable';
-    }
-    const parsed = toDateFromYmd(dateStr);
-    return parsed.toLocaleDateString('en-US');
-  }
-
-  function toDateFromYmd(ymd) {
-    if (!ymd || typeof ymd !== 'string') {
-      return new Date(ymd || Date.now());
-    }
-
-    const parts = ymd.split('-').map(Number);
-    if (parts.length !== 3 || parts.some(Number.isNaN)) {
-      return new Date(ymd);
-    }
-
-    return new Date(parts[0], parts[1] - 1, parts[2]);
-  }
-
-  function updateMonthlyChart(sessions) {
-    const ctx = document.getElementById('monthlyChart');
-    if (!ctx) return;
-
-    if (monthlyChart) {
-      monthlyChart.destroy();
-    }
-
-    // Group sessions by month
-    const monthlyData = {};
+    const roomData = {};
     sessions.forEach(session => {
-      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
-      if (!sessionDate) return;
-
-      const date = new Date(sessionDate);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = 0;
-      }
-      monthlyData[monthKey] += (session.cashOut || 0) - (session.buyIn || 0);
+      const room = session.location || 'Unknown';
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      roomData[room] = (roomData[room] || 0) + profit;
     });
 
-    const sortedMonths = Object.keys(monthlyData).sort();
-    const monthlyProfits = sortedMonths.map(month => monthlyData[month]);
-    const monthLabels = sortedMonths.map(month => {
-      const [year, monthNum] = month.split('-');
-      return new Date(year, monthNum - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-    });
+    const labels = Object.keys(roomData);
+    const data = Object.values(roomData);
 
-    monthlyChart = new Chart(ctx, {
+    profitByRoomChart = new Chart(canvas, {
       type: 'bar',
       data: {
-        labels: monthLabels,
+        labels,
         datasets: [{
-          label: 'Monthly P&L',
-          data: monthlyProfits,
-          backgroundColor: monthlyProfits.map(profit => profit >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
-          borderColor: monthlyProfits.map(profit => profit >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
+          label: 'Profit',
+          data,
+          backgroundColor: data.map(profit => profit >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+          borderColor: data.map(profit => profit >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
           borderWidth: 1
         }]
       },
@@ -648,7 +475,7 @@ nav_id: bankroll
           y: {
             ticks: {
               callback: function(value) {
-                return '$' + value;
+                return PokerTracker.Utils.formatCurrency(value);
               }
             }
           }
@@ -662,51 +489,139 @@ nav_id: bankroll
     });
   }
 
-  function updateSessionDistributionChart(sessions) {
-    const ctx = document.getElementById('sessionDistributionChart');
-    if (!ctx) return;
+  function updateHourlyByStakeChart(sessions) {
+    const canvas = document.getElementById('hourlyByStakeChart');
+    if (!canvas) return;
 
-    if (distributionChart) {
-      distributionChart.destroy();
+    if (hourlyByStakeChart) {
+      hourlyByStakeChart.destroy();
     }
 
-    // Calculate win/loss distribution
-    let wins = 0;
-    let losses = 0;
-    let breakeven = 0;
+    const stakeData = {};
+    const stakeHours = {};
 
     sessions.forEach(session => {
+      if (!session.smallBlind || !session.bigBlind) return;
+
+      const stake = `${session.smallBlind}/${session.bigBlind}`;
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
-      if (profit > 0) wins++;
-      else if (profit < 0) losses++;
-      else breakeven++;
+      let hours = 0;
+
+      if (session.startTime && session.endTime) {
+        const startTime = new Date(session.startTime);
+        const endTime = new Date(session.endTime);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const sessionHours = durationMs / (1000 * 60 * 60);
+        if (sessionHours > 0) {
+          hours = sessionHours;
+        }
+      } else if (session.total > 0) {
+        hours = session.total * 2 / 60; // fallback estimation
+      }
+
+      stakeData[stake] = (stakeData[stake] || 0) + profit;
+      stakeHours[stake] = (stakeHours[stake] || 0) + hours;
     });
 
-    distributionChart = new Chart(ctx, {
-      type: 'doughnut',
+    const labels = Object.keys(stakeData);
+    const data = labels.map(stake => {
+      const totalProfit = stakeData[stake];
+      const totalHours = stakeHours[stake];
+      return totalHours > 0 ? totalProfit / totalHours : 0;
+    });
+
+    hourlyByStakeChart = new Chart(canvas, {
+      type: 'bar',
       data: {
-        labels: ['Wins', 'Losses', 'Break Even'],
+        labels: labels.map(stake => `$${stake}`),
         datasets: [{
-          data: [wins, losses, breakeven],
-          backgroundColor: [
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(239, 68, 68, 0.8)',
-            'rgba(156, 163, 175, 0.8)'
-          ],
-          borderColor: [
-            'rgb(34, 197, 94)',
-            'rgb(239, 68, 68)',
-            'rgb(156, 163, 175)'
-          ],
-          borderWidth: 2
+          label: 'Hourly Rate',
+          data,
+          backgroundColor: data.map(rate => rate >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+          borderColor: data.map(rate => rate >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
+          borderWidth: 1
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        scales: {
+          y: {
+            ticks: {
+              callback: function(value) {
+                return PokerTracker.Utils.formatCurrency(value) + '/hr';
+              }
+            }
+          }
+        },
         plugins: {
           legend: {
-            position: 'bottom'
+            display: false
+          }
+        }
+      }
+    });
+  }
+
+  function updateProfitByDayChart(sessions) {
+    const canvas = document.getElementById('profitByDayChart');
+    if (!canvas) return;
+
+    if (profitByDayChart) {
+      profitByDayChart.destroy();
+    }
+
+    const dayData = {
+      'Monday': 0,
+      'Tuesday': 0,
+      'Wednesday': 0,
+      'Thursday': 0,
+      'Friday': 0,
+      'Saturday': 0,
+      'Sunday': 0
+    };
+
+    sessions.forEach(session => {
+      const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+      if (!sessionDate) return;
+
+      const date = new Date(sessionDate);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+
+      dayData[dayName] += profit;
+    });
+
+    const labels = Object.keys(dayData);
+    const data = Object.values(dayData);
+
+    profitByDayChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Profit',
+          data,
+          backgroundColor: data.map(profit => profit >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+          borderColor: data.map(profit => profit >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            ticks: {
+              callback: function(value) {
+                return PokerTracker.Utils.formatCurrency(value);
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
           }
         }
       }
