@@ -149,9 +149,11 @@
     if (startTimeInput && !startTimeInput.dataset.boundDisplay) {
       startTimeInput.addEventListener('change', () => {
         updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+        updateEndTimeDefault(startTimeInput, endTimeInput);
       });
       startTimeInput.addEventListener('input', () => {
         updateDateTimeDisplay('newSessionStartTimeInput', 'newSessionStartTimeDisplay');
+        updateEndTimeDefault(startTimeInput, endTimeInput);
       });
       startTimeInput.dataset.boundDisplay = 'true';
     }
@@ -164,6 +166,21 @@
         updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
       });
       endTimeInput.dataset.boundDisplay = 'true';
+    }
+  }
+
+  function updateEndTimeDefault(startTimeInput, endTimeInput) {
+    if (!startTimeInput || !endTimeInput) return;
+
+    // Only auto-populate end time if it's currently empty and start time has a value
+    if (startTimeInput.value && !endTimeInput.value) {
+      const startDate = new Date(startTimeInput.value);
+      if (!isNaN(startDate.getTime())) {
+        // Add 1 hour to start time
+        const endDate = new Date(startDate.getTime() + (60 * 60 * 1000));
+        endTimeInput.value = formatDateTimeForInput(endDate.toISOString());
+        updateDateTimeDisplay('newSessionEndTimeInput', 'newSessionEndTimeDisplay');
+      }
     }
   }
 
@@ -222,7 +239,7 @@
   }
 
   function handleLocationChange() {
-    const { modal, locationSelect, locationInput } = getElements();
+    const { modal, locationSelect, locationInput, smallBlindInput, bigBlindInput } = getElements();
 
     if (!locationSelect || !locationInput) return;
 
@@ -239,6 +256,9 @@
       locationInput.style.display = 'block';
       locationInput.value = '';
       locationInput.focus();
+    } else if (locationSelect.value && locationSelect.value !== '') {
+      // Pre-populate blinds based on selected location
+      prePopulateBlindStructure(locationSelect.value, smallBlindInput, bigBlindInput);
     }
     // Note: We don't need an else clause here because we only want to handle + Location selection
     // Regular location selections are handled normally by SlimSelect
@@ -309,6 +329,45 @@
 
 
       locationInput.dataset.bound = 'true';
+    }
+  }
+
+  function prePopulateBlindStructure(location, smallBlindInput, bigBlindInput) {
+    if (!PT.DataStore || !location || !smallBlindInput || !bigBlindInput) return;
+
+    // Get all sessions for this location
+    const sessions = PT.DataStore.getSessions();
+    const locationSessions = sessions.filter(session =>
+      session.location && session.location.trim().toLowerCase() === location.trim().toLowerCase()
+    );
+
+    if (locationSessions.length === 0) return;
+
+    // Count frequency of blind structures
+    const blindStructures = {};
+    locationSessions.forEach(session => {
+      if (session.smallBlind && session.bigBlind) {
+        const key = `${session.smallBlind}/${session.bigBlind}`;
+        blindStructures[key] = (blindStructures[key] || 0) + 1;
+      }
+    });
+
+    if (Object.keys(blindStructures).length === 0) return;
+
+    // Find the most frequent blind structure
+    let mostFrequentStructure = '';
+    let maxCount = 0;
+    for (const [structure, count] of Object.entries(blindStructures)) {
+      if (count > maxCount) {
+        maxCount = count;
+        mostFrequentStructure = structure;
+      }
+    }
+
+    if (mostFrequentStructure) {
+      const [smallBlind, bigBlind] = mostFrequentStructure.split('/');
+      smallBlindInput.value = parseFloat(smallBlind);
+      bigBlindInput.value = parseFloat(bigBlind);
     }
   }
 
@@ -544,27 +603,38 @@
     const isLive = liveToggle.checked;
     let newSession = null;
 
-    if (isLive) {
-      newSession = PT.DataStore.createLiveSession(0);
-    } else {
-      // Get location from dropdown or input
-      const { locationInput } = getElements();
-      let location = '';
+    // Get location from dropdown or input (for both live and regular sessions)
+    const { locationInput } = getElements();
+    let location = '';
 
-      // Check if text input is visible (user entered custom location)
-      if (locationInput && locationInput.style.display !== 'none') {
-        location = locationInput.value.trim();
-      } else {
-        // Check SlimSelect dropdown value
-        const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
-        if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
-          const selectedValue = slimInstance.getSelected();
-          if (selectedValue && selectedValue.length > 0 && selectedValue[0].value !== '+ Location') {
-            location = selectedValue[0].value;
-          }
+    // Check if text input is visible (user entered custom location)
+    if (locationInput && locationInput.style.display !== 'none') {
+      location = locationInput.value.trim();
+    } else {
+      // Check SlimSelect dropdown value
+      const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
+      if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
+        const selectedValue = slimInstance.getSelected();
+        if (selectedValue && selectedValue.length > 0 && selectedValue[0].value !== '+ Location') {
+          location = selectedValue[0].value;
         }
       }
+    }
 
+    if (isLive) {
+      newSession = PT.DataStore.createLiveSession(0);
+
+      // Update live session with location and other details
+      if (location || smallBlindInput?.value || bigBlindInput?.value || notesInput?.value?.trim()) {
+        const liveUpdates = {};
+        if (location) liveUpdates.location = location;
+        if (smallBlindInput?.value) liveUpdates.smallBlind = coerceStake(smallBlindInput.value);
+        if (bigBlindInput?.value) liveUpdates.bigBlind = coerceStake(bigBlindInput.value);
+        if (notesInput?.value?.trim()) liveUpdates.notes = notesInput.value.trim();
+
+        PT.DataStore.updateSession(newSession.id, liveUpdates);
+      }
+    } else {
       const smallBlind = coerceStake(smallBlindInput ? smallBlindInput.value : null);
       const bigBlind = coerceStake(bigBlindInput ? bigBlindInput.value : null);
       const buyIn = coerceMoney(buyInInput ? buyInInput.value : 0);
