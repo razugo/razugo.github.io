@@ -47,6 +47,7 @@ exclude:
   - "**/.claude"
   - "**/GEMINI.md"
   - "**/AGENTS.md"
+  - "**.playwright-mcp"
 #   - .sass-cache/
 #   - .jekyll-cache/
 #   - gemfiles/

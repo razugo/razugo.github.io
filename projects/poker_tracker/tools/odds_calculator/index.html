@@ -32,41 +32,31 @@ nav_id: tools
   <main>
 <div class="tool-container">
   <div class="tool-header">
-    <h2>Poker Odds Calculator</h2>
-    <p>Calculate win probabilities for up to 8 hands against any board</p>
+    <div class="tool-header-content">
+      <h1>Odds Calculator</h1>
+      <p>Calculate win probabilities for up to 8 hands against any board</p>
+    </div>
+    <button class="back-btn" onclick="window.location.href='{{ '/projects/poker_tracker/tools/' | relative_url }}'" aria-label="Back to Tools">←</button>
   </div>
 
   <div class="odds-calculator">
-    <!-- Hand Inputs -->
-    <div class="hands-section">
-      <h3>Player Hands</h3>
-      <div class="hands-grid" id="handsGrid">
-        <!-- Hands will be dynamically generated -->
-      </div>
-      <div class="hands-controls">
-        <button id="addHandBtn" class="btn btn-outline">Add Hand</button>
-        <button id="removeHandBtn" class="btn btn-outline">Remove Hand</button>
-      </div>
-    </div>
-
-    <!-- Board Input -->
+    <!-- Board Cards Section -->
     <div class="board-section">
-      <h3>Board Cards</h3>
       <div class="board-cards">
-        <div class="card-display empty" data-board="0">
-          ?
+        <div class="card-picker empty" data-board="0" tabindex="0" role="button" aria-label="Select flop card 1">
+          <span class="card-placeholder">?</span>
         </div>
-        <div class="card-display empty" data-board="1">
-          ?
+        <div class="card-picker empty" data-board="1" tabindex="0" role="button" aria-label="Select flop card 2">
+          <span class="card-placeholder">?</span>
         </div>
-        <div class="card-display empty" data-board="2">
-          ?
+        <div class="card-picker empty" data-board="2" tabindex="0" role="button" aria-label="Select flop card 3">
+          <span class="card-placeholder">?</span>
         </div>
-        <div class="card-display empty" data-board="3">
-          ?
+        <div class="card-picker empty" data-board="3" tabindex="0" role="button" aria-label="Select turn card">
+          <span class="card-placeholder">?</span>
         </div>
-        <div class="card-display empty" data-board="4">
-          ?
+        <div class="card-picker empty" data-board="4" tabindex="0" role="button" aria-label="Select river card">
+          <span class="card-placeholder">?</span>
         </div>
       </div>
       <div class="board-labels">
@@ -78,35 +68,64 @@ nav_id: tools
       </div>
     </div>
 
-    <!-- Calculate Button -->
-    <div class="calculate-section">
-      <button id="calculateBtn" class="btn btn-primary btn-large">Calculate Odds</button>
-      <div class="simulation-info">
-        <label>
-          Simulations:
-          <select id="simulationCount">
-            <option value="1000">1,000</option>
-            <option value="10000" selected>10,000</option>
-            <option value="50000">50,000</option>
-            <option value="100000">100,000</option>
-          </select>
-        </label>
+    <!-- Odds Table -->
+    <div class="odds-table-container">
+      <div class="table-wrapper">
+        <table class="odds-table" id="oddsTable">
+          <thead>
+            <tr>
+              <th class="cards-col">Cards</th>
+              <th class="pct-col">Win %</th>
+              <th class="pct-col">Tie %</th>
+              <th class="actions-col"></th>
+            </tr>
+          </thead>
+          <tbody id="handsTableBody">
+            <!-- Hands will be dynamically generated -->
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Results -->
-    <div class="results-section" id="resultsSection" style="display: none;">
-      <h3>Results</h3>
-      <div class="progress-bar-container" id="progressContainer" style="display: none;">
-        <div class="progress-bar">
-          <div class="progress-fill" id="progressFill"></div>
-        </div>
-        <div class="progress-text" id="progressText">Calculating...</div>
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <div class="controls-left">
+        <button id="addHandBtn" class="btn btn-secondary" aria-label="Add new hand">
+          <span class="btn-icon">+</span>
+          Add Hand
+        </button>
+        <button id="clearBoardBtn" class="btn btn-secondary" aria-label="Clear all board cards">
+          Clear Board
+        </button>
       </div>
-      <div class="results-grid" id="resultsGrid">
-        <!-- Results will be displayed here -->
+
+      <div class="controls-center">
+        <div class="progress-container" id="progressContainer" style="display: none;">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-text" id="progressText">Calculating...</div>
+        </div>
+      </div>
+
+      <div class="controls-right">
+        <div class="simulation-selector">
+          <label for="simulationCount" class="sr-only">Number of simulations</label>
+          <select id="simulationCount" class="sim-select">
+            <option value="1000">1K</option>
+            <option value="10000" selected>10K</option>
+            <option value="100000">100K</option>
+          </select>
+          <span class="sim-label">simulations</span>
+        </div>
+        <button id="calculateBtn" class="btn btn-primary btn-large" disabled>
+          Run Simulation
+        </button>
       </div>
     </div>
+
+    <!-- Results announcer for screen readers -->
+    <div id="resultsAnnouncer" aria-live="polite" class="sr-only"></div>
   </div>
 </div>
 
@@ -126,236 +145,866 @@ nav_id: tools
 </div>
 
 <style>
-.tool-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 20px;
+/* CSS Variables for consistent theming */
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary-color: #64748b;
+  --success-color: #16a34a;
+  --danger-color: #dc2626;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --card-bg: #ffffff;
+  --bg-secondary: #f8fafc;
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --radius: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 }
 
-.tool-header {
-  text-align: center;
-  margin-bottom: 30px;
+/* Accessibility utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.tool-header h2 {
-  margin: 0 0 10px 0;
-  color: var(--primary-color);
-}
-
-.tool-header p {
-  color: var(--text-muted);
-  margin: 0;
-}
-
+/* Core layout */
 .odds-calculator {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
 }
 
-/* Hands Section */
-.hands-section h3,
-.board-section h3,
-.results-section h3 {
-  margin: 0 0 15px 0;
-  color: var(--text-primary);
-}
-
-.hands-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.hand-input {
+/* Board Cards Section */
+.board-section {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 15px;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
-.hand-input h4 {
-  margin: 0 0 10px 0;
-  font-size: 14px;
-  color: var(--text-primary);
-}
-
-.hand-cards {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.hand-result {
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  padding: 8px;
-  border-radius: 4px;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.hand-result.winner {
-  background: var(--success-bg);
-  color: var(--success-color);
-}
-
-/* Card Input */
-.card-input {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-}
-
-.card-rank,
-.card-suit {
-  padding: 4px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: white;
-  font-size: 14px;
-}
-
-.card-rank {
-  width: 50px;
-}
-
-.card-suit {
-  width: 45px;
-}
-
-/* Board Section */
 .board-cards {
   display: flex;
-  gap: 15px;
+  gap: 1rem;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 0.75rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.card-picker {
+  width: 80px;
+  height: 112px;
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.card-picker:hover {
+  border-color: var(--border-hover);
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-picker:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.card-picker.empty .card-placeholder {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+.card-picker:not(.empty) {
+  background: white;
+  border-style: solid;
+  border-color: var(--border-color);
+}
+
+.card-picker .card-rank {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.card-picker .card-suit {
+  font-size: 1.5rem;
+}
+
+.card-picker.red {
+  color: #dc2626;
+}
+
+.card-picker.black {
+  color: var(--text-primary);
 }
 
 .board-labels {
   display: flex;
-  gap: 15px;
+  gap: 1rem;
   justify-content: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  flex-wrap: nowrap;
 }
 
 .board-labels span {
-  width: 95px;
+  width: 80px;
   text-align: center;
 }
 
-/* Controls */
-.hands-controls {
+/* Odds Table */
+.odds-table-container {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.odds-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.odds-table thead {
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.odds-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.odds-table .pct-col {
+  text-align: right;
+  width: 100px;
+}
+
+.odds-table .cards-col {
+  width: 200px;
+}
+
+.odds-table .actions-col {
+  width: 60px;
+  text-align: center;
+}
+
+.odds-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.odds-table tbody tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.odds-table tbody tr:hover {
+  background: rgb(37 99 235 / 0.05);
+}
+
+.odds-table tbody tr.winner {
+  background: rgb(16 163 74 / 0.05);
+  position: relative;
+}
+
+.odds-table tbody tr.winner td {
+  font-weight: 600;
+}
+
+.odds-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  min-height: 64px;
+}
+
+/* Hand row cards */
+.hand-cards {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 0.5rem;
+  align-items: center;
 }
 
-.calculate-section {
-  text-align: center;
+.hand-card-picker {
+  width: 48px;
+  height: 68px;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 0.375rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
-.btn-large {
-  padding: 12px 30px;
-  font-size: 16px;
+.hand-card-picker:hover {
+  border-color: var(--border-hover);
+  background: white;
+  box-shadow: var(--shadow-sm);
 }
 
-.simulation-info {
-  font-size: 14px;
+.hand-card-picker:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.1);
+}
+
+.hand-card-picker.empty {
   color: var(--text-muted);
 }
 
-.simulation-info select {
-  padding: 4px 8px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+.hand-card-picker:not(.empty) {
   background: white;
-  margin-left: 5px;
+  border-style: solid;
 }
 
-/* Progress Bar */
-.progress-bar-container {
-  margin-bottom: 20px;
+.hand-card-picker .card-rank {
+  font-size: 0.875rem;
+  font-weight: bold;
+  margin-bottom: 0.125rem;
+}
+
+.hand-card-picker .card-suit {
+  font-size: 1rem;
+}
+
+.hand-card-picker.red {
+  color: #dc2626;
+}
+
+.hand-card-picker.black {
+  color: var(--text-primary);
+}
+
+/* Percentage columns */
+.pct-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', 'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pct-value.winner {
+  color: var(--success-color);
+}
+
+.pct-value.empty {
+  color: var(--text-muted);
+}
+
+/* Winner trophy */
+.winner-trophy {
+  margin-left: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/* Remove hand button */
+.remove-hand-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.remove-hand-btn:hover {
+  color: var(--danger-color);
+  background: rgb(239 68 68 / 0.1);
+}
+
+.remove-hand-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(239 68 68 / 0.2);
+}
+
+/* Controls Bar */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.controls-left {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.controls-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-large {
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.btn-icon {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+/* Simulation selector */
+.simulation-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.sim-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.sim-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.1);
+}
+
+.sim-label {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* Progress bar */
+.progress-container {
+  min-width: 240px;
+  text-align: center;
 }
 
 .progress-bar {
   width: 100%;
-  height: 20px;
+  height: 6px;
   background: var(--bg-secondary);
-  border-radius: 10px;
+  border-radius: 3px;
   overflow: hidden;
-  margin-bottom: 5px;
+  margin-bottom: 0.5rem;
 }
 
 .progress-fill {
   height: 100%;
-  background: var(--primary-color);
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-hover));
   width: 0%;
   transition: width 0.3s ease;
+  border-radius: 3px;
 }
 
 .progress-text {
-  text-align: center;
-  font-size: 14px;
+  font-size: 0.75rem;
   color: var(--text-muted);
+  font-weight: 500;
 }
 
-/* Results */
-.results-grid {
+/* Card Selector Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.card-selector-modal {
+  max-width: 600px;
+  width: 90vw;
+}
+
+.modal-header {
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  border-radius: var(--radius);
+  transition: all 0.15s ease;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+}
+
+.modal-close:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.1);
+}
+
+.modal-body {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 0.5rem;
 }
 
-.result-item {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 15px;
-  text-align: center;
+.card-option {
+  aspect-ratio: 2.5/3.5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  font-weight: bold;
+  min-height: 50px;
 }
 
-.result-item h4 {
-  margin: 0 0 10px 0;
+.card-option:hover:not(.disabled) {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-option:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.1);
+}
+
+.card-option.disabled {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.card-option .card-rank {
+  font-size: 0.875rem;
+  font-weight: bold;
+  margin-bottom: 0.125rem;
+}
+
+.card-option .card-suit {
+  font-size: 1rem;
+}
+
+.card-option.red {
+  color: #dc2626;
+}
+
+.card-option.black {
   color: var(--text-primary);
 }
 
-.result-cards {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 10px;
-  font-family: monospace;
-  font-size: 14px;
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .tool-header {
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .tool-header-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .tool-header-content p {
+    font-size: 0.875rem;
+  }
+
+  .back-btn {
+    height: 36px;
+    width: 36px;
+    min-width: 36px;
+    font-size: 1.125rem;
+  }
+
+  .odds-calculator {
+    gap: 1.5rem;
+  }
+
+  .board-section {
+    padding: 1rem;
+  }
+
+  .board-cards {
+    gap: 0.5rem;
+    justify-content: space-between;
+    max-width: 100%;
+  }
+
+  .card-picker {
+    width: 56px;
+    height: 80px;
+    flex-shrink: 0;
+  }
+
+  .card-picker .card-rank {
+    font-size: 0.875rem;
+  }
+
+  .card-picker .card-suit {
+    font-size: 1rem;
+  }
+
+  .card-picker.empty .card-placeholder {
+    font-size: 1.25rem;
+  }
+
+  .board-labels {
+    gap: 0.5rem;
+    justify-content: space-between;
+    max-width: 100%;
+  }
+
+  .board-labels span {
+    width: 56px;
+    font-size: 0.625rem;
+    flex-shrink: 0;
+  }
+
+  .controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .controls-left {
+    justify-content: center;
+  }
+
+  .controls-right {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .simulation-selector {
+    justify-content: center;
+  }
+
+  .odds-table th,
+  .odds-table td {
+    padding: 0.75rem;
+  }
+
+  .hand-card-picker {
+    width: 40px;
+    height: 56px;
+  }
+
+  .hand-card-picker .card-rank {
+    font-size: 0.75rem;
+  }
+
+  .hand-card-picker .card-suit {
+    font-size: 0.875rem;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(13, 1fr);
+    gap: 0.25rem;
+  }
+
+  .card-option {
+    min-height: 40px;
+    font-size: 0.625rem;
+  }
+
+  .card-option .card-rank {
+    font-size: 0.75rem;
+  }
+
+  .card-option .card-suit {
+    font-size: 0.875rem;
+  }
 }
 
-.result-percentage {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--primary-color);
+/* Extra small devices - ensure 5 cards fit in one row */
+@media (max-width: 480px) {
+  .board-cards {
+    gap: 0.25rem;
+    padding: 0 0.25rem;
+  }
+
+  .card-picker {
+    width: 48px;
+    height: 68px;
+    min-width: 48px;
+  }
+
+  .card-picker .card-rank {
+    font-size: 0.75rem;
+  }
+
+  .card-picker .card-suit {
+    font-size: 0.875rem;
+  }
+
+  .card-picker .card-placeholder {
+    font-size: 1rem;
+  }
+
+  .board-labels {
+    gap: 0.25rem;
+    padding: 0 0.25rem;
+  }
+
+  .board-labels span {
+    width: 48px;
+    min-width: 48px;
+    font-size: 0.5rem;
+    text-align: center;
+  }
+
+  .hand-card-picker {
+    width: 36px;
+    height: 50px;
+  }
+
+  .card-grid {
+    gap: 0.125rem;
+  }
+
+  .card-option {
+    min-height: 36px;
+  }
 }
 
-.result-item.winner .result-percentage {
-  color: var(--success-color);
+/* Very small devices - force single row layout */
+@media (max-width: 640px) {
+  .board-section {
+    padding: 0.75rem;
+  }
+
+  .board-cards {
+    gap: 0.25rem !important;
+    padding: 0;
+    margin: 0 auto;
+    flex-wrap: nowrap !important;
+    justify-content: space-evenly !important;
+    width: 100%;
+  }
+
+  .card-picker {
+    width: 48px !important;
+    height: 68px !important;
+    min-width: 48px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .card-picker .card-rank {
+    font-size: 0.75rem;
+  }
+
+  .card-picker .card-suit {
+    font-size: 0.875rem;
+  }
+
+  .card-picker .card-placeholder {
+    font-size: 1rem;
+  }
+
+  .board-labels {
+    gap: 0.25rem !important;
+    padding: 0;
+    margin: 0 auto;
+    flex-wrap: nowrap !important;
+    justify-content: space-evenly !important;
+    width: 100%;
+  }
+
+  .board-labels span {
+    width: 48px !important;
+    min-width: 48px !important;
+    font-size: 0.5rem;
+    line-height: 1;
+    text-align: center;
+    flex-shrink: 0 !important;
+  }
 }
 
-/* Suit colors */
-.suit-hearts,
-.suit-diamonds {
-  color: #d73027;
+/* Extra small devices */
+@media (max-width: 375px) {
+  .card-picker {
+    width: 44px !important;
+    height: 62px !important;
+    min-width: 44px !important;
+  }
+
+  .card-picker .card-placeholder {
+    font-size: 0.875rem;
+  }
+
+  .board-labels span {
+    width: 44px !important;
+    min-width: 44px !important;
+    font-size: 0.45rem;
+  }
 }
 
-.suit-clubs,
-.suit-spades {
-  color: #1a1a1a;
-}
 
 /* Card Selector Modal */
 .card-selector-modal {
@@ -417,49 +1066,6 @@ nav_id: tools
   color: #1a1a1a;
 }
 
-/* Card Display (replacing dropdowns) */
-.card-display {
-  width: 80px;
-  height: 50px;
-  background: white;
-  border: 2px solid var(--border-color);
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-
-.card-display:hover {
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
-}
-
-.card-display.empty {
-  color: #999;
-  font-size: 24px;
-}
-
-.card-display.red {
-  color: #d73027;
-}
-
-.card-display.black {
-  color: #1a1a1a;
-}
-
-.card-display .card-rank {
-  font-size: 14px;
-  margin-bottom: 2px;
-}
-
-.card-display .card-suit {
-  font-size: 14px;
-}
 
 /* Modal Overlay */
 .modal-overlay {
@@ -520,51 +1126,395 @@ nav_id: tools
   padding: 0 20px 20px 20px;
 }
 
+/* Improved spacing and visual hierarchy */
+.tool-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.tool-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 1rem;
+}
+
+.tool-header-content {
+  flex: 1;
+}
+
+.tool-header-content h1 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.tool-header-content p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.back-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  height: 40px;
+  width: 40px;
+  min-width: 40px;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.back-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.back-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+}
+
+.odds-calculator {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Enhanced button styles */
+.btn {
+  padding: 10px 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary-color) 85%, black);
+}
+
+/* Improved board section */
+.board-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-cards {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.board-labels {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.board-labels span {
+  width: 80px;
+  text-align: center;
+}
+
+/* Enhanced card displays */
+.card-display {
+  width: 80px;
+  height: 56px;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-display:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card-display.empty {
+  color: #999;
+  font-size: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.card-display.empty:hover {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+/* Enhanced progress bar */
+.progress-bar-container {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 8px;
+  height: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), color-mix(in srgb, var(--primary-color) 80%, white));
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Enhanced results */
+.results-section {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.result-item {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-item.winner {
+  border-color: var(--success-color);
+  background: color-mix(in srgb, var(--success-bg) 10%, var(--card-bg));
+}
+
+.result-item.winner::before {
+  content: '🏆';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 16px;
+}
+
+.result-percentage {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin-top: 8px;
+}
+
+.result-item.winner .result-percentage {
+  color: var(--success-color);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+  .tool-container {
+    padding: 12px;
+  }
+
+  .odds-calculator {
+    gap: 20px;
+  }
+
   .board-cards {
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
 
   .board-labels {
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
 
   .board-labels span {
-    width: 85px;
+    width: 70px;
+    font-size: 11px;
+  }
+
+  .card-display {
+    width: 70px;
+    height: 50px;
+    font-size: 11px;
+  }
+
+  .card-display.empty {
+    font-size: 18px;
   }
 
   .hands-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .results-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .card-selector-modal {
     width: 95vw;
-    margin: 10px;
+    margin: 8px;
+    max-height: 85vh;
   }
 
   .card-grid {
     grid-template-columns: repeat(13, 1fr);
-    gap: 4px;
+    gap: 3px;
   }
 
   .card-option {
-    min-height: 40px;
-    font-size: 9px;
+    min-height: 36px;
+    font-size: 8px;
+    border-radius: 4px;
   }
 
   .card-option .card-rank {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .card-option .card-suit {
-    font-size: 12px;
+    font-size: 11px;
+  }
+
+  .hands-controls {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hands-controls .btn {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .calculate-section .btn-large {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+  }
+
+  .simulation-info {
+    width: 100%;
+  }
+
+  .simulation-info select {
+    width: 100px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .board-cards {
+    justify-content: center;
+  }
+
+  .card-display {
+    width: 60px;
+    height: 44px;
+    font-size: 10px;
+  }
+
+  .card-display.empty {
+    font-size: 16px;
+  }
+
+  .board-labels span {
+    width: 60px;
+    font-size: 10px;
+  }
+
+  .card-grid {
+    gap: 2px;
+  }
+
+  .card-option {
+    min-height: 32px;
+    font-size: 7px;
+  }
+
+  .card-option .card-rank {
+    font-size: 9px;
+  }
+
+  .card-option .card-suit {
+    font-size: 10px;
+  }
+
+  .modal-header {
+    padding: 16px 16px 0 16px;
+  }
+
+  .modal-body {
+    padding: 0 16px 16px 16px;
   }
 }
 </style>
@@ -577,6 +1527,7 @@ class OddsCalculator {
     this.minHands = 2;
     this.boardCards = [];
     this.isCalculating = false;
+    this.currentSelection = null;
 
     this.ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
     this.suits = ['s', 'h', 'd', 'c'];
@@ -589,6 +1540,7 @@ class OddsCalculator {
     this.createInitialHands();
     this.bindEvents();
     this.setupCardSelector();
+    this.updateCalculateButton();
   }
 
   setupCardSelector() {
@@ -632,82 +1584,143 @@ class OddsCalculator {
     for (let i = 0; i < this.minHands; i++) {
       this.addHand();
     }
-    this.updateHandControls();
   }
 
   addHand() {
     if (this.hands.length >= this.maxHands) return;
 
     const handIndex = this.hands.length;
-    const handElement = this.createHandElement(handIndex);
+    const handRow = this.createHandRow(handIndex);
 
-    document.getElementById('handsGrid').appendChild(handElement);
-    this.hands.push({ element: handElement, cards: [] });
+    document.getElementById('handsTableBody').appendChild(handRow);
+    this.hands.push({
+      id: `hand-${handIndex}`,
+      element: handRow,
+      cards: [],
+      winPct: null,
+      tiePct: null,
+      isWinner: false
+    });
 
-    this.updateHandControls();
+    this.updateCalculateButton();
+  }
+
+  createHandRow(index) {
+    const row = document.createElement('tr');
+    row.dataset.handIndex = index;
+
+    row.innerHTML = `
+      <td class="cards-col">
+        <div class="hand-cards">
+          <div class="hand-card-picker empty" data-hand="${index}" data-card="0" tabindex="0" role="button" aria-label="Select first card for hand ${index + 1}">?</div>
+          <div class="hand-card-picker empty" data-hand="${index}" data-card="1" tabindex="0" role="button" aria-label="Select second card for hand ${index + 1}">?</div>
+        </div>
+      </td>
+      <td class="pct-col">
+        <span class="pct-value empty" data-win-pct="${index}">–</span>
+      </td>
+      <td class="pct-col">
+        <span class="pct-value empty" data-tie-pct="${index}">–</span>
+      </td>
+      <td class="actions-col">
+        ${this.hands.length >= this.minHands ? `<button class="remove-hand-btn" data-hand="${index}" aria-label="Remove hand ${index + 1}">&times;</button>` : ''}
+      </td>
+    `;
+
+    // Add event listeners to card pickers
+    row.querySelectorAll('.hand-card-picker').forEach(picker => {
+      picker.addEventListener('click', () => {
+        const handIndex = picker.dataset.hand;
+        const cardIndex = picker.dataset.card;
+        this.openCardSelector(handIndex, cardIndex, picker, false);
+      });
+
+      // Keyboard support
+      picker.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          picker.click();
+        }
+      });
+    });
+
+    // Add remove button listener
+    const removeBtn = row.querySelector('.remove-hand-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        this.removeHandByIndex(index);
+      });
+    }
+
+    return row;
   }
 
   removeHand() {
     if (this.hands.length <= this.minHands) return;
-
-    const lastHand = this.hands.pop();
-    lastHand.element.remove();
-
-    this.updateHandControls();
+    this.removeHandByIndex(this.hands.length - 1);
   }
 
-  createHandElement(index) {
-    const handDiv = document.createElement('div');
-    handDiv.className = 'hand-input';
-    handDiv.innerHTML = `
-      <h4>Hand ${index + 1}</h4>
-      <div class="hand-cards">
-        <div class="card-display empty" data-hand="${index}" data-card="0">
-          ?
-        </div>
-        <div class="card-display empty" data-hand="${index}" data-card="1">
-          ?
-        </div>
-      </div>
-      <div class="hand-result" data-result="${index}">-</div>
-    `;
+  removeHandByIndex(index) {
+    if (this.hands.length <= this.minHands) return;
 
-    // Add click listeners to card displays
-    handDiv.querySelectorAll('.card-display').forEach(cardDisplay => {
-      cardDisplay.addEventListener('click', () => {
-        const hand = cardDisplay.dataset.hand;
-        const card = cardDisplay.dataset.card;
-        this.openCardSelector(hand, card, cardDisplay);
-      });
-    });
+    // Find and remove the hand
+    const handIndex = this.hands.findIndex(hand => hand.element.dataset.handIndex == index);
+    if (handIndex === -1) return;
 
-    return handDiv;
+    const hand = this.hands[handIndex];
+    hand.element.remove();
+    this.hands.splice(handIndex, 1);
+
+    this.updateCalculateButton();
   }
 
-  updateHandControls() {
-    const addBtn = document.getElementById('addHandBtn');
-    const removeBtn = document.getElementById('removeHandBtn');
+  updateCalculateButton() {
+    const calculateBtn = document.getElementById('calculateBtn');
+    const completeHands = this.getCompleteHands();
+    const isValid = this.validateCards();
 
-    addBtn.disabled = this.hands.length >= this.maxHands;
-    removeBtn.disabled = this.hands.length <= this.minHands;
+    calculateBtn.disabled = !isValid || completeHands.length < 2 || this.isCalculating;
   }
 
   bindEvents() {
     document.getElementById('addHandBtn').addEventListener('click', () => this.addHand());
-    document.getElementById('removeHandBtn').addEventListener('click', () => this.removeHand());
     document.getElementById('calculateBtn').addEventListener('click', () => this.calculateOdds());
 
-    // Add click listeners to board card displays
-    document.querySelectorAll('.board-section .card-display').forEach(cardDisplay => {
-      cardDisplay.addEventListener('click', () => {
-        const board = cardDisplay.dataset.board;
-        this.openCardSelector(null, board, cardDisplay);
+    // Add clear board button
+    document.getElementById('clearBoardBtn').addEventListener('click', () => this.clearBoard());
+
+    // Add click listeners to board card pickers
+    document.querySelectorAll('.board-section .card-picker').forEach(cardPicker => {
+      cardPicker.addEventListener('click', () => {
+        const boardIndex = cardPicker.dataset.board;
+        this.openCardSelector(null, boardIndex, cardPicker, true);
+      });
+
+      // Keyboard support
+      cardPicker.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          cardPicker.click();
+        }
       });
     });
   }
 
-  openCardSelector(hand, card, targetElement) {
-    this.currentSelection = { hand, card, targetElement };
+  clearBoard() {
+    // Clear all board cards
+    document.querySelectorAll('.board-section .card-picker').forEach(cardPicker => {
+      cardPicker.className = 'card-picker empty';
+      cardPicker.innerHTML = '<span class="card-placeholder">?</span>';
+      cardPicker.removeAttribute('data-card-value');
+    });
+
+    this.boardCards = [];
+    this.validateCards();
+    this.updateCalculateButton();
+  }
+
+  openCardSelector(hand, card, targetElement, isBoard = false) {
+    this.currentSelection = { hand, card, targetElement, isBoard };
     this.updateCardAvailability();
     document.getElementById('cardSelectorModal').style.display = 'flex';
   }
@@ -720,7 +1733,7 @@ class OddsCalculator {
   selectCard(cardValue) {
     if (!this.currentSelection) return;
 
-    const { targetElement } = this.currentSelection;
+    const { targetElement, isBoard } = this.currentSelection;
     const rank = cardValue[0];
     const suit = cardValue[1];
     const isRed = suit === 'h' || suit === 'd';
@@ -730,11 +1743,18 @@ class OddsCalculator {
       <div class="card-rank">${rank}</div>
       <div class="card-suit">${this.suitSymbols[suit]}</div>
     `;
-    targetElement.className = `card-display ${isRed ? 'red' : 'black'}`;
+
+    if (isBoard) {
+      targetElement.className = `card-picker ${isRed ? 'red' : 'black'}`;
+    } else {
+      targetElement.className = `hand-card-picker ${isRed ? 'red' : 'black'}`;
+    }
+
     targetElement.dataset.cardValue = cardValue;
 
     this.closeCardSelector();
     this.validateCards();
+    this.updateCalculateButton();
   }
 
   updateCardAvailability() {
@@ -754,16 +1774,16 @@ class OddsCalculator {
     const usedCards = new Set();
 
     // Check hand cards
-    document.querySelectorAll('.hand-input .card-display').forEach(cardDisplay => {
-      const cardValue = cardDisplay.dataset.cardValue;
+    document.querySelectorAll('.hand-card-picker').forEach(cardPicker => {
+      const cardValue = cardPicker.dataset.cardValue;
       if (cardValue) {
         usedCards.add(cardValue);
       }
     });
 
     // Check board cards
-    document.querySelectorAll('.board-section .card-display').forEach(cardDisplay => {
-      const cardValue = cardDisplay.dataset.cardValue;
+    document.querySelectorAll('.board-section .card-picker').forEach(cardPicker => {
+      const cardValue = cardPicker.dataset.cardValue;
       if (cardValue) {
         usedCards.add(cardValue);
       }
@@ -773,32 +1793,26 @@ class OddsCalculator {
   }
 
   validateCards() {
-    const usedCards = this.getUsedCards();
     let isValid = true;
 
-    // Reset all card displays to normal appearance
-    document.querySelectorAll('.card-display').forEach(display => {
-      display.style.borderColor = '';
+    // Reset all card pickers to normal appearance
+    document.querySelectorAll('.card-picker, .hand-card-picker').forEach(picker => {
+      picker.style.borderColor = '';
     });
 
     // Check for duplicates and mark invalid cards
     const cardValues = [];
-    document.querySelectorAll('.card-display').forEach(cardDisplay => {
-      const cardValue = cardDisplay.dataset.cardValue;
+    document.querySelectorAll('.card-picker, .hand-card-picker').forEach(picker => {
+      const cardValue = picker.dataset.cardValue;
       if (cardValue) {
         if (cardValues.includes(cardValue)) {
-          cardDisplay.style.borderColor = 'red';
+          picker.style.borderColor = 'var(--danger-color)';
           isValid = false;
         } else {
           cardValues.push(cardValue);
         }
       }
     });
-
-    // Update calculate button state
-    const calculateBtn = document.getElementById('calculateBtn');
-    const completeHands = this.getCompleteHands();
-    calculateBtn.disabled = !isValid || completeHands.length < 2 || this.isCalculating;
 
     return isValid;
   }
@@ -810,8 +1824,8 @@ class OddsCalculator {
       const cards = [];
       const handElement = hand.element;
 
-      handElement.querySelectorAll('.card-display').forEach(cardDisplay => {
-        const cardValue = cardDisplay.dataset.cardValue;
+      handElement.querySelectorAll('.hand-card-picker').forEach(cardPicker => {
+        const cardValue = cardPicker.dataset.cardValue;
         if (cardValue) {
           cards.push(cardValue);
         }
@@ -828,8 +1842,8 @@ class OddsCalculator {
   getBoardCards() {
     const board = [];
 
-    document.querySelectorAll('.board-section .card-display').forEach(cardDisplay => {
-      const cardValue = cardDisplay.dataset.cardValue;
+    document.querySelectorAll('.board-section .card-picker').forEach(cardPicker => {
+      const cardValue = cardPicker.dataset.cardValue;
       if (cardValue) {
         board.push(cardValue);
       }
@@ -857,9 +1871,7 @@ class OddsCalculator {
 
     this.isCalculating = true;
     document.getElementById('calculateBtn').disabled = true;
-    document.getElementById('resultsSection').style.display = 'block';
     document.getElementById('progressContainer').style.display = 'block';
-    document.getElementById('resultsGrid').innerHTML = '';
 
     const simulations = parseInt(document.getElementById('simulationCount').value);
 
@@ -951,53 +1963,60 @@ class OddsCalculator {
   }
 
   displayResults(hands, results) {
-    // Get the total number of simulations from the first result
     const totalSims = parseInt(document.getElementById('simulationCount').value);
-    const resultsGrid = document.getElementById('resultsGrid');
-
-    // Debug logging
-    console.log('Results:', results);
-    console.log('Total simulations:', totalSims);
 
     // Calculate percentages and find winner
     const percentages = results.map((r, index) => {
       const percentage = ((r.wins + r.ties / hands.length) / totalSims) * 100;
-      console.log(`Hand ${index + 1}: ${r.wins} wins, ${r.ties} ties, ${percentage.toFixed(2)}%`);
+      return percentage;
+    });
+
+    const tiePercentages = results.map((r, index) => {
+      const percentage = (r.ties / totalSims) * 100;
       return percentage;
     });
 
     const maxPercentage = Math.max(...percentages);
 
+    // Update each hand row in the table
     hands.forEach((hand, index) => {
-      const result = results[index];
-      const percentage = percentages[index];
-      const isWinner = percentage === maxPercentage && percentage > 0;
+      const winPct = percentages[index];
+      const tiePct = tiePercentages[index];
+      const isWinner = winPct === maxPercentage && winPct > 0;
 
-      const resultDiv = document.createElement('div');
-      resultDiv.className = `result-item ${isWinner ? 'winner' : ''}`;
+      // Find the table row
+      const handRow = document.querySelector(`tr[data-hand-index="${hand.index}"]`);
+      if (handRow) {
+        // Update win percentage
+        const winPctElement = handRow.querySelector(`[data-win-pct="${hand.index}"]`);
+        if (winPctElement) {
+          winPctElement.textContent = `${winPct.toFixed(1)}%`;
+          winPctElement.className = `pct-value ${isWinner ? 'winner' : ''}`;
+          if (isWinner) {
+            winPctElement.innerHTML += ' <span class="winner-trophy">🏆</span>';
+          }
+        }
 
-      const cardDisplay = hand.cards.map(card => {
-        const rank = card[0];
-        const suit = card[1];
-        const suitClass = suit === 'h' || suit === 'd' ? 'suit-hearts' : 'suit-clubs';
-        return `<span class="${suitClass}">${rank}${this.suitSymbols[suit]}</span>`;
-      }).join(' ');
+        // Update tie percentage
+        const tiePctElement = handRow.querySelector(`[data-tie-pct="${hand.index}"]`);
+        if (tiePctElement) {
+          tiePctElement.textContent = `${tiePct.toFixed(1)}%`;
+          tiePctElement.className = 'pct-value';
+        }
 
-      resultDiv.innerHTML = `
-        <h4>Hand ${hand.index + 1}</h4>
-        <div class="result-cards">${cardDisplay}</div>
-        <div class="result-percentage">${percentage.toFixed(1)}%</div>
-      `;
-
-      resultsGrid.appendChild(resultDiv);
-
-      // Update hand result in the input section
-      const resultElement = document.querySelector(`[data-result="${hand.index}"]`);
-      if (resultElement) {
-        resultElement.textContent = `${percentage.toFixed(1)}%`;
-        resultElement.className = `hand-result ${isWinner ? 'winner' : ''}`;
+        // Mark winner row
+        if (isWinner) {
+          handRow.classList.add('winner');
+        } else {
+          handRow.classList.remove('winner');
+        }
       }
     });
+
+    // Announce results for screen readers
+    const announcer = document.getElementById('resultsAnnouncer');
+    const winnerIndex = percentages.indexOf(maxPercentage);
+    announcer.textContent = `Calculation complete. Hand ${winnerIndex + 1} has the highest win probability at ${maxPercentage.toFixed(1)}%.`;
   }
 
   shuffle(array) {
