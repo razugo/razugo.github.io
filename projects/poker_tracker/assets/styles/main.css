@@ -1,4 +1,4 @@
-    :root {
+:root {
       --primary: #3b82f6;
       --primary-dark: #2563eb;
       --success: #10b981;
@@ -348,75 +348,6 @@
     .status-banner strong {
       font-weight: 600;
       color: var(--text-primary);
-    }
-
-    /* Navigation */
-    .nav-container {
-      position: sticky;
-      top: 0;
-      z-index: 200;
-      width: 100%;
-    }
-
-    .nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0.85rem 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 120;
-      min-height: var(--nav-height);
-    }
-
-    .nav-brand {
-      font-weight: 700;
-      font-size: 1.25rem;
-      color: var(--primary);
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-
-    .nav-brand:hover {
-      color: var(--primary-dark);
-    }
-
-    .nav-menu {
-      display: flex;
-      gap: 1rem;
-      list-style: none;
-    }
-
-    .nav-link {
-      text-decoration: none;
-      color: var(--text-secondary);
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius);
-    }
-
-    .nav-link:hover, .nav-link.active {
-      background: rgba(59, 130, 246, 0.1);
-    }
-
-    /* Live Session Button States */
-    .nav-link.live-session-start {
-      color: var(--primary);
-      font-weight: 600;
-      background: transparent;
-    }
-
-    .nav-link.live-session-start:hover {
-      background: var(--primary);
-      color: white;
-    }
-
-    .nav-link.live-session-active {
-      background: var(--primary);
-      color: white;
-      font-weight: 600;
     }
 
     /* Live Session Button in Sessions Page */
@@ -849,14 +780,6 @@
       background: rgba(239, 68, 68, 0.1);
     }
 
-
-    .nav-toggle {
-      display: none;
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
 
     /* Container */
     .container {
@@ -1758,48 +1681,6 @@
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      .nav-menu {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        left: auto;
-        width: 200px;
-        background: var(--surface);
-        border-top: 1px solid var(--border);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        flex-direction: column;
-        padding: 1rem;
-        align-items: center;
-        gap: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease, opacity 0.3s ease;
-        opacity: 0;
-        display: flex;
-        z-index: 1000;
-      }
-
-      .nav-link {
-        width: 100%;
-        text-align: center;
-        margin: 0;
-        display: block;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .nav-link:last-child {
-        border-bottom: none;
-      }
-
-      .nav-menu.open {
-        max-height: 300px;
-        opacity: 1;
-      }
-
-      .nav-toggle {
-        display: block;
-      }
-
       /* Mobile Action Menu */
       .action-menu-btn {
         padding: 1rem;
