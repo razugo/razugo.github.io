@@ -604,7 +604,6 @@
     let newSession = null;
 
     // Get location from dropdown or input (for both live and regular sessions)
-    const { locationInput } = getElements();
     let location = '';
 
     // Check if text input is visible (user entered custom location)
@@ -613,12 +612,8 @@
     } else {
       // Check SlimSelect dropdown value
       const slimInstance = PT.Dropdowns.get('newSessionLocationSelect');
-      if (slimInstance && slimInstance.container && slimInstance.container.style.display !== 'none') {
-        const selectedValue = slimInstance.getSelected();
-        if (selectedValue && selectedValue.length > 0 && selectedValue[0].value !== '+ Location') {
-          location = selectedValue[0].value;
-        }
-      }
+      selection = slimInstance.getSelected();
+      location = selection[0];
     }
 
     if (isLive) {

@@ -324,12 +324,11 @@ PokerTracker.DataStore = {
 
   createSession: function(buyIn = 0) {
     const sessionId = 'session-' + Date.now();
-    const today = new Date().toISOString().split('T')[0];
     const newSession = {
       id: sessionId,
       buyIn: buyIn,
       cashOut: buyIn,
-      sessionDate: today,
+      sessionDate: null,
       durationHours: null,
       startTime: null,
       endTime: null,
