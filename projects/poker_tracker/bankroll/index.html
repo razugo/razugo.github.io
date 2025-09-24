@@ -188,6 +188,10 @@ nav_id: bankroll
     updateBankrollData();
   });
 
+  document.addEventListener('pokertracker:session-data-change', function() {
+    updateBankrollData();
+  });
+
   function setupEventListeners() {
     // Time period filter buttons
     document.querySelectorAll('.time-filter-btn').forEach(btn => {

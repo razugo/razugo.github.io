@@ -162,6 +162,12 @@ nav_id: sessions
       applyFilters();
     });
 
+    document.addEventListener('pokertracker:session-data-change', function() {
+      applyFilters();
+      populateLocationFilter();
+      populateStakesFilter();
+    });
+
     window.addEventListener('resize', updateSessionsTableResponsiveState);
   });
 
@@ -174,7 +180,13 @@ nav_id: sessions
     const orderedSessions = [...sessions].sort((a, b) => {
       const valueA = PokerTracker.DataStore.getSessionSortValue(a);
       const valueB = PokerTracker.DataStore.getSessionSortValue(b);
-      return valueB - valueA; // Most recent first
+
+      // Sessions without start time (value 0) should be at the top
+      if (valueA === 0 && valueB === 0) return 0;
+      if (valueA === 0) return -1; // A without start time goes first
+      if (valueB === 0) return 1;  // B without start time goes first
+
+      return valueB - valueA; // Most recent first for sessions with dates
     });
 
     renderSessionsSummary(orderedSessions);
@@ -381,24 +393,16 @@ nav_id: sessions
       totalHands += dealt;
       totalPlayed += played;
 
-      // Calculate duration for this session
+      // Calculate duration for this session - only count if both start and end times exist
       let durationMinutes = 0;
-      if (typeof session.durationHours === 'number' && Number.isFinite(session.durationHours) && session.durationHours > 0) {
-        durationMinutes = session.durationHours * 60;
-      } else if (session.startTime && session.endTime) {
+      if (session.startTime && session.endTime) {
         const start = new Date(session.startTime);
         const end = new Date(session.endTime);
         if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
           durationMinutes = Math.max(0, (end.getTime() - start.getTime()) / (1000 * 60));
         }
-      } else if (session.startTime) {
-        const start = new Date(session.startTime);
-        if (!Number.isNaN(start.getTime())) {
-          durationMinutes = Math.max(0, (Date.now() - start.getTime()) / (1000 * 60));
-        }
-      } else if (dealt > 0) {
-        durationMinutes = dealt * 2;
       }
+      // If either start time or end time is missing, duration counts as 0
       totalDurationMinutes += durationMinutes;
     });
 

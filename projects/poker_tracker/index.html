@@ -101,6 +101,12 @@ nav_id: dashboard
           createBankrollChart();
         });
 
+        document.addEventListener('pokertracker:session-data-change', function() {
+          populateStats();
+          populateRecentSessions();
+          createBankrollChart();
+        });
+
         function populateStats() {
           const stats = PokerTracker.DataStore.getSessionStats();
           const statsGrid = document.getElementById('statsGrid');

@@ -1144,6 +1144,17 @@
       background: rgba(59, 130, 246, 0.05);
     }
 
+    /* P&L colors for table cells */
+    .table td.positive {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .table td.negative {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
     /* Desktop table improvements */
     @media (min-width: 768px) {
       .table {

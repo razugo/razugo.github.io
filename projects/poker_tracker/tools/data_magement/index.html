@@ -108,6 +108,13 @@ nav_id: tools
           return Math.round(numeric * 100) / 100;
         };
 
+        const coerceMoneyOrNull = value => {
+          if (value === null || typeof value === 'undefined' || value === '') return null;
+          const numeric = typeof value === 'number' ? value : parseFloat(value);
+          if (!Number.isFinite(numeric)) return null;
+          return Math.round(numeric * 100) / 100;
+        };
+
         const parseDateString = value => {
           if (!value || typeof value !== 'string') return null;
           const parsed = new Date(value);
@@ -150,6 +157,7 @@ nav_id: tools
               }
             });
           }
+          // Use fallback data computed from hands if source doesn't have counts
           if (Object.keys(result).length === 0 && fallback) {
             return { ...fallback };
           }
@@ -203,42 +211,37 @@ nav_id: tools
           const counts = sanitizeCounts(raw.counts, generatedCounts);
           const playedCounts = sanitizeCounts(raw.playedCounts, generatedPlayedCounts);
 
+          // Compute total hands from hand history if not provided, otherwise use 0
           const numericTotal = typeof raw.total === 'number' ? raw.total : parseInt(raw.total, 10);
           const totalHands = Number.isFinite(numericTotal) ? numericTotal : handHistory.length;
+
+          // Compute total played from hand history if not provided, otherwise use 0
           const numericTotalPlayed = typeof raw.totalPlayed === 'number' ? raw.totalPlayed : parseInt(raw.totalPlayed, 10);
           const totalPlayed = Number.isFinite(numericTotalPlayed) ? numericTotalPlayed : handHistory.filter(hand => hand.played).length;
+
+          // Compute VPIP from totals if not provided
           const rawVpip = typeof raw.vpip === 'number' ? raw.vpip : parseFloat(raw.vpip);
           const vpipValue = Number.isFinite(rawVpip) ? rawVpip : (totalHands > 0 ? ((totalPlayed / totalHands) * 100) : 0);
 
-          const sessionDate = raw.sessionDate || toISODate(raw.created) || toISODate(raw.startTime) || toISODate(raw.endTime);
-          const durationHours = computeDuration(raw.startTime, raw.endTime);
+          const sessionDate = raw.sessionDate || null;
+          const durationHours = null;
 
-          const trimmedLocation = typeof raw.location === 'string' ? raw.location.trim() : '';
-          const stakes = {};
-          const rawSmallBlind = coerceMoney(raw.smallBlind);
-          const rawBigBlind = coerceMoney(raw.bigBlind);
-          const normalizedSmallBlind = rawSmallBlind > 0 ? rawSmallBlind : null;
-          const normalizedBigBlind = rawBigBlind > 0 ? rawBigBlind : null;
-          if (normalizedSmallBlind !== null || normalizedBigBlind !== null) {
-            stakes.smallBlind = normalizedSmallBlind;
-            stakes.bigBlind = normalizedBigBlind;
-            stakes.currency = 'USD';
-          }
+          const trimmedLocation = typeof raw.location === 'string' && raw.location.trim() ? raw.location.trim() : null;
 
-          const startTime = toISODateTime(raw.startTime);
-          const endTime = toISODateTime(raw.endTime);
+          const startTime = raw.startTime ? toISODateTime(raw.startTime) : null;
+          const endTime = raw.endTime ? toISODateTime(raw.endTime) : null;
 
           const sessionRecord = {
             id: sessionId,
             name: raw.name || null,
-            location: trimmedLocation || null,
-            smallBlind: normalizedSmallBlind,
-            bigBlind: normalizedBigBlind,
+            location: trimmedLocation,
+            smallBlind: raw.smallBlind ? coerceMoney(raw.smallBlind) : null,
+            bigBlind: raw.bigBlind ? coerceMoney(raw.bigBlind) : null,
             startTime: startTime,
             endTime: endTime,
             buyIn: coerceMoney(raw.buyIn),
             cashOut: coerceMoney(raw.cashOut),
-            sessionDate: sessionDate || null,
+            sessionDate: sessionDate,
             durationHours: durationHours,
             counts: counts,
             playedCounts: playedCounts,
@@ -248,10 +251,6 @@ nav_id: tools
             vpip: Math.max(0, Math.min(100, Math.round((vpipValue || 0) * 10) / 10)),
             notes: raw.notes || ''
           };
-
-          if (Object.keys(stakes).length > 0) {
-            sessionRecord.stakes = stakes;
-          }
 
           return sessionRecord;
         };
@@ -428,9 +427,18 @@ nav_id: tools
           throw new Error('PokerTracker data store is not available.');
         }
 
-        PokerTracker.DataStore.sessions = safeArray(backup.sessions);
+        // Normalize imported sessions to ensure data consistency
+        const rawSessions = safeArray(backup.sessions);
+        const normalized = PokerTracker.DataStore.normalizeSessionsList(rawSessions);
+
+        PokerTracker.DataStore.sessions = normalized.sessions;
         PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
         PokerTracker.DataStore.notifyLiveSessionChange(null);
+
+        // Notify all pages that session data has changed
+        if (typeof PokerTracker.DataStore.notifySessionDataChange === 'function') {
+          PokerTracker.DataStore.notifySessionDataChange(null);
+        }
       };
 
       if (exportButton) {

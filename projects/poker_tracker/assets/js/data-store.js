@@ -350,6 +350,9 @@ PokerTracker.DataStore = {
     sessions.push(newSession);
     this.sessions = sessions;
 
+    // Notify all pages that session data has changed
+    this.notifySessionDataChange(newSession.id);
+
     return newSession;
   },
 
@@ -436,6 +439,10 @@ PokerTracker.DataStore = {
           }
         }
       }
+
+      // Notify all pages that session data has changed
+      this.notifySessionDataChange(sessionId);
+
       return normalized.session;
     }
     return null;
@@ -453,11 +460,22 @@ PokerTracker.DataStore = {
       this.appState = state;
       this.notifyLiveSessionChange(null);
     }
+
+    // Notify all pages that session data has changed
+    this.notifySessionDataChange(sessionId);
   },
 
   notifyLiveSessionChange: function(sessionId) {
     if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
       document.dispatchEvent(new CustomEvent('pokertracker:live-session-change', {
+        detail: { sessionId }
+      }));
+    }
+  },
+
+  notifySessionDataChange: function(sessionId) {
+    if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
+      document.dispatchEvent(new CustomEvent('pokertracker:session-data-change', {
         detail: { sessionId }
       }));
     }
