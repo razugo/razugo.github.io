@@ -304,12 +304,17 @@ nav_id: tools
           });
 
           let newCount = 0;
+          let skippedCount = 0;
           importedSessions.forEach(session => {
             if (!session || !session.id) return;
             if (!mergedMap.has(session.id)) {
+              // Only add sessions that don't already exist
+              mergedMap.set(session.id, session);
               newCount++;
+            } else {
+              // Count sessions that already exist (duplicates)
+              skippedCount++;
             }
-            mergedMap.set(session.id, session);
           });
 
           const mergedSessions = Array.from(mergedMap.values());
@@ -317,7 +322,12 @@ nav_id: tools
           PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
           PokerTracker.DataStore.notifyLiveSessionChange(null);
 
-          return newCount;
+          // Notify all pages that session data has changed
+          if (typeof PokerTracker.DataStore.notifySessionDataChange === 'function') {
+            PokerTracker.DataStore.notifySessionDataChange(null);
+          }
+
+          return { newCount, skippedCount };
         };
 
         const handleFileSelection = () => {
@@ -333,9 +343,14 @@ nav_id: tools
           reader.onload = event => {
             try {
               const importedSessions = parseExport(event.target.result);
-              const newCount = mergeSessions(importedSessions);
-              const totalImported = newCount > 0 ? newCount : importedSessions.length;
-              alert(`${totalImported} session${totalImported === 1 ? '' : 's'} imported.`);
+              const result = mergeSessions(importedSessions);
+              const { newCount, skippedCount } = result;
+
+              let message = `${newCount} session${newCount === 1 ? '' : 's'} imported.`;
+              if (skippedCount > 0) {
+                message += ` ${skippedCount} duplicate${skippedCount === 1 ? '' : 's'} skipped.`;
+              }
+              alert(message);
               updateStatus('Import complete. You can import another file if needed.');
             } catch (err) {
               console.error(err);
