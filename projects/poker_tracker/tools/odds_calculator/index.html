@@ -1,0 +1,1035 @@
+---
+title: PokerTracker - Odds Calculator
+nav_id: tools
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>{{ page.title | default: "PokerTracker" }}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.css">
+  <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/main.css' | relative_url }}">
+  <!-- Include pokersolver library -->
+  <script src="https://cdn.jsdelivr.net/npm/pokersolver@2.1.4/pokersolver.min.js"></script>
+</head>
+<body>
+  <div class="nav-container" data-component="nav-bar" data-active="{{ page.nav_id | default: '' }}" data-base="{{ '/projects/poker_tracker' | relative_url }}">
+  <nav class="nav">
+    <a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-brand">PokerTracker</a>
+    <ul class="nav-menu">
+      <li><a href="#" class="nav-link live-session-btn">Live Session</a></li>
+      <li><a href="{{ '/projects/poker_tracker/' | relative_url }}" class="nav-link{% if page.nav_id == 'dashboard' %} active{% endif %}" data-nav-id="dashboard">Dashboard</a></li>
+      <li><a href="{{ '/projects/poker_tracker/bankroll/' | relative_url }}" class="nav-link{% if page.nav_id == 'bankroll' %} active{% endif %}" data-nav-id="bankroll">Bankroll</a></li>
+      <li><a href="{{ '/projects/poker_tracker/sessions/' | relative_url }}" class="nav-link{% if page.nav_id == 'sessions' %} active{% endif %}" data-nav-id="sessions">Sessions</a></li>
+      <li><a href="{{ '/projects/poker_tracker/tools/' | relative_url }}" class="nav-link{% if page.nav_id == 'tools' %} active{% endif %}" data-nav-id="tools">Tools</a></li>
+    </ul>
+    <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  </nav>
+</div>
+
+  <main>
+<div class="tool-container">
+  <div class="tool-header">
+    <h2>Poker Odds Calculator</h2>
+    <p>Calculate win probabilities for up to 8 hands against any board</p>
+  </div>
+
+  <div class="odds-calculator">
+    <!-- Hand Inputs -->
+    <div class="hands-section">
+      <h3>Player Hands</h3>
+      <div class="hands-grid" id="handsGrid">
+        <!-- Hands will be dynamically generated -->
+      </div>
+      <div class="hands-controls">
+        <button id="addHandBtn" class="btn btn-outline">Add Hand</button>
+        <button id="removeHandBtn" class="btn btn-outline">Remove Hand</button>
+      </div>
+    </div>
+
+    <!-- Board Input -->
+    <div class="board-section">
+      <h3>Board Cards</h3>
+      <div class="board-cards">
+        <div class="card-display empty" data-board="0">
+          ?
+        </div>
+        <div class="card-display empty" data-board="1">
+          ?
+        </div>
+        <div class="card-display empty" data-board="2">
+          ?
+        </div>
+        <div class="card-display empty" data-board="3">
+          ?
+        </div>
+        <div class="card-display empty" data-board="4">
+          ?
+        </div>
+      </div>
+      <div class="board-labels">
+        <span>Flop</span>
+        <span></span>
+        <span></span>
+        <span>Turn</span>
+        <span>River</span>
+      </div>
+    </div>
+
+    <!-- Calculate Button -->
+    <div class="calculate-section">
+      <button id="calculateBtn" class="btn btn-primary btn-large">Calculate Odds</button>
+      <div class="simulation-info">
+        <label>
+          Simulations:
+          <select id="simulationCount">
+            <option value="1000">1,000</option>
+            <option value="10000" selected>10,000</option>
+            <option value="50000">50,000</option>
+            <option value="100000">100,000</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="resultsSection" style="display: none;">
+      <h3>Results</h3>
+      <div class="progress-bar-container" id="progressContainer" style="display: none;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Calculating...</div>
+      </div>
+      <div class="results-grid" id="resultsGrid">
+        <!-- Results will be displayed here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Card Selector Modal -->
+<div id="cardSelectorModal" class="modal-overlay" style="display: none;">
+  <div class="modal-content card-selector-modal">
+    <div class="modal-header">
+      <h3>Select Card</h3>
+      <button class="modal-close" data-action="close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="card-grid">
+        <!-- Cards will be generated dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.tool-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.tool-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.tool-header h2 {
+  margin: 0 0 10px 0;
+  color: var(--primary-color);
+}
+
+.tool-header p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.odds-calculator {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* Hands Section */
+.hands-section h3,
+.board-section h3,
+.results-section h3 {
+  margin: 0 0 15px 0;
+  color: var(--text-primary);
+}
+
+.hands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.hand-input {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.hand-input h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.hand-cards {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hand-result {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.hand-result.winner {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+/* Card Input */
+.card-input {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.card-rank,
+.card-suit {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: white;
+  font-size: 14px;
+}
+
+.card-rank {
+  width: 50px;
+}
+
+.card-suit {
+  width: 45px;
+}
+
+/* Board Section */
+.board-cards {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.board-labels {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.board-labels span {
+  width: 95px;
+  text-align: center;
+}
+
+/* Controls */
+.hands-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.calculate-section {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-large {
+  padding: 12px 30px;
+  font-size: 16px;
+}
+
+.simulation-info {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.simulation-info select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: white;
+  margin-left: 5px;
+}
+
+/* Progress Bar */
+.progress-bar-container {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Results */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 15px;
+}
+
+.result-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+}
+
+.result-item h4 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+}
+
+.result-cards {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 10px;
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.result-percentage {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.result-item.winner .result-percentage {
+  color: var(--success-color);
+}
+
+/* Suit colors */
+.suit-hearts,
+.suit-diamonds {
+  color: #d73027;
+}
+
+.suit-clubs,
+.suit-spades {
+  color: #1a1a1a;
+}
+
+/* Card Selector Modal */
+.card-selector-modal {
+  max-width: 600px;
+  width: 90vw;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.card-option {
+  aspect-ratio: 2.5/3.5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 11px;
+  font-weight: bold;
+  min-height: 50px;
+}
+
+.card-option:hover:not(.disabled) {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-option.disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.card-option .card-rank {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.card-option .card-suit {
+  font-size: 16px;
+}
+
+.card-option.red {
+  color: #d73027;
+}
+
+.card-option.black {
+  color: #1a1a1a;
+}
+
+/* Card Display (replacing dropdowns) */
+.card-display {
+  width: 80px;
+  height: 50px;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.card-display:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.card-display.empty {
+  color: #999;
+  font-size: 24px;
+}
+
+.card-display.red {
+  color: #d73027;
+}
+
+.card-display.black {
+  color: #1a1a1a;
+}
+
+.card-display .card-rank {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.card-display .card-suit {
+  font-size: 14px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  padding: 20px 20px 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 0 20px 20px 20px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .board-cards {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .board-labels {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .board-labels span {
+    width: 85px;
+  }
+
+  .hands-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-selector-modal {
+    width: 95vw;
+    margin: 10px;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(13, 1fr);
+    gap: 4px;
+  }
+
+  .card-option {
+    min-height: 40px;
+    font-size: 9px;
+  }
+
+  .card-option .card-rank {
+    font-size: 11px;
+  }
+
+  .card-option .card-suit {
+    font-size: 12px;
+  }
+}
+</style>
+
+<script>
+class OddsCalculator {
+  constructor() {
+    this.hands = [];
+    this.maxHands = 8;
+    this.minHands = 2;
+    this.boardCards = [];
+    this.isCalculating = false;
+
+    this.ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+    this.suits = ['s', 'h', 'd', 'c'];
+    this.suitSymbols = { s: '♠', h: '♥', d: '♦', c: '♣' };
+
+    this.init();
+  }
+
+  init() {
+    this.createInitialHands();
+    this.bindEvents();
+    this.setupCardSelector();
+  }
+
+  setupCardSelector() {
+    // Create card grid in modal
+    const cardGrid = document.querySelector('.card-grid');
+    cardGrid.innerHTML = '';
+
+    // Create all 52 cards organized by suit (spades, hearts, diamonds, clubs)
+    this.suits.forEach(suit => {
+      this.ranks.forEach(rank => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = `card-option ${suit === 'h' || suit === 'd' ? 'red' : 'black'}`;
+        cardDiv.dataset.card = rank + suit;
+        cardDiv.innerHTML = `
+          <div class="card-rank">${rank}</div>
+          <div class="card-suit">${this.suitSymbols[suit]}</div>
+        `;
+        cardDiv.addEventListener('click', () => {
+          if (!cardDiv.classList.contains('disabled')) {
+            this.selectCard(rank + suit);
+          }
+        });
+        cardGrid.appendChild(cardDiv);
+      });
+    });
+
+    // Setup modal close events
+    document.querySelector('#cardSelectorModal .modal-close').addEventListener('click', () => {
+      this.closeCardSelector();
+    });
+
+    document.getElementById('cardSelectorModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.closeCardSelector();
+      }
+    });
+  }
+
+  createInitialHands() {
+    // Start with 2 hands
+    for (let i = 0; i < this.minHands; i++) {
+      this.addHand();
+    }
+    this.updateHandControls();
+  }
+
+  addHand() {
+    if (this.hands.length >= this.maxHands) return;
+
+    const handIndex = this.hands.length;
+    const handElement = this.createHandElement(handIndex);
+
+    document.getElementById('handsGrid').appendChild(handElement);
+    this.hands.push({ element: handElement, cards: [] });
+
+    this.updateHandControls();
+  }
+
+  removeHand() {
+    if (this.hands.length <= this.minHands) return;
+
+    const lastHand = this.hands.pop();
+    lastHand.element.remove();
+
+    this.updateHandControls();
+  }
+
+  createHandElement(index) {
+    const handDiv = document.createElement('div');
+    handDiv.className = 'hand-input';
+    handDiv.innerHTML = `
+      <h4>Hand ${index + 1}</h4>
+      <div class="hand-cards">
+        <div class="card-display empty" data-hand="${index}" data-card="0">
+          ?
+        </div>
+        <div class="card-display empty" data-hand="${index}" data-card="1">
+          ?
+        </div>
+      </div>
+      <div class="hand-result" data-result="${index}">-</div>
+    `;
+
+    // Add click listeners to card displays
+    handDiv.querySelectorAll('.card-display').forEach(cardDisplay => {
+      cardDisplay.addEventListener('click', () => {
+        const hand = cardDisplay.dataset.hand;
+        const card = cardDisplay.dataset.card;
+        this.openCardSelector(hand, card, cardDisplay);
+      });
+    });
+
+    return handDiv;
+  }
+
+  updateHandControls() {
+    const addBtn = document.getElementById('addHandBtn');
+    const removeBtn = document.getElementById('removeHandBtn');
+
+    addBtn.disabled = this.hands.length >= this.maxHands;
+    removeBtn.disabled = this.hands.length <= this.minHands;
+  }
+
+  bindEvents() {
+    document.getElementById('addHandBtn').addEventListener('click', () => this.addHand());
+    document.getElementById('removeHandBtn').addEventListener('click', () => this.removeHand());
+    document.getElementById('calculateBtn').addEventListener('click', () => this.calculateOdds());
+
+    // Add click listeners to board card displays
+    document.querySelectorAll('.board-section .card-display').forEach(cardDisplay => {
+      cardDisplay.addEventListener('click', () => {
+        const board = cardDisplay.dataset.board;
+        this.openCardSelector(null, board, cardDisplay);
+      });
+    });
+  }
+
+  openCardSelector(hand, card, targetElement) {
+    this.currentSelection = { hand, card, targetElement };
+    this.updateCardAvailability();
+    document.getElementById('cardSelectorModal').style.display = 'flex';
+  }
+
+  closeCardSelector() {
+    document.getElementById('cardSelectorModal').style.display = 'none';
+    this.currentSelection = null;
+  }
+
+  selectCard(cardValue) {
+    if (!this.currentSelection) return;
+
+    const { targetElement } = this.currentSelection;
+    const rank = cardValue[0];
+    const suit = cardValue[1];
+    const isRed = suit === 'h' || suit === 'd';
+
+    // Update the display
+    targetElement.innerHTML = `
+      <div class="card-rank">${rank}</div>
+      <div class="card-suit">${this.suitSymbols[suit]}</div>
+    `;
+    targetElement.className = `card-display ${isRed ? 'red' : 'black'}`;
+    targetElement.dataset.cardValue = cardValue;
+
+    this.closeCardSelector();
+    this.validateCards();
+  }
+
+  updateCardAvailability() {
+    const usedCards = this.getUsedCards();
+
+    document.querySelectorAll('.card-option').forEach(cardOption => {
+      const cardValue = cardOption.dataset.card;
+      if (usedCards.has(cardValue)) {
+        cardOption.classList.add('disabled');
+      } else {
+        cardOption.classList.remove('disabled');
+      }
+    });
+  }
+
+  getUsedCards() {
+    const usedCards = new Set();
+
+    // Check hand cards
+    document.querySelectorAll('.hand-input .card-display').forEach(cardDisplay => {
+      const cardValue = cardDisplay.dataset.cardValue;
+      if (cardValue) {
+        usedCards.add(cardValue);
+      }
+    });
+
+    // Check board cards
+    document.querySelectorAll('.board-section .card-display').forEach(cardDisplay => {
+      const cardValue = cardDisplay.dataset.cardValue;
+      if (cardValue) {
+        usedCards.add(cardValue);
+      }
+    });
+
+    return usedCards;
+  }
+
+  validateCards() {
+    const usedCards = this.getUsedCards();
+    let isValid = true;
+
+    // Reset all card displays to normal appearance
+    document.querySelectorAll('.card-display').forEach(display => {
+      display.style.borderColor = '';
+    });
+
+    // Check for duplicates and mark invalid cards
+    const cardValues = [];
+    document.querySelectorAll('.card-display').forEach(cardDisplay => {
+      const cardValue = cardDisplay.dataset.cardValue;
+      if (cardValue) {
+        if (cardValues.includes(cardValue)) {
+          cardDisplay.style.borderColor = 'red';
+          isValid = false;
+        } else {
+          cardValues.push(cardValue);
+        }
+      }
+    });
+
+    // Update calculate button state
+    const calculateBtn = document.getElementById('calculateBtn');
+    const completeHands = this.getCompleteHands();
+    calculateBtn.disabled = !isValid || completeHands.length < 2 || this.isCalculating;
+
+    return isValid;
+  }
+
+  getCompleteHands() {
+    const hands = [];
+
+    this.hands.forEach((hand, handIndex) => {
+      const cards = [];
+      const handElement = hand.element;
+
+      handElement.querySelectorAll('.card-display').forEach(cardDisplay => {
+        const cardValue = cardDisplay.dataset.cardValue;
+        if (cardValue) {
+          cards.push(cardValue);
+        }
+      });
+
+      if (cards.length === 2) {
+        hands.push({ index: handIndex, cards });
+      }
+    });
+
+    return hands;
+  }
+
+  getBoardCards() {
+    const board = [];
+
+    document.querySelectorAll('.board-section .card-display').forEach(cardDisplay => {
+      const cardValue = cardDisplay.dataset.cardValue;
+      if (cardValue) {
+        board.push(cardValue);
+      }
+    });
+
+    return board;
+  }
+
+  async calculateOdds() {
+    if (!this.validateCards() || this.isCalculating) return;
+
+    // Check if pokersolver library is loaded
+    if (typeof Hand === 'undefined') {
+      alert('Poker evaluation library not loaded. Please refresh the page and try again.');
+      return;
+    }
+
+    const hands = this.getCompleteHands();
+    const board = this.getBoardCards();
+
+    if (hands.length < 2) {
+      alert('Please enter at least 2 complete hands.');
+      return;
+    }
+
+    this.isCalculating = true;
+    document.getElementById('calculateBtn').disabled = true;
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('progressContainer').style.display = 'block';
+    document.getElementById('resultsGrid').innerHTML = '';
+
+    const simulations = parseInt(document.getElementById('simulationCount').value);
+
+    try {
+      const results = await this.runSimulation(hands, board, simulations);
+      this.displayResults(hands, results);
+    } catch (error) {
+      console.error('Calculation error:', error);
+      alert('An error occurred during calculation. Please try again.');
+    }
+
+    this.isCalculating = false;
+    document.getElementById('calculateBtn').disabled = false;
+    document.getElementById('progressContainer').style.display = 'none';
+  }
+
+  async runSimulation(hands, board, simulations) {
+    const results = hands.map(() => ({ wins: 0, ties: 0 }));
+
+    // Get all cards that are already used
+    const usedCards = new Set([...board, ...hands.flatMap(h => h.cards)]);
+
+    // Create deck without used cards
+    const availableCards = [];
+    for (const rank of this.ranks) {
+      for (const suit of this.suits) {
+        const card = rank + suit;
+        if (!usedCards.has(card)) {
+          availableCards.push(card);
+        }
+      }
+    }
+
+    const cardsNeeded = 5 - board.length;
+    const batchSize = 100; // Process in batches for progress updates
+
+    for (let batch = 0; batch < Math.ceil(simulations / batchSize); batch++) {
+      const batchStart = batch * batchSize;
+      const batchEnd = Math.min(batchStart + batchSize, simulations);
+
+      for (let sim = batchStart; sim < batchEnd; sim++) {
+        // Generate random board completion
+        const shuffledDeck = [...availableCards];
+        this.shuffle(shuffledDeck);
+
+        const completeBoard = [...board, ...shuffledDeck.slice(0, cardsNeeded)];
+
+        // Evaluate each hand
+        const handResults = hands.map(hand => {
+          try {
+            const fullHand = [...hand.cards, ...completeBoard];
+            return Hand.solve(fullHand);
+          } catch (error) {
+            console.error('Hand evaluation error:', error);
+            return null;
+          }
+        });
+
+        // Find winners
+        const validHands = handResults.filter(h => h !== null);
+        if (validHands.length === 0) continue;
+
+        const winners = Hand.winners(validHands);
+        const winnerIndexes = winners.map(winner =>
+          handResults.findIndex(h => h === winner)
+        );
+
+        if (winnerIndexes.length === 1) {
+          results[winnerIndexes[0]].wins++;
+        } else if (winnerIndexes.length > 1) {
+          // Tie - each tied hand gets a fractional win
+          winnerIndexes.forEach(index => {
+            results[index].ties++;
+          });
+        }
+      }
+
+      // Update progress
+      const progress = (batchEnd / simulations) * 100;
+      document.getElementById('progressFill').style.width = progress + '%';
+      document.getElementById('progressText').textContent =
+        `Calculating... ${Math.round(progress)}%`;
+
+      // Allow UI to update
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+
+    return results;
+  }
+
+  displayResults(hands, results) {
+    // Get the total number of simulations from the first result
+    const totalSims = parseInt(document.getElementById('simulationCount').value);
+    const resultsGrid = document.getElementById('resultsGrid');
+
+    // Debug logging
+    console.log('Results:', results);
+    console.log('Total simulations:', totalSims);
+
+    // Calculate percentages and find winner
+    const percentages = results.map((r, index) => {
+      const percentage = ((r.wins + r.ties / hands.length) / totalSims) * 100;
+      console.log(`Hand ${index + 1}: ${r.wins} wins, ${r.ties} ties, ${percentage.toFixed(2)}%`);
+      return percentage;
+    });
+
+    const maxPercentage = Math.max(...percentages);
+
+    hands.forEach((hand, index) => {
+      const result = results[index];
+      const percentage = percentages[index];
+      const isWinner = percentage === maxPercentage && percentage > 0;
+
+      const resultDiv = document.createElement('div');
+      resultDiv.className = `result-item ${isWinner ? 'winner' : ''}`;
+
+      const cardDisplay = hand.cards.map(card => {
+        const rank = card[0];
+        const suit = card[1];
+        const suitClass = suit === 'h' || suit === 'd' ? 'suit-hearts' : 'suit-clubs';
+        return `<span class="${suitClass}">${rank}${this.suitSymbols[suit]}</span>`;
+      }).join(' ');
+
+      resultDiv.innerHTML = `
+        <h4>Hand ${hand.index + 1}</h4>
+        <div class="result-cards">${cardDisplay}</div>
+        <div class="result-percentage">${percentage.toFixed(1)}%</div>
+      `;
+
+      resultsGrid.appendChild(resultDiv);
+
+      // Update hand result in the input section
+      const resultElement = document.querySelector(`[data-result="${hand.index}"]`);
+      if (resultElement) {
+        resultElement.textContent = `${percentage.toFixed(1)}%`;
+        resultElement.className = `hand-result ${isWinner ? 'winner' : ''}`;
+      }
+    });
+  }
+
+  shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+}
+
+// Initialize the calculator when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  // Wait a moment for external libraries to load
+  setTimeout(() => {
+    new OddsCalculator();
+  }, 100);
+});
+</script>
+
+  </main>
+
+<div data-component="new-session-modal"></div>
+<div data-component="session-settings-modal"></div>
+
+<!-- Shared JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/slim-select@2/dist/slimselect.min.js"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/data-store.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/app.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/datetime-picker.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/nav-bar.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/new-session-modal.js' | relative_url }}"></script>
+<script src="{{ '/projects/poker_tracker/assets/js/session-settings-modal.js' | relative_url }}"></script>
+
+</body>
+</html>
