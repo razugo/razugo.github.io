@@ -93,7 +93,7 @@
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease;
     opacity: 0;
-    display: flex;
+    display: none;
     z-index: 1000;
   }
 
@@ -110,6 +110,7 @@
   }
 
   .nav-menu.open {
+    display: flex;
     max-height: 300px;
     opacity: 1;
   }
