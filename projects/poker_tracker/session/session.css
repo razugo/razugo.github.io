@@ -1,0 +1,307 @@
+/* =====================================
+   SESSION PAGE STYLES
+   ===================================== */
+
+/* Live Session UI */
+.live-stats-bar {
+  position: sticky;
+  top: var(--nav-height);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+  z-index: 110;
+  display: flex;
+  justify-content: center;
+  box-shadow: var(--shadow);
+}
+
+.live-stats-inner {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.live-stats-content {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-body {
+  padding-top: 1.5rem !important;
+}
+
+.session-body-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.stat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.stat-group.stat-session {
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 260px;
+}
+
+.stat-group.stat-session .session-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-stats-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.live-stats-toggle-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  fill: currentColor;
+}
+
+.live-stats-toggle:hover {
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+  .stat-group.stat-session {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .stat-group.stat-session .session-name {
+    overflow: visible;
+    text-overflow: initial;
+    white-space: normal;
+  }
+}
+
+.session-overlay {
+  position: fixed;
+  top: 130px;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem;
+  z-index: 98;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  box-shadow: var(--shadow);
+}
+
+.session-overlay.expanded {
+  transform: translateY(0);
+}
+
+.session-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Session Hand Analysis */
+.session-analysis-card {
+  margin-top: 2rem;
+}
+
+.session-analysis-card .card-header {
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.session-analysis-mode {
+  align-self: flex-start;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.session-analysis-card.analysis-empty .session-analysis-mode {
+  opacity: 0.7;
+}
+
+.session-analysis-empty {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--background);
+  font-size: 0.9rem;
+}
+
+.session-analysis-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.luck-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+  width: fit-content;
+}
+
+.luck-badge.high-roll {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+}
+
+.luck-badge.low-roll {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+.luck-badge.expected {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--primary);
+}
+
+.session-analysis-chart {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.75rem;
+  height: 260px;
+}
+
+.session-analysis-chart canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.session-analysis-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.analysis-stat-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.analysis-stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.analysis-stat-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.session-analysis-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.analysis-sample {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Mobile live session adjustments */
+@media (max-width: 768px) {
+  .live-stats-bar {
+    padding: 0.6rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .live-stats-content {
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+  }
+
+  .stat-group {
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .stat-group.stat-session {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .stat-group.stat-session .session-name {
+    font-size: 0.95rem;
+  }
+
+  .live-stats-toggle {
+    font-size: 1.5rem;
+    padding: 0.25rem;
+  }
+
+  .session-analysis-chart {
+    height: 220px;
+    padding: 0.5rem;
+  }
+
+  .analysis-stat-value {
+    font-size: 1.35rem;
+  }
+}
