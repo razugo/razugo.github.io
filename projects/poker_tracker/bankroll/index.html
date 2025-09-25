@@ -40,11 +40,11 @@ nav_id: bankroll
       <div class="session-filters">
         <div class="filter-group">
           <label>FROM DATE</label>
-          <input type="text" id="dateFromFilter" class="filter-input" placeholder="YYYY-MM-DD">
+          <input type="text" id="dateFromFilter" class="filter-input datetime-picker-input" placeholder="YYYY-MM-DD" readonly>
         </div>
         <div class="filter-group">
           <label>TO DATE</label>
-          <input type="text" id="dateToFilter" class="filter-input" placeholder="YYYY-MM-DD">
+          <input type="text" id="dateToFilter" class="filter-input datetime-picker-input" placeholder="YYYY-MM-DD" readonly>
         </div>
         <div class="filter-group">
           <label>LOCATION</label>
@@ -154,6 +154,7 @@ nav_id: bankroll
   document.addEventListener('DOMContentLoaded', function() {
     populateFilterOptions();
     setupEventListeners();
+    setupDatePickers();
     updateDashboard();
   });
 
@@ -162,12 +163,12 @@ nav_id: bankroll
   });
 
   function setupEventListeners() {
-    // Filter event listeners
-    document.getElementById('dateFromFilter').addEventListener('input', (e) => {
+    // Filter event listeners for date inputs (will be triggered by datetime-picker)
+    document.getElementById('dateFromFilter').addEventListener('change', (e) => {
       currentFilters.dateFrom = e.target.value;
     });
 
-    document.getElementById('dateToFilter').addEventListener('input', (e) => {
+    document.getElementById('dateToFilter').addEventListener('change', (e) => {
       currentFilters.dateTo = e.target.value;
     });
 
@@ -179,9 +180,25 @@ nav_id: bankroll
       currentFilters.stakes = e.target.value;
     });
 
-
     document.getElementById('filterButton').addEventListener('click', () => {
       updateDashboard();
+    });
+  }
+
+  function setupDatePickers() {
+    // Initialize datetime-picker for date-only selection
+    PokerTracker.DateTimePicker.attachToInput('#dateFromFilter', {
+      includeTime: false,
+      onConfirm: (value) => {
+        currentFilters.dateFrom = value || '';
+      }
+    });
+
+    PokerTracker.DateTimePicker.attachToInput('#dateToFilter', {
+      includeTime: false,
+      onConfirm: (value) => {
+        currentFilters.dateTo = value || '';
+      }
     });
   }
 

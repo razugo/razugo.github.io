@@ -137,44 +137,40 @@
    BANKROLL DASHBOARD STYLES
    ===================================== */
 
-/* Session Filters - Matching session page styling */
+/* Session Filters - Matching sessions page styling */
 .session-filters {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  background: var(--surface);
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius);
-  margin-bottom: 2rem;
-  border: 1px solid var(--border);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  align-items: end;
 }
 
 .session-filters .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 120px;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .session-filters .filter-group label {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
 }
 
 .session-filters .filter-input,
 .session-filters .filter-select {
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  width: 100%;
+  min-width: 0;
   background: var(--surface);
   color: var(--text-primary);
-  font-size: 0.875rem;
   transition: all 0.2s ease;
 }
 
@@ -194,18 +190,20 @@
   background: var(--primary);
   color: white;
   border: 1px solid var(--primary);
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
   font-size: 0.875rem;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filter-btn:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 /* KPI Cards Grid */
@@ -351,19 +349,15 @@
   }
 
   .session-filters {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
-    padding: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .session-filters .filter-group {
-    min-width: auto;
-    flex: none;
+    min-width: 0;
   }
 
   .filter-btn {
-    margin-top: 0.5rem;
+    width: 100%;
   }
 
   .kpi-grid {
@@ -397,6 +391,12 @@
   }
 }
 
+@media (max-width: 600px) {
+  .session-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 480px) {
   .secondary-charts-grid {
     grid-template-columns: 1fr;
@@ -407,7 +407,7 @@
   }
 
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
 
@@ -425,5 +425,10 @@
 
   .chart-container-small {
     height: 180px;
+  }
+
+  .session-filters {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
   }
 }
