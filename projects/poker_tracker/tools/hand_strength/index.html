@@ -15,6 +15,135 @@ nav_id: tools
   <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/datetime-picker.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/projects/poker_tracker/assets/styles/new-session-modal.css' | relative_url }}">
   <script src="{{ '/projects/poker_tracker/assets/js/constants.js' | relative_url }}"></script>
+  <style>
+    /* Hand Strength Tool Specific Styles */
+
+    /* Grid */
+    .poker-grid {
+      display: grid;
+      grid-template-columns: repeat(13, var(--cell-size));
+      grid-auto-rows: max(var(--cell-size), 30px);
+      gap: var(--cell-gap);
+      justify-content: center;
+      margin: 0 auto;
+      min-width: 0;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: white;
+      color: var(--text-primary);
+      font-size: var(--cell-font-size);
+      font-weight: 600;
+      cursor: default;
+      transition: all 0.2s;
+      user-select: none;
+      padding: 0;
+      line-height: 1.05;
+      min-width: var(--cell-size);
+      min-height: max(var(--cell-size), 30px);
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .cell.pair {
+      background: #f3f4f6;
+    }
+
+    /* Hand Highlighting */
+    .cell.highlighted {
+      background: #3b82f6 !important;
+      color: white;
+      font-weight: 600;
+      border: 2px solid var(--primary);
+    }
+
+    /* Disable scroll wheel on number inputs */
+    input[type="number"] {
+      -moz-appearance: textfield; /* Firefox - remove spin buttons */
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none; /* Chrome, Safari, Edge - remove spin buttons */
+      margin: 0;
+    }
+
+    /* Slider Styling */
+    input[type="range"] {
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* Hand Strength Tool Mobile Responsive */
+    @media (max-width: 767px) {
+      :root {
+        --cell-size: calc((100vw - 3rem) / 13 - 2px);
+        --cell-gap: 2px;
+        --cell-font-size: 8px;
+      }
+
+      .poker-grid {
+        width: 100%;
+      }
+
+      .cell {
+        font-weight: 500;
+      }
+    }
+
+    @media (max-width: 479px) {
+      :root {
+        --cell-size: calc((100vw - 1rem) / 13 - 1px);
+        --cell-gap: 1px;
+        --cell-font-size: 7px;
+      }
+
+      .poker-grid {
+        gap: 1px;
+        width: 100%;
+      }
+
+      .cell {
+        border-radius: 2px;
+        font-weight: 400;
+      }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      :root {
+        --cell-size: 42px;
+        --cell-gap: 3px;
+        --cell-font-size: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="nav-container" data-component="nav-bar" data-active="{{ page.nav_id | default: '' }}" data-base="{{ '/projects/poker_tracker' | relative_url }}">
