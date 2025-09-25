@@ -111,6 +111,12 @@ nav_id: bankroll
           <div class="card chart-card">
             <div class="card-header">
               <h3 class="card-title">Profit by Room</h3>
+              <div class="chart-toggle">
+                <button id="profitByRoomToggle" class="toggle-btn" title="Toggle between money and big blinds">
+                  <span class="toggle-option active" data-mode="money">$</span>
+                  <span class="toggle-option" data-mode="bb">BB</span>
+                </button>
+              </div>
             </div>
             <div class="card-content">
               <div class="chart-container chart-container-small">
@@ -122,6 +128,12 @@ nav_id: bankroll
           <div class="card chart-card">
             <div class="card-header">
               <h3 class="card-title">Hourly by Stake</h3>
+              <div class="chart-toggle">
+                <button id="hourlyByStakeToggle" class="toggle-btn" title="Toggle between money and big blinds">
+                  <span class="toggle-option active" data-mode="money">$</span>
+                  <span class="toggle-option" data-mode="bb">BB</span>
+                </button>
+              </div>
             </div>
             <div class="card-content">
               <div class="chart-container chart-container-small">
@@ -159,6 +171,8 @@ nav_id: bankroll
   };
 
   let chartAxisMode = 'session'; // 'date' or 'session'
+  let profitByRoomMode = 'money'; // 'money' or 'bb'
+  let hourlyByStakeMode = 'money'; // 'money' or 'bb'
 
   document.addEventListener('DOMContentLoaded', function() {
     populateFilterOptions();
@@ -205,7 +219,7 @@ nav_id: bankroll
         chartAxisMode = target.dataset.mode;
 
         // Update UI
-        document.querySelectorAll('.toggle-option').forEach(option => {
+        document.querySelectorAll('#chartAxisToggle .toggle-option').forEach(option => {
           option.classList.remove('active');
         });
         target.classList.add('active');
@@ -213,6 +227,44 @@ nav_id: bankroll
         // Update chart
         const filteredSessions = getFilteredSessions();
         updateBankrollOverTimeChart(filteredSessions);
+      }
+    });
+
+    // Profit by Room toggle event listener
+    document.getElementById('profitByRoomToggle').addEventListener('click', (e) => {
+      const target = e.target.closest('.toggle-option');
+      if (target && target.dataset.mode !== profitByRoomMode) {
+        // Update mode
+        profitByRoomMode = target.dataset.mode;
+
+        // Update UI
+        document.querySelectorAll('#profitByRoomToggle .toggle-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        target.classList.add('active');
+
+        // Update chart
+        const filteredSessions = getFilteredSessions();
+        updateProfitByRoomChart(filteredSessions);
+      }
+    });
+
+    // Hourly by Stake toggle event listener
+    document.getElementById('hourlyByStakeToggle').addEventListener('click', (e) => {
+      const target = e.target.closest('.toggle-option');
+      if (target && target.dataset.mode !== hourlyByStakeMode) {
+        // Update mode
+        hourlyByStakeMode = target.dataset.mode;
+
+        // Update UI
+        document.querySelectorAll('#hourlyByStakeToggle .toggle-option').forEach(option => {
+          option.classList.remove('active');
+        });
+        target.classList.add('active');
+
+        // Update chart
+        const filteredSessions = getFilteredSessions();
+        updateHourlyByStakeChart(filteredSessions);
       }
     });
   }
@@ -562,21 +614,56 @@ nav_id: bankroll
     }
 
     const roomData = {};
+    const roomBBData = {}; // For calculating weighted average BB per room
+    const roomHours = {};
+
     sessions.forEach(session => {
       const room = session.location || 'Unknown';
       const profit = (session.cashOut || 0) - (session.buyIn || 0);
       roomData[room] = (roomData[room] || 0) + profit;
+
+      // Calculate weighted BB data for each room
+      if (session.bigBlind && session.startTime && session.endTime) {
+        const startTime = new Date(session.startTime);
+        const endTime = new Date(session.endTime);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const sessionHours = durationMs / (1000 * 60 * 60);
+        if (sessionHours > 0) {
+          roomBBData[room] = (roomBBData[room] || 0) + (session.bigBlind * sessionHours);
+          roomHours[room] = (roomHours[room] || 0) + sessionHours;
+        }
+      }
     });
 
     const labels = Object.keys(roomData);
-    const data = Object.values(roomData);
+    let data, yAxisLabel;
+
+    if (profitByRoomMode === 'bb') {
+      // Convert to BB using weighted average for each room
+      data = labels.map(room => {
+        const profit = roomData[room];
+        const totalWeightedBB = roomBBData[room] || 0;
+        const totalHours = roomHours[room] || 0;
+
+        // Calculate weighted average BB for this room
+        const avgBB = totalHours > 0
+          ? totalWeightedBB / totalHours
+          : sessions.filter(s => s.location === room && s.bigBlind).reduce((sum, s, _, arr) => sum + s.bigBlind / arr.length, 0) || 2;
+
+        return avgBB > 0 ? Math.round(profit / avgBB) : 0;
+      });
+      yAxisLabel = 'Profit (BB)';
+    } else {
+      data = Object.values(roomData);
+      yAxisLabel = 'Profit ($)';
+    }
 
     profitByRoomChart = new Chart(canvas, {
       type: 'bar',
       data: {
         labels,
         datasets: [{
-          label: 'Profit',
+          label: yAxisLabel,
           data,
           backgroundColor: data.map(profit => profit >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
           borderColor: data.map(profit => profit >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
@@ -588,9 +675,15 @@ nav_id: bankroll
         maintainAspectRatio: false,
         scales: {
           y: {
+            title: {
+              display: true,
+              text: yAxisLabel
+            },
             ticks: {
               callback: function(value) {
-                return PokerTracker.Utils.formatCurrency(value);
+                return profitByRoomMode === 'bb'
+                  ? `${Math.round(value)} BB`
+                  : PokerTracker.Utils.formatCurrency(value);
               }
             }
           }
@@ -639,18 +732,36 @@ nav_id: bankroll
     });
 
     const labels = Object.keys(stakeData);
-    const data = labels.map(stake => {
-      const totalProfit = stakeData[stake];
-      const totalHours = stakeHours[stake];
-      return totalHours > 0 ? totalProfit / totalHours : 0;
-    });
+    let data, yAxisLabel;
+
+    if (hourlyByStakeMode === 'bb') {
+      // Convert to BB/hr using the big blind for each stake
+      data = labels.map(stake => {
+        const totalProfit = stakeData[stake];
+        const totalHours = stakeHours[stake];
+        const hourlyRate = totalHours > 0 ? totalProfit / totalHours : 0;
+
+        // Extract big blind from stake (format: "smallBlind/bigBlind")
+        const bigBlind = parseFloat(stake.split('/')[1]);
+
+        return bigBlind > 0 ? Math.round((hourlyRate / bigBlind) * 10) / 10 : 0;
+      });
+      yAxisLabel = 'Hourly Rate (BB/hr)';
+    } else {
+      data = labels.map(stake => {
+        const totalProfit = stakeData[stake];
+        const totalHours = stakeHours[stake];
+        return totalHours > 0 ? totalProfit / totalHours : 0;
+      });
+      yAxisLabel = 'Hourly Rate ($/hr)';
+    }
 
     hourlyByStakeChart = new Chart(canvas, {
       type: 'bar',
       data: {
         labels: labels.map(stake => `$${stake}`),
         datasets: [{
-          label: 'Hourly Rate',
+          label: yAxisLabel,
           data,
           backgroundColor: data.map(rate => rate >= 0 ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
           borderColor: data.map(rate => rate >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'),
@@ -662,9 +773,15 @@ nav_id: bankroll
         maintainAspectRatio: false,
         scales: {
           y: {
+            title: {
+              display: true,
+              text: yAxisLabel
+            },
             ticks: {
               callback: function(value) {
-                return PokerTracker.Utils.formatCurrency(value) + '/hr';
+                return hourlyByStakeMode === 'bb'
+                  ? `${value} BB/hr`
+                  : PokerTracker.Utils.formatCurrency(value) + '/hr';
               }
             }
           }
