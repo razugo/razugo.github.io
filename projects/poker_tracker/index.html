@@ -212,14 +212,14 @@ nav_id: dashboard
               }
 
               return `
-                <div class="session-card">
-                  <div class="session-card-content">
-                    <div class="session-card-top">
-                      <span class="session-card-title">${locationStakesDisplay}</span>
+                <div class="recent-session-card">
+                  <div class="recent-session-card-content">
+                    <div class="recent-session-card-top">
+                      <span class="recent-session-card-title">${locationStakesDisplay}</span>
                     </div>
-                    <div class="session-card-bottom">
-                      <span class="session-card-meta">${dateDisplay}</span>
-                      <span class="session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
+                    <div class="recent-session-card-bottom">
+                      <span class="recent-session-card-meta">${dateDisplay}</span>
+                      <span class="recent-session-card-pnl ${profit >= 0 ? 'positive' : 'negative'}">
                         ${profit >= 0 ? '+' : ''}${PokerTracker.Utils.formatCurrency(profit)}
                       </span>
                     </div>

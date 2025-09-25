@@ -450,12 +450,14 @@ nav_id: session
       listItem.dataset.handIndex = handIndex;
 
       listItem.innerHTML = `
-        <div class="list-item-hand">${hand.key}</div>
-        <div class="list-item-position">#${hand.position}</div>
-        <div class="list-item-actions">
-          <button class="action-button notes-button" data-action="notes">Notes</button>
-          <button class="toggle-switch ${hand.played ? 'played' : ''}" data-action="toggle"></button>
-          <button class="delete-button" data-action="delete">🗑️</button>
+        <div class="list-item-main">
+          <div class="list-item-hand">${hand.key}</div>
+          <div class="list-item-position">#${hand.position}</div>
+          <div class="list-item-actions">
+            <button class="action-button notes-button" data-action="notes">Notes</button>
+            <button class="toggle-switch ${hand.played ? 'played' : ''}" data-action="toggle"></button>
+            <button class="delete-button" data-action="delete">🗑️</button>
+          </div>
         </div>
         <div class="list-item-notes-container ${hand.notes ? 'active' : ''}">
           <textarea class="list-item-notes" placeholder="Add notes...">${hand.notes || ''}</textarea>

@@ -275,6 +275,56 @@
   background: var(--background);
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Chart Toggle Button */
+.chart-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-btn {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-option {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.toggle-option:hover {
+  background: var(--border);
+  color: var(--text-primary);
+}
+
+.toggle-option.active {
+  background: var(--primary);
+  color: white;
+}
+
+.toggle-option:first-child {
+  border-right: 1px solid var(--border);
 }
 
 .chart-card .card-content {
@@ -388,6 +438,16 @@
 
   .chart-card .card-content {
     padding: 1rem;
+  }
+
+  .chart-card .card-header {
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .chart-toggle {
+    width: 100%;
+    justify-content: flex-end;
   }
 }
 

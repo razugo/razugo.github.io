@@ -297,12 +297,34 @@
   }
 
   .session-analysis-chart {
-    height: 220px;
+    height: 200px;
     padding: 0.5rem;
+    margin: 0 -0.5rem;
+  }
+
+  .session-analysis-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .analysis-stat-card {
+    padding: 0.75rem;
   }
 
   .analysis-stat-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
+  }
+
+  .analysis-stat-label {
+    font-size: 0.65rem;
+  }
+
+  .session-analysis-body {
+    gap: 1rem;
+  }
+
+  .session-analysis-footer {
+    font-size: 0.8rem;
   }
 }
 
@@ -585,6 +607,10 @@
   font-weight: var(--font-weight-normal);
   padding: 0;
   line-height: 1.05;
+  min-width: var(--cell);
+  min-height: var(--cell);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .cell:hover {
@@ -596,6 +622,7 @@
 
 .cell.pair {
   background: #f3f4f6;
+  font-weight: var(--font-weight-semibold);
 }
 
 .cell.selected {
@@ -604,11 +631,12 @@
   font-weight: 700;
 }
 
+.cell:active {
+  transform: scale(0.98);
+}
+
 .cell.active {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  z-index: 15;
-  position: relative;
+  opacity: 0.3;
 }
 
 .cell.long-pressing {
@@ -722,8 +750,7 @@
 /* List Items */
 .list-item {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
   background: var(--color-white);
   border: 1px solid var(--color-light);
   border-radius: 8px;
@@ -738,11 +765,20 @@
   background: var(--color-lightest);
 }
 
+.list-item-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
 .list-item-hand {
   font-weight: var(--font-weight-semibold);
   font-size: 18px;
   color: var(--primary);
   min-width: 60px;
+  flex-shrink: 0;
 }
 
 .list-item-position {
@@ -751,13 +787,34 @@
   font-size: 14px;
   font-weight: var(--font-weight-medium);
   min-width: 50px;
+  flex-shrink: 0;
 }
 
 .list-item-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
   margin-left: auto;
+}
+
+/* Desktop layout */
+@media (min-width: 769px) {
+  .list-item {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .list-item-main {
+    flex: 1;
+    gap: 12px;
+  }
+
+  .list-item-position {
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 /* Hand List (legacy) */
@@ -953,7 +1010,8 @@
   }
 
   .list-item {
-    padding: 16px;
+    padding: 12px;
+    gap: 8px;
   }
 
   .list-item-hand {
@@ -961,8 +1019,7 @@
   }
 
   .list-item-actions {
-    justify-content: space-between;
-    margin-left: 0;
+    gap: 6px;
   }
 }
 
@@ -990,5 +1047,46 @@
   .view-tab {
     padding: 10px 16px;
     font-size: 13px;
+  }
+}
+
+/* =====================================
+   MAGNIFYING OVERLAY FOR MOBILE
+   (Copied exactly from poker_clicker.css)
+   ===================================== */
+
+/* Overlay only visible on mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  #magnify-overlay {
+    position: fixed;
+    width: var(--cell);
+    height: var(--cell);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid var(--color-light);
+    border-radius: var(--radius);
+    background: var(--color-white);
+    color: var(--color-dark);
+    font-size: var(--font-size-cell);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.05;
+    white-space: nowrap;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1000;
+    transform: scale(2.0) translateY(-20px);
+    transform-origin: center center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: none;
+    will-change: transform;
+  }
+}
+
+/* Hide overlay on desktop */
+@media (hover: hover) and (pointer: fine) {
+  #magnify-overlay {
+    display: none !important;
   }
 }
