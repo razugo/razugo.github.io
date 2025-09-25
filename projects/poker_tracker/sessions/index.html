@@ -73,7 +73,7 @@ nav_id: sessions
       </select>
     </div>
   <div class="filter-field filter-button">
-    <button type="button" class="btn btn-primary session-filter-apply" id="sessionFilterApplyBtn" aria-label="Apply session filters">Filter</button>
+    <button type="button" class="btn btn-primary session-filter-clear" id="sessionFilterClearBtn" aria-label="Clear session filters">Clear</button>
   </div>
 </div>
 
@@ -118,8 +118,14 @@ nav_id: sessions
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize custom date pickers for filters
     if (window.PokerTracker && window.PokerTracker.DateTimePicker) {
-      PokerTracker.DateTimePicker.attachToInput('#dateFrom', { includeTime: false });
-      PokerTracker.DateTimePicker.attachToInput('#dateTo', { includeTime: false });
+      PokerTracker.DateTimePicker.attachToInput('#dateFrom', {
+        includeTime: false,
+        onConfirm: () => applyFilters()
+      });
+      PokerTracker.DateTimePicker.attachToInput('#dateTo', {
+        includeTime: false,
+        onConfirm: () => applyFilters()
+      });
     }
 
     // Populate filter dropdowns
@@ -134,6 +140,9 @@ nav_id: sessions
           allowDeselect: true,
           showSearch: false,
           placeholderText: 'All locations'
+        },
+        events: {
+          afterChange: () => applyFilters()
         }
       });
 
@@ -144,6 +153,9 @@ nav_id: sessions
           allowDeselect: true,
           showSearch: false,
           placeholderText: 'All stakes'
+        },
+        events: {
+          afterChange: () => applyFilters()
         }
       });
 
@@ -154,6 +166,9 @@ nav_id: sessions
           allowDeselect: true,
           showSearch: false,
           placeholderText: 'All results'
+        },
+        events: {
+          afterChange: () => applyFilters()
         }
       });
     }
@@ -467,11 +482,12 @@ nav_id: sessions
   }
 
   function setupFilters() {
-    const applyButton = document.getElementById('sessionFilterApplyBtn');
-    if (applyButton) {
-      applyButton.addEventListener('click', applyFilters);
+    const clearButton = document.getElementById('sessionFilterClearBtn');
+    if (clearButton) {
+      clearButton.addEventListener('click', clearFilters);
     }
 
+    // Add change listeners for date inputs
     ['dateFrom', 'dateTo'].forEach(id => {
       const input = document.getElementById(id);
       if (input) {
@@ -483,6 +499,16 @@ nav_id: sessions
             e.preventDefault();
             applyFilters();
           }
+        });
+      }
+    });
+
+    // Add change listeners for dropdown filters (fallback for native selects)
+    ['locationFilter', 'stakesFilter', 'profitFilter'].forEach(id => {
+      const select = document.getElementById(id);
+      if (select) {
+        select.addEventListener('change', function(e) {
+          applyFilters();
         });
       }
     });
@@ -536,6 +562,23 @@ nav_id: sessions
   function applyFilters() {
     const filteredSessions = getFilteredSessions();
     renderSessions(filteredSessions);
+  }
+
+  function clearFilters() {
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('locationFilter').value = '';
+    document.getElementById('stakesFilter').value = '';
+    document.getElementById('profitFilter').value = '';
+
+    // Reset dropdown displays if using custom dropdowns
+    if (PokerTracker?.Dropdowns) {
+      PokerTracker.Dropdowns.setValue('locationFilter', '');
+      PokerTracker.Dropdowns.setValue('stakesFilter', '');
+      PokerTracker.Dropdowns.setValue('profitFilter', '');
+    }
+
+    applyFilters();
   }
 
   function viewSession(sessionId) {

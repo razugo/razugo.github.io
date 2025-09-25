@@ -58,7 +58,7 @@ nav_id: bankroll
             <option value="">All stakes</option>
           </select>
         </div>
-        <button id="filterButton" class="filter-btn">Filter</button>
+        <button id="clearButton" class="filter-btn">Clear</button>
       </div>
 
       <!-- KPI Cards -->
@@ -166,22 +166,26 @@ nav_id: bankroll
     // Filter event listeners for date inputs (will be triggered by datetime-picker)
     document.getElementById('dateFromFilter').addEventListener('change', (e) => {
       currentFilters.dateFrom = e.target.value;
+      updateDashboard();
     });
 
     document.getElementById('dateToFilter').addEventListener('change', (e) => {
       currentFilters.dateTo = e.target.value;
+      updateDashboard();
     });
 
     document.getElementById('locationFilter').addEventListener('change', (e) => {
       currentFilters.location = e.target.value;
+      updateDashboard();
     });
 
     document.getElementById('stakesFilter').addEventListener('change', (e) => {
       currentFilters.stakes = e.target.value;
+      updateDashboard();
     });
 
-    document.getElementById('filterButton').addEventListener('click', () => {
-      updateDashboard();
+    document.getElementById('clearButton').addEventListener('click', () => {
+      clearFilters();
     });
   }
 
@@ -191,6 +195,7 @@ nav_id: bankroll
       includeTime: false,
       onConfirm: (value) => {
         currentFilters.dateFrom = value || '';
+        updateDashboard();
       }
     });
 
@@ -198,6 +203,7 @@ nav_id: bankroll
       includeTime: false,
       onConfirm: (value) => {
         currentFilters.dateTo = value || '';
+        updateDashboard();
       }
     });
   }
@@ -206,6 +212,20 @@ nav_id: bankroll
     const filteredSessions = getFilteredSessions();
     updateKPIs(filteredSessions);
     updateCharts(filteredSessions);
+  }
+
+  function clearFilters() {
+    currentFilters.dateFrom = '';
+    currentFilters.dateTo = '';
+    currentFilters.location = '';
+    currentFilters.stakes = '';
+
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+    document.getElementById('locationFilter').value = '';
+    document.getElementById('stakesFilter').value = '';
+
+    updateDashboard();
   }
 
   function populateFilterOptions() {
