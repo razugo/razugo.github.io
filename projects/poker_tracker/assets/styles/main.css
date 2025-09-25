@@ -92,33 +92,6 @@
       color: var(--text-primary);
     }
 
-    /* Live Session Button in Sessions Page */
-    .btn-live-active {
-      background: var(--success) !important;
-      color: white !important;
-      border-color: var(--success) !important;
-      font-weight: 600;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-live-active:hover {
-      background: #059669 !important;
-      border-color: #059669 !important;
-    }
-
-    .btn-live-disabled {
-      background: var(--border) !important;
-      color: var(--text-secondary) !important;
-      border-color: var(--border) !important;
-      cursor: not-allowed !important;
-      opacity: 0.6;
-    }
-
-    .btn-live-disabled:hover {
-      background: var(--border) !important;
-      color: var(--text-secondary) !important;
-      border-color: var(--border) !important;
-    }
 
 
 
@@ -178,94 +151,6 @@
       margin-bottom: 0;
     }
 
-    /* Mobile Action Menu */
-    .session-actions {
-      position: relative;
-    }
-
-    .action-menu-btn {
-      background: none;
-      border: none;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      padding: 0.75rem;
-      border-radius: var(--radius);
-      color: var(--text-secondary);
-      transition: all 0.2s;
-      min-width: 44px;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .action-menu-btn:hover,
-    .action-menu-btn:active {
-      background: var(--background);
-      color: var(--text-primary);
-    }
-
-    /* Action Menu Popup */
-    .action-menu-popup {
-      position: fixed;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-      z-index: 9999;
-      min-width: 140px;
-      opacity: 0;
-      transform: scale(0.95);
-      transition: opacity 0.15s ease;
-      pointer-events: none;
-    }
-
-    .action-menu-popup.show {
-      opacity: 1;
-      transform: scale(1);
-      pointer-events: auto;
-    }
-
-    .action-menu-item {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: none;
-      background: none;
-      text-align: left;
-      cursor: pointer;
-      color: var(--text-primary);
-      transition: background 0.15s;
-      font-size: 0.9rem;
-      border-radius: 0;
-    }
-
-    .action-menu-item:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
-    }
-
-    .action-menu-item:last-child {
-      border-radius: 0 0 var(--radius) var(--radius);
-    }
-
-    .action-menu-item:only-child {
-      border-radius: var(--radius);
-    }
-
-    .action-menu-item:hover {
-      background: var(--background);
-    }
-
-    .action-menu-item.delete {
-      color: var(--danger);
-    }
-
-    .action-menu-item.delete:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
 
 
     /* Container */
@@ -338,78 +223,6 @@
       display: none;
     }
 
-    /* Session Cards (Mobile) */
-    .session-card {
-      background: var(--surface);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      margin-bottom: 1rem;
-      padding: 1rem;
-      position: relative;
-      display: flex;
-      gap: 1rem;
-    }
-
-    .session-card-content {
-      flex: 1;
-    }
-
-    .session-card-actions {
-      display: flex;
-      align-items: flex-start;
-      flex-shrink: 0;
-    }
-
-    .session-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .session-card-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin: 0;
-      text-align: left;
-    }
-
-    .session-card-bottom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .session-card-date {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-
-    .session-card-meta {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin: 0;
-      flex: 0 1 auto;
-      text-align: center;
-    }
-
-    .session-card-pnl {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .session-card-pnl.positive {
-      color: var(--success);
-    }
-
-    .session-card-pnl.negative {
-      color: var(--danger);
-    }
 
     /* Stats Grid */
     .stats-grid {
@@ -503,15 +316,6 @@
       -webkit-overflow-scrolling: touch;
     }
 
-.sessions-table-container {
-  position: relative;
-  overflow-x: hidden;
-}
-
-.sessions-table-container.scrollable {
-  overflow-x: auto;
-}
-
 .recent-sessions-table-container {
   position: relative;
   overflow-x: hidden;
@@ -528,13 +332,6 @@
   min-width: 600px;
 }
 
-.sessions-table[data-hide-stakes="true"] .col-stake {
-  display: none;
-}
-
-.sessions-table[data-hide-hands="true"] .col-hands {
-  display: none;
-}
 
     .recent-sessions-table[data-hide-end="true"] .col-end {
       display: none;
@@ -632,98 +429,6 @@
       }
     }
 
-    /* Filters */
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 0.75rem 1rem;
-      margin-bottom: 1.5rem;
-      align-items: end;
-    }
-
-    .filter-field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      min-width: 0;
-    }
-
-    .filter-input {
-      padding: 0.5rem;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.875rem;
-      width: 100%;
-      min-width: 0;
-    }
-
-    .filter-label {
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .filter-button {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding-top: 1.3rem;
-    }
-
-    .filter-button .session-filter-apply {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .sessions-empty {
-      padding: 1rem;
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    .sessions-summary {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 0.75rem;
-      width: 100%;
-      max-width: 1000px;
-      margin: 0 auto 1.25rem;
-    }
-
-    .summary-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0.65rem 0.8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      align-items: center;
-      text-align: center;
-    }
-
-    .summary-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-    }
-
-    .summary-value {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .summary-subvalue {
-      font-size: 0.7rem;
-      color: var(--text-secondary);
-    }
 
     .recent-sessions-table-wrapper {
       width: 100%;
@@ -1030,37 +735,6 @@
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      /* Mobile Action Menu */
-      .action-menu-btn {
-        padding: 1rem;
-        min-width: 48px;
-        min-height: 48px;
-      }
-
-      .action-menu-item {
-        padding: 1rem 1.25rem;
-        min-height: 48px;
-        font-size: 0.95rem;
-      }
-
-      .filters {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .filter-button {
-        padding-top: 0;
-        width: 100%;
-      }
-
-      .filter-button .session-filter-apply {
-        width: 100%;
-      }
-
-      @media (max-width: 600px) {
-        .filters {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
 
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -1094,12 +768,10 @@
       }
 
       /* Show scroll indicator on mobile */
-      .sessions-table-container,
       .recent-sessions-table-container {
         position: relative;
       }
 
-      .sessions-table-container.scrollable::after,
       .recent-sessions-table-container.scrollable::after {
         content: '← Scroll →';
         position: absolute;
@@ -1115,7 +787,6 @@
       }
 
       /* Hide scroll indicator if table fits */
-      .sessions-table-container::after,
       .recent-sessions-table-container::after {
         display: none;
       }
