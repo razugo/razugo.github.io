@@ -113,6 +113,57 @@ nav_id: tools
       }
     };
 
+    // Shared merge function for both import types
+    const mergeSessions = importedSessions => {
+      const existingSessions = Array.isArray(PokerTracker.DataStore.sessions)
+        ? PokerTracker.DataStore.sessions
+        : [];
+
+      const mergedMap = new Map();
+
+      // Add existing sessions to map (ensure they're PokerSession instances)
+      existingSessions.forEach(session => {
+        if (session && session.id) {
+          // Convert to PokerSession if needed
+          if (!(session instanceof PokerTracker.PokerSession)) {
+            try {
+              session = new PokerTracker.PokerSession(session);
+            } catch (err) {
+              console.warn('Failed to convert existing session to PokerSession:', err, session);
+              return;
+            }
+          }
+          mergedMap.set(session.id, session);
+        }
+      });
+
+      let newCount = 0;
+      let skippedCount = 0;
+      importedSessions.forEach(session => {
+        if (!session || !session.id) return;
+        if (!mergedMap.has(session.id)) {
+          // Only add sessions that don't already exist (they're already PokerSession instances)
+          mergedMap.set(session.id, session);
+          newCount++;
+        } else {
+          // Count sessions that already exist (duplicates)
+          skippedCount++;
+        }
+      });
+
+      const mergedSessions = Array.from(mergedMap.values());
+      PokerTracker.DataStore.sessions = mergedSessions;
+      PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
+      PokerTracker.DataStore.notifyLiveSessionChange(null);
+
+      // Notify all pages that session data has changed
+      if (typeof PokerTracker.DataStore.notifySessionDataChange === 'function') {
+        PokerTracker.DataStore.notifySessionDataChange(null);
+      }
+
+      return { newCount, skippedCount };
+    };
+
     const importComponent = document.querySelector('[data-component="poker-import"]');
     if (importComponent) {
       const trigger = importComponent.querySelector('[data-action="trigger-import"]');
@@ -313,55 +364,6 @@ nav_id: tools
           return converted;
         };
 
-        const mergeSessions = importedSessions => {
-          const existingSessions = Array.isArray(PokerTracker.DataStore.sessions)
-            ? PokerTracker.DataStore.sessions
-            : [];
-
-          const mergedMap = new Map();
-
-          // Add existing sessions to map (ensure they're PokerSession instances)
-          existingSessions.forEach(session => {
-            if (session && session.id) {
-              // Convert to PokerSession if needed
-              if (!(session instanceof PokerTracker.PokerSession)) {
-                try {
-                  session = new PokerTracker.PokerSession(session);
-                } catch (err) {
-                  console.warn('Failed to convert existing session to PokerSession:', err, session);
-                  return;
-                }
-              }
-              mergedMap.set(session.id, session);
-            }
-          });
-
-          let newCount = 0;
-          let skippedCount = 0;
-          importedSessions.forEach(session => {
-            if (!session || !session.id) return;
-            if (!mergedMap.has(session.id)) {
-              // Only add sessions that don't already exist (they're already PokerSession instances)
-              mergedMap.set(session.id, session);
-              newCount++;
-            } else {
-              // Count sessions that already exist (duplicates)
-              skippedCount++;
-            }
-          });
-
-          const mergedSessions = Array.from(mergedMap.values());
-          PokerTracker.DataStore.sessions = mergedSessions;
-          PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
-          PokerTracker.DataStore.notifyLiveSessionChange(null);
-
-          // Notify all pages that session data has changed
-          if (typeof PokerTracker.DataStore.notifySessionDataChange === 'function') {
-            PokerTracker.DataStore.notifySessionDataChange(null);
-          }
-
-          return { newCount, skippedCount };
-        };
 
         const handleFileSelection = () => {
           const file = fileInput.files && fileInput.files[0];
@@ -502,14 +504,9 @@ nav_id: tools
           throw new Error('No valid sessions found in backup.');
         }
 
-        PokerTracker.DataStore.sessions = validatedSessions;
-        PokerTracker.DataStore.appState = { liveSessionId: null, liveSessionStart: null };
-        PokerTracker.DataStore.notifyLiveSessionChange(null);
-
-        // Notify all pages that session data has changed
-        if (typeof PokerTracker.DataStore.notifySessionDataChange === 'function') {
-          PokerTracker.DataStore.notifySessionDataChange(null);
-        }
+        // Use the same merge logic as the Poker Clicker import
+        const result = mergeSessions(validatedSessions);
+        return result;
       };
 
       if (exportButton) {
@@ -543,9 +540,14 @@ nav_id: tools
           reader.onload = event => {
             try {
               const backup = parseBackup(event.target.result);
-              applyBackup(backup);
-              const sessionCount = backup.sessions.length;
-              alert(`Backup imported. ${sessionCount} session${sessionCount === 1 ? '' : 's'} restored.`);
+              const result = applyBackup(backup);
+              const { newCount, skippedCount } = result;
+
+              let message = `${newCount} session${newCount === 1 ? '' : 's'} imported from backup.`;
+              if (skippedCount > 0) {
+                message += ` ${skippedCount} duplicate${skippedCount === 1 ? '' : 's'} skipped.`;
+              }
+              alert(message);
               updateBackupStatus('Import complete. Your data is saved locally.');
             } catch (err) {
               console.error(err);
