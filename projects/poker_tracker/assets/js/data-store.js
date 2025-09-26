@@ -807,5 +807,18 @@ PokerTracker.DataStore = {
       this.sessions = sessions;
     }
     return this.getSessionData(sessionId);
+  },
+
+  clearAllData: function() {
+    // Clear all poker tracker data from localStorage
+    localStorage.removeItem('poker-tracker-sessions');
+    localStorage.removeItem('poker-tracker-state');
+    localStorage.removeItem('poker-tracker-games'); // Legacy cleanup
+
+    // Notify all pages that session data has been cleared
+    this.notifySessionDataChange(null);
+    this.notifyLiveSessionChange(null);
+
+    return true;
   }
 };

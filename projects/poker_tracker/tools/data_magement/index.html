@@ -75,6 +75,22 @@ nav_id: tools
           </div>
         </div>
       </div>
+
+      <div style="margin: 3rem 0;"></div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Clear All Data</h3>
+        </div>
+        <div class="card-content" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <p style="color: var(--text-secondary);">Permanently delete all PokerTracker data including sessions, statistics, and settings. This action cannot be undone.</p>
+
+          <div class="data-clear" data-component="poker-clear">
+            <button class="btn btn-danger" data-action="clear-all-data">Clear All Data</button>
+            <div class="clear-status" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -557,6 +573,70 @@ nav_id: tools
         });
 
         fileInput.addEventListener('change', handleBackupImport);
+      }
+    }
+
+    // Clear All Data Component
+    const clearComponent = document.querySelector('[data-component="poker-clear"]');
+    if (clearComponent) {
+      const clearButton = clearComponent.querySelector('[data-action="clear-all-data"]');
+      const statusElement = clearComponent.querySelector('.clear-status');
+      const updateClearStatus = createStatusUpdater(statusElement);
+
+      if (clearButton) {
+        clearButton.addEventListener('click', () => {
+          if (clearButton.disabled) return;
+
+          // First confirmation dialog
+          const firstConfirmation = confirm(
+            'This will permanently delete ALL PokerTracker data including sessions, statistics, and settings.\n\n' +
+            'This action CANNOT be undone.\n\n' +
+            'Are you sure you want to continue?'
+          );
+
+          if (!firstConfirmation) {
+            updateClearStatus('Data clearing cancelled.');
+            return;
+          }
+
+          // Second confirmation dialog
+          const secondConfirmation = confirm(
+            'FINAL WARNING: You are about to delete ALL your poker data.\n\n' +
+            'All sessions, hand histories, and statistics will be permanently lost.\n\n' +
+            'Click OK to proceed with deletion, or Cancel to keep your data.'
+          );
+
+          if (!secondConfirmation) {
+            updateClearStatus('Data clearing cancelled.');
+            return;
+          }
+
+          // Proceed with deletion
+          try {
+            clearButton.disabled = true;
+            updateClearStatus('Clearing all data...');
+
+            if (!window.PokerTracker || !PokerTracker.DataStore) {
+              throw new Error('PokerTracker data store is not available.');
+            }
+
+            // Call the clearAllData function
+            const success = PokerTracker.DataStore.clearAllData();
+
+            if (success) {
+              alert('All PokerTracker data has been permanently deleted.');
+              updateClearStatus('All data cleared successfully.');
+            } else {
+              throw new Error('Failed to clear data.');
+            }
+          } catch (err) {
+            console.error('Error clearing data:', err);
+            alert(err.message || 'Failed to clear data.');
+            updateClearStatus('Error occurred while clearing data.');
+          } finally {
+            clearButton.disabled = false;
+          }
+        });
       }
     }
   })();
