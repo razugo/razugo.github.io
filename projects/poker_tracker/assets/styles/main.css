@@ -417,6 +417,11 @@
       border-radius: var(--radius);
       overflow: hidden;
       transition: all var(--transition-standard);
+      margin-bottom: 0.75rem;
+    }
+
+    .recent-session-card:last-child {
+      margin-bottom: 0;
     }
 
     .recent-session-card:hover {

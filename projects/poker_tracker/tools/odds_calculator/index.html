@@ -334,7 +334,7 @@ nav_id: tools
 }
 
 .odds-table .actions-col {
-  width: 60px;
+  width: 80px;
   text-align: center;
 }
 
@@ -450,6 +450,34 @@ nav_id: tools
   font-size: 0.875rem;
 }
 
+/* Clear hand button */
+.clear-hand-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: all 0.15s ease;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  margin-right: 0.25rem;
+}
+
+.clear-hand-btn:hover {
+  color: var(--primary-color);
+  background: rgb(37 99 235 / 0.1);
+}
+
+.clear-hand-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(37 99 235 / 0.2);
+}
+
 /* Remove hand button */
 .remove-hand-btn {
   background: none;
@@ -459,9 +487,9 @@ nav_id: tools
   padding: 0.25rem;
   border-radius: 0.25rem;
   transition: all 0.15s ease;
-  width: 32px;
-  height: 32px;
-  display: flex;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 1rem;
@@ -1627,6 +1655,7 @@ class OddsCalculator {
         <span class="pct-value empty" data-tie-pct="${index}">–</span>
       </td>
       <td class="actions-col">
+        <button class="clear-hand-btn" data-hand="${index}" aria-label="Clear hand ${index + 1}" title="Clear hand">↻</button>
         ${this.hands.length >= this.minHands ? `<button class="remove-hand-btn" data-hand="${index}" aria-label="Remove hand ${index + 1}">&times;</button>` : ''}
       </td>
     `;
@@ -1648,6 +1677,14 @@ class OddsCalculator {
       });
     });
 
+    // Add clear button listener
+    const clearBtn = row.querySelector('.clear-hand-btn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearHandByIndex(index);
+      });
+    }
+
     // Add remove button listener
     const removeBtn = row.querySelector('.remove-hand-btn');
     if (removeBtn) {
@@ -1662,6 +1699,36 @@ class OddsCalculator {
   removeHand() {
     if (this.hands.length <= this.minHands) return;
     this.removeHandByIndex(this.hands.length - 1);
+  }
+
+  clearHandByIndex(index) {
+    // Find the hand row and clear its cards
+    const handRow = document.querySelector(`tr[data-hand-index="${index}"]`);
+    if (!handRow) return;
+
+    handRow.querySelectorAll('.hand-card-picker').forEach(picker => {
+      picker.className = 'hand-card-picker empty';
+      picker.innerHTML = '?';
+      picker.removeAttribute('data-card-value');
+    });
+
+    // Clear results
+    const winPctElement = handRow.querySelector(`[data-win-pct="${index}"]`);
+    if (winPctElement) {
+      winPctElement.textContent = '–';
+      winPctElement.className = 'pct-value empty';
+    }
+
+    const tiePctElement = handRow.querySelector(`[data-tie-pct="${index}"]`);
+    if (tiePctElement) {
+      tiePctElement.textContent = '–';
+      tiePctElement.className = 'pct-value empty';
+    }
+
+    handRow.classList.remove('winner');
+
+    this.validateCards();
+    this.updateCalculateButton();
   }
 
   removeHandByIndex(index) {
