@@ -336,21 +336,11 @@
 }
 
 /* Mobile responsive styles */
-@media (max-width: 360px) {
-  .session-form-grid-finance {
+@media (max-width: 767px) {
+  .session-form-grid-finance,
+  .session-form-grid-stakes,
+  .session-form-grid-time {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .session-form-grid-finance > .form-group:last-child {
-    grid-column: 1 / -1;
-  }
-
-  .session-form-grid-stakes {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .session-form-grid-stakes > .form-group:last-child {
-    grid-column: 1 / -1;
   }
 }
 
