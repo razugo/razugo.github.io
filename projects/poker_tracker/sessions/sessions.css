@@ -162,7 +162,8 @@
   padding-top: 1.3rem;
 }
 
-.filter-button .session-filter-apply {
+.filter-button .session-filter-apply,
+.filter-button .session-filter-clear {
   width: 100%;
   display: flex;
   align-items: center;

@@ -1,157 +1,126 @@
-# CLAUDE.md
+# WARP.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to WARP (warp.dev) when working with code in this repository.
 
 ## Development Commands
 
 ### Local Development
 ```bash
-cd /Users/rwakugawa/Documents/razugo.github.io
+cd /Users/russell/Documents/projects/razugo.github.io
 bundle exec jekyll serve
 ```
 Starts local development server at `http://localhost:4000`. Navigate to `http://localhost:4000/projects/poker_tracker/` to view this poker tracker application.
 
 ### Building
 ```bash
-cd /Users/rwakugawa/Documents/razugo.github.io
+cd /Users/russell/Documents/projects/razugo.github.io
 bundle exec jekyll build
 ```
 Builds the entire Jekyll site including this poker tracker project.
 
 ### Testing Changes
 - Changes to HTML files auto-reload when Jekyll server is running
-- CSS changes in `_includes/assets/styles/main.css` auto-reload
-- JavaScript changes in `_includes/scripts/` auto-reload
+- CSS changes auto-reload when Jekyll server is running
+- JavaScript changes auto-reload when Jekyll server is running
 - No separate build step required for this standalone application
 
 ## Project Overview
 
-This is a poker hand tracking application built using Jekyll with modular components. It uses URL-based routing with separate pages for each section (dashboard, sessions, live tracking) while sharing common components and data layers.
+This is a poker hand tracking application built as a Jekyll multi-page application. It provides comprehensive poker session tracking with real-time hand analysis, bankroll management, and statistical tools. The application uses client-side JavaScript for data management and interactive features.
 
 ## Architecture
 
-### Jekyll Multi-Page Application
-- **Modular Structure**: Separate Jekyll pages for each section with shared layout and components
-- **URL Routing**: Each page has its own URL path (/, /bankroll, /sessions, /session, /tools, /tools/hand_strength)
-- **Shared Components**: Reusable components in `_includes/components/`
-- **Shared Data Layer**: Centralized data management in `_includes/scripts/data-store.js`
+### Jekyll Multi-Page Application Structure
+- **Modular Pages**: Each section (dashboard, sessions, live tracking, tools) has its own HTML page
+- **Shared Components**: Navigation and modals use data-component system for initialization
+- **Client-side Data**: All data stored in localStorage via PokerTracker.DataStore class
+- **Responsive Design**: Mobile-first responsive grid system for poker hand tracking
 
-### Core Components
-- **Layout System**: `_layouts/poker-app.html` provides shared structure
-- **Navigation Component**: `_includes/components/nav-bar.html` with Jekyll-based routing
-- **Data Management**: `_includes/scripts/data-store.js` for centralized data access
-- **Poker Hand Grid**: `_includes/components/poker-grid.html` reusable component
-- **Statistics Components**: Shared across dashboard and other pages
+### Key Architectural Components
+- **Data Store (`data-store.js`)**: Centralized PokerSession class with validation and persistence
+- **Navigation System**: Jekyll front-matter driven navigation with active state management
+- **Component System**: JavaScript modules attached via `data-component` attributes
+- **Poker Grid**: 13x13 hand grid representing all Texas Hold'em starting hands
 
-### Key Features
-- **Session Management**: Track buy-ins, cash-outs, hands played, and VPIP statistics
-- **Live Session Mode**: Interactive poker grid for real-time hand tracking during play
-- **Tools Suite**: Hand strength analyzer and other poker utilities
-- **Data Visualization**: Bankroll progress charts and statistical analysis
-- **Responsive UI**: Works on both desktop and mobile devices
+### Data Model
+The core data structure is the PokerSession class with properties:
+- Financial: `buyIn`, `cashOut`, calculated `profit`
+- Timing: `startTime`, `endTime`, `sessionDate`, calculated `duration`
+- Hand Tracking: `counts`, `playedCounts`, `handHistory`, `total`, `totalPlayed`, `vpip`
+- Meta: `location`, `smallBlind`, `bigBlind`, `notes`
 
-## Data Structure
+### Poker Hand Grid System
+- **Grid Layout**: 13x13 CSS Grid representing all 169 starting hands
+- **Hand Representation**: Diagonal = pairs, upper triangle = suited, lower triangle = offsuit
+- **Interactive Modes**: Quick tap (dealt/folded), long press (dealt & played)
+- **Responsive Sizing**: CSS custom properties scale grid for mobile devices
 
-### Sessions Object
+## Key Features
+
+### Session Management
+- Create live sessions for real-time tracking during play
+- Track buy-ins, cash-outs, location, stakes, and session notes
+- Automatic VPIP calculation based on hands played vs. total hands
+
+### Hand Analysis
+- Statistical variance analysis comparing dealt hands to expected distribution
+- Z-score calculations for hand strength deviation
+- Visual chart representation of session hand distribution
+
+### Tools Suite
+- **Hand Strength Tool**: Visual poker hand range selector with percentile highlighting
+- **Data Management**: Import/export functionality for session data
+
+## Development Patterns
+
+### Component Initialization
+Components initialize via `data-component` attributes:
+```html
+<div data-component="nav-bar" data-active="dashboard"></div>
+```
+
+Corresponding JavaScript:
 ```javascript
-{
-  id: 'session-identifier',
-  sessionDate: 'YYYY-MM-DD', // derived from startTime or fallback
-  startTime: 'ISO string', // when session started
-  endTime: 'ISO string', // when session ended (null for active sessions)
-  buyIn: number,
-  cashOut: number,
-  hands: number,
-  vpip: number, // percentage
-  durationHours: number, // calculated from start/end times when available
-  location: string, // optional location
-  smallBlind: number, // optional stake info
-  bigBlind: number, // optional stake info
-  notes: string, // optional session notes
-  status: 'active' | 'completed'
+document.addEventListener('DOMContentLoaded', function() {
+  // Component auto-initializes based on data-component attribute
+});
+```
+
+### Data Management Pattern
+All data operations go through PokerTracker.DataStore:
+```javascript
+// Create session
+const session = PokerTracker.DataStore.createLiveSession(buyIn);
+
+// Add hand
+session.addHand({ hand: 'AKs', played: true });
+
+// Save changes
+PokerTracker.DataStore.saveSession(session);
+```
+
+### Navigation Pattern
+Pages use Jekyll front-matter for navigation state:
+```yaml
+---
+title: PokerTracker - Dashboard
+nav_id: dashboard
+---
+```
+
+## Mobile Considerations
+
+### Responsive Grid Sizing
+CSS custom properties handle grid scaling:
+```css
+:root {
+  --cell-size: calc((100vw - 3rem) / 13 - 2px);
+  --cell-gap: 2px;
+  --cell-font-size: 8px;
 }
 ```
 
-## File Structure
-
-```
-poker_tracker/
-├── index.html                    # Dashboard page (main entry)
-├── bankroll/index.html           # Bankroll analytics
-├── sessions/index.html           # Sessions management page
-├── session/index.html            # Individual session tracking page
-└── tools/
-    ├── index.html               # Tools overview page
-    ├── data_magement/index.html # Data import/export utilities
-    └── hand_strength/index.html # Hand strength analysis tool
-
-assets/
-├── styles/main.css               # Global styles
-└── js/
-    ├── data-store.js            # Centralized data management
-    ├── app.js                   # Shared utilities
-    ├── nav-bar.js               # Navigation component logic
-    ├── new-session-modal.js     # New session modal component
-    └── session-settings-modal.js # Session settings modal component
-```
-
-## Development Notes
-
-### Navigation
-- Each page uses Jekyll's `nav_id` front matter for active navigation state
-- Global nav behavior lives in `assets/js/nav-bar.js` and consumes the `data-component="nav-bar"` placeholder
-- Links rely on `relative_url` helpers so pages work regardless of depth
-- Mobile navigation toggle handled directly in the nav-bar component
-
-### Data Management
-- `PokerTracker.DataStore` provides centralized data access
-- Shared utilities (`PokerTracker.Utils`, modals) live in `assets/js/` modules
-- Statistics calculations happen in the data store for consistency
-
-### Component System
-- Components render via JavaScript modules (`assets/js/*-modal.js`, `nav-bar.js`) attached with `data-component` hooks
-- Keep component scripts self-contained and namespaced under `PokerTracker.*`
-- Shared utilities available through `PokerTracker.Utils`
-
-### Poker Grid Logic
-- 13x13 grid representing all Texas Hold'em starting hands
-- Diagonal cells represent pocket pairs (AA, KK, etc.)
-- Upper triangle represents suited hands (AKs, QJs, etc.)
-- Lower triangle represents off-suit hands (AKo, QJo, etc.)
-
-## Common Tasks
-
-### Adding New Pages
-1. Create new HTML file with Jekyll front matter
-2. Set appropriate `nav_id` for navigation highlighting
-3. Use `layout: poker-app` for consistent structure
-4. Add navigation link to `_includes/components/nav-bar.html`
-
-### Adding New Components
-1. Create component file in `components/`
-2. Include component in pages using `{% include_relative components/component-name.html %}`
-3. Add component-specific styles to `assets/styles/main.css`
-4. Add component JavaScript within the component file
-
-### Modifying Data Structure
-1. Update data objects in `assets/js/data-store.js`
-2. Update related display functions across all pages
-3. Ensure data validation and error handling
-
-### Styling Changes
-1. Modify CSS custom properties in `:root` for theme changes
-2. Add new component styles following existing patterns
-3. Test responsive behavior across all pages
-
-### Adding New Tools
-1. Create tool page as Jekyll page with front matter (`nav_id: tools`)
-2. Add tool card to `tools/index.html` with appropriate `onclick="openTool('tool-name')"`
-3. Add tool-specific styles to `assets/styles/main.css`
-4. Use shared nav-bar component with `{% include_relative components/nav-bar.html %}`
-5. Include shared CSS with `<link rel="stylesheet" href="assets/styles/main.css">`
-
-### Tool Architecture Notes
-- **Hand Strength Tool**: Uses responsive poker grid with percentage-based range selection
-- **Grid Sizing**: CSS custom properties (`--cell-size`, `--cell-gap`, `--cell-font-size`) for responsive design
-- **Mobile Optimization**: Viewport-width calculations for full-screen grid on mobile devices
-- **Range Selection**: Slider + editable input for precise percentage control with real-time highlighting
+### Touch Interactions
+- Long press detection (>600ms) for dual-action hand tracking
+- Magnification overlay for precise cell selection on small screens
+- Touch-optimized button sizing and spacing

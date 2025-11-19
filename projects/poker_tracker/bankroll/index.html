@@ -197,15 +197,51 @@ nav_id: bankroll
       updateDashboard();
     });
 
-    document.getElementById('locationFilter').addEventListener('change', (e) => {
-      currentFilters.location = e.target.value;
-      updateDashboard();
-    });
+    // Initialize custom dropdowns
+    if (PokerTracker?.Dropdowns) {
+      PokerTracker.Dropdowns.init('locationFilter', {
+        placeholder: 'All locations',
+        placeholderText: 'All locations',
+        settings: {
+          allowDeselect: true,
+          showSearch: false,
+          placeholderText: 'All locations'
+        },
+        events: {
+          afterChange: () => {
+            currentFilters.location = document.getElementById('locationFilter').value;
+            updateDashboard();
+          }
+        }
+      });
 
-    document.getElementById('stakesFilter').addEventListener('change', (e) => {
-      currentFilters.stakes = e.target.value;
-      updateDashboard();
-    });
+      PokerTracker.Dropdowns.init('stakesFilter', {
+        placeholder: 'All stakes',
+        placeholderText: 'All stakes',
+        settings: {
+          allowDeselect: true,
+          showSearch: false,
+          placeholderText: 'All stakes'
+        },
+        events: {
+          afterChange: () => {
+            currentFilters.stakes = document.getElementById('stakesFilter').value;
+            updateDashboard();
+          }
+        }
+      });
+    } else {
+      // Fallback to native change listeners
+      document.getElementById('locationFilter').addEventListener('change', (e) => {
+        currentFilters.location = e.target.value;
+        updateDashboard();
+      });
+
+      document.getElementById('stakesFilter').addEventListener('change', (e) => {
+        currentFilters.stakes = e.target.value;
+        updateDashboard();
+      });
+    }
 
     document.getElementById('clearButton').addEventListener('click', () => {
       clearFilters();
@@ -304,6 +340,12 @@ nav_id: bankroll
     document.getElementById('dateToFilter').value = '';
     document.getElementById('locationFilter').value = '';
     document.getElementById('stakesFilter').value = '';
+
+    // Reset dropdown displays if using custom dropdowns
+    if (PokerTracker?.Dropdowns) {
+      PokerTracker.Dropdowns.setValue('locationFilter', '');
+      PokerTracker.Dropdowns.setValue('stakesFilter', '');
+    }
 
     updateDashboard();
   }
