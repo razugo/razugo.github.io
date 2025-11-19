@@ -441,7 +441,12 @@ nav_id: sessions
       <div class="summary-card">
         <span class="summary-label">Total Duration</span>
         <span class="summary-value">${totalDurationMinutes > 0 ? PokerTracker.Utils.formatDuration(Math.round(totalDurationMinutes)) : '-'}</span>
-      </div>`;
+      </div>
+      <button class="summary-card summary-card-action" onclick="viewAggregateSession()">
+        <span class="summary-label">View All</span>
+        <span class="summary-value">📊</span>
+        <span class="summary-subvalue">Aggregate hands</span>
+      </button>`;
   }
 
   function updateSessionsTableResponsiveState() {
@@ -584,6 +589,28 @@ nav_id: sessions
   function viewSession(sessionId) {
     const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '{{ '/projects/poker_tracker/session/' | relative_url }}';
     window.location.href = `${sessionRoute}?session_id=${sessionId}`;
+  }
+
+  function viewAggregateSession() {
+    const sessionRoute = (PokerTracker.routes && PokerTracker.routes.session) || '{{ '/projects/poker_tracker/session/' | relative_url }}';
+
+    // Build URL with current filter parameters
+    const params = new URLSearchParams({ session_id: 'ALL' });
+
+    // Add filter parameters if they have values
+    const dateFrom = document.getElementById('dateFrom')?.value;
+    const dateTo = document.getElementById('dateTo')?.value;
+    const location = document.getElementById('locationFilter')?.value;
+    const stakes = document.getElementById('stakesFilter')?.value;
+    const profit = document.getElementById('profitFilter')?.value;
+
+    if (dateFrom) params.append('dateFrom', dateFrom);
+    if (dateTo) params.append('dateTo', dateTo);
+    if (location) params.append('location', location);
+    if (stakes) params.append('stakes', stakes);
+    if (profit) params.append('profit', profit);
+
+    window.location.href = `${sessionRoute}?${params.toString()}`;
   }
 
   function editSession(sessionId) {

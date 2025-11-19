@@ -378,7 +378,11 @@ PokerTracker.DataStore = {
   },
 
   // Session Management
-  getSession: function(sessionId) {
+  getSession: function(sessionId, filters = {}) {
+    // Handle aggregate view
+    if (sessionId === 'ALL') {
+      return this.getAggregateSession(filters);
+    }
     return this.sessions.find(s => s.id === sessionId);
   },
 
@@ -604,7 +608,12 @@ PokerTracker.DataStore = {
     return state.liveSessionId !== null;
   },
 
-  getSessionData: function(sessionId) {
+  getSessionData: function(sessionId, filters = {}) {
+    // Handle aggregate view for all sessions
+    if (sessionId === 'ALL') {
+      return this.getAggregateSessionData(filters);
+    }
+
     // Return session data directly from the session object
     const session = this.getSession(sessionId);
     if (!session) {
@@ -629,6 +638,182 @@ PokerTracker.DataStore = {
       totalPlayed: session.totalPlayed || 0,
       vpip: session.vpip || 0,
       notes: session.notes || ''
+    };
+  },
+
+  getAggregateSessionData: function(filters = {}) {
+    let sessions = this.getSessions();
+
+    // Apply filters if provided
+    if (filters.dateFrom || filters.dateTo || filters.location || filters.stakes || filters.profit) {
+      sessions = sessions.filter(session => {
+        const sessionDate = this.getSessionDate(session);
+
+        // Date from filter
+        if (filters.dateFrom && (!sessionDate || sessionDate < filters.dateFrom)) {
+          return false;
+        }
+
+        // Date to filter
+        if (filters.dateTo && (!sessionDate || sessionDate > filters.dateTo)) {
+          return false;
+        }
+
+        // Location filter
+        if (filters.location && session.location !== filters.location) {
+          return false;
+        }
+
+        // Stakes filter
+        if (filters.stakes) {
+          const sessionStakes = (session.smallBlind && session.bigBlind)
+            ? `$${session.smallBlind}/$${session.bigBlind}`
+            : '';
+          if (sessionStakes !== filters.stakes) {
+            return false;
+          }
+        }
+
+        // Profit filter
+        if (filters.profit) {
+          const profit = (session.cashOut || 0) - (session.buyIn || 0);
+          if (filters.profit === 'positive' && profit <= 0) {
+            return false;
+          }
+          if (filters.profit === 'negative' && profit >= 0) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    }
+
+    const aggregateCounts = {};
+    const aggregatePlayedCounts = {};
+    const aggregateHandHistory = [];
+    let totalHands = 0;
+    let totalPlayed = 0;
+
+    sessions.forEach(session => {
+      // Merge counts
+      const counts = session.counts || {};
+      Object.keys(counts).forEach(key => {
+        aggregateCounts[key] = (aggregateCounts[key] || 0) + counts[key];
+      });
+
+      // Merge played counts
+      const playedCounts = session.playedCounts || {};
+      Object.keys(playedCounts).forEach(key => {
+        aggregatePlayedCounts[key] = (aggregatePlayedCounts[key] || 0) + playedCounts[key];
+      });
+
+      // Concatenate hand history with session context
+      const handHistory = session.handHistory || [];
+      handHistory.forEach(hand => {
+        aggregateHandHistory.push({
+          ...hand,
+          sessionId: session.id,
+          sessionDate: this.getSessionDate(session)
+        });
+      });
+
+      totalHands += session.total || 0;
+      totalPlayed += session.totalPlayed || 0;
+    });
+
+    // Calculate aggregate VPIP
+    const vpip = totalHands > 0 ? (totalPlayed / totalHands) * 100 : 0;
+
+    return {
+      sessionId: 'ALL',
+      counts: aggregateCounts,
+      playedCounts: aggregatePlayedCounts,
+      handHistory: aggregateHandHistory,
+      total: totalHands,
+      totalPlayed: totalPlayed,
+      vpip: vpip,
+      notes: '',
+      filteredSessionCount: sessions.length
+    };
+  },
+
+  getAggregateSession: function(filters = {}) {
+    let sessions = this.getSessions();
+
+    // Apply filters if provided
+    if (filters.dateFrom || filters.dateTo || filters.location || filters.stakes || filters.profit) {
+      sessions = sessions.filter(session => {
+        const sessionDate = this.getSessionDate(session);
+
+        // Date from filter
+        if (filters.dateFrom && (!sessionDate || sessionDate < filters.dateFrom)) {
+          return false;
+        }
+
+        // Date to filter
+        if (filters.dateTo && (!sessionDate || sessionDate > filters.dateTo)) {
+          return false;
+        }
+
+        // Location filter
+        if (filters.location && session.location !== filters.location) {
+          return false;
+        }
+
+        // Stakes filter
+        if (filters.stakes) {
+          const sessionStakes = (session.smallBlind && session.bigBlind)
+            ? `$${session.smallBlind}/$${session.bigBlind}`
+            : '';
+          if (sessionStakes !== filters.stakes) {
+            return false;
+          }
+        }
+
+        // Profit filter
+        if (filters.profit) {
+          const profit = (session.cashOut || 0) - (session.buyIn || 0);
+          if (filters.profit === 'positive' && profit <= 0) {
+            return false;
+          }
+          if (filters.profit === 'negative' && profit >= 0) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+    }
+
+    let totalBuyIn = 0;
+    let totalCashOut = 0;
+
+    sessions.forEach(session => {
+      totalBuyIn += session.buyIn || 0;
+      totalCashOut += session.cashOut || 0;
+    });
+
+    const sessionData = this.getAggregateSessionData(filters);
+
+    return {
+      id: 'ALL',
+      sessionDate: null,
+      startTime: null,
+      endTime: null,
+      buyIn: totalBuyIn,
+      cashOut: totalCashOut,
+      counts: sessionData.counts,
+      playedCounts: sessionData.playedCounts,
+      handHistory: sessionData.handHistory,
+      total: sessionData.total,
+      totalPlayed: sessionData.totalPlayed,
+      vpip: sessionData.vpip,
+      notes: '',
+      location: null,
+      smallBlind: null,
+      bigBlind: null,
+      filteredSessionCount: sessionData.filteredSessionCount
     };
   },
 

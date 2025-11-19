@@ -17,6 +17,20 @@
   box-shadow: var(--shadow);
 }
 
+/* Aggregate view indicator */
+#grid.aggregate-view {
+  opacity: 0.95;
+  cursor: default;
+}
+
+#grid.aggregate-view .cell {
+  cursor: default;
+}
+
+#grid.aggregate-view .cell:hover {
+  transform: none;
+}
+
 .live-stats-inner {
   width: 100%;
   max-width: 960px;

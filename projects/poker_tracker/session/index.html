@@ -89,7 +89,7 @@ nav_id: session
       <button id="undo">Undo</button>
     </div>
 
-    <div class="note">Quick tap: dealt (folded). Long press (>600ms): dealt AND played.</div>
+    <div class="note" id="gridNote">Quick tap: dealt (folded). Long press (>600ms): dealt AND played.</div>
 
     <!-- Hand Analysis -->
     <div class="card session-analysis-card" id="sessionAnalysisCard">
@@ -195,9 +195,29 @@ nav_id: session
     document.getElementById('sessionOverlay').classList.toggle('expanded');
   }
 
+  function getFiltersFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filters = {};
+
+    const dateFrom = urlParams.get('dateFrom');
+    const dateTo = urlParams.get('dateTo');
+    const location = urlParams.get('location');
+    const stakes = urlParams.get('stakes');
+    const profit = urlParams.get('profit');
+
+    if (dateFrom) filters.dateFrom = dateFrom;
+    if (dateTo) filters.dateTo = dateTo;
+    if (location) filters.location = location;
+    if (stakes) filters.stakes = stakes;
+    if (profit) filters.profit = profit;
+
+    return filters;
+  }
+
   function getCurrentSession() {
     if (!currentSessionId) return null;
-    return PokerTracker.DataStore.getSession(currentSessionId);
+    const filters = currentSessionId === 'ALL' ? getFiltersFromURL() : {};
+    return PokerTracker.DataStore.getSession(currentSessionId, filters);
   }
 
   function getSessionData() {
@@ -205,7 +225,8 @@ nav_id: session
       console.error('getSessionData: No currentSessionId');
       return null;
     }
-    const data = PokerTracker.DataStore.getSessionData(currentSessionId);
+    const filters = currentSessionId === 'ALL' ? getFiltersFromURL() : {};
+    const data = PokerTracker.DataStore.getSessionData(currentSessionId, filters);
     console.log('getSessionData result:', data);
     return data;
   }
@@ -231,7 +252,16 @@ nav_id: session
     const profit = (session.cashOut || 0) - (session.buyIn || 0);
 
     // Update live stats bar
-    const sessionDate = PokerTracker.DataStore.getSessionDate(session) || 'Current Session';
+    const isAggregateView = currentSessionId === 'ALL';
+    let sessionDate;
+    if (isAggregateView) {
+      const filters = getFiltersFromURL();
+      const hasFilters = Object.keys(filters).length > 0;
+      const sessionCount = session.filteredSessionCount || 0;
+      sessionDate = hasFilters ? `${sessionCount} Filtered Sessions` : 'All Sessions';
+    } else {
+      sessionDate = PokerTracker.DataStore.getSessionDate(session) || 'Current Session';
+    }
     document.getElementById('sessionNameStat').textContent = sessionDate || 'Session Details';
 
     document.getElementById('vpipStat').textContent = `${vpipPercent}% (${sessionData.totalPlayed}/${sessionData.total})`;
@@ -249,7 +279,17 @@ nav_id: session
       return;
     }
 
-    const modeText = showPlayed ? 'Analyzing played hands' : 'Analyzing all dealt hands';
+    const isAggregateView = currentSessionId === 'ALL';
+    const allSessions = PokerTracker.DataStore.getSessions();
+    const sessionCount = allSessions.length;
+
+    let modeText;
+    if (isAggregateView) {
+      modeText = showPlayed ? `Analyzing played hands (${sessionCount} sessions)` : `Analyzing all dealt hands (${sessionCount} sessions)`;
+    } else {
+      modeText = showPlayed ? 'Analyzing played hands' : 'Analyzing all dealt hands';
+    }
+
     if (analysisElements.mode) {
       analysisElements.mode.textContent = modeText;
     }
@@ -479,17 +519,32 @@ nav_id: session
         notesButton.classList.toggle('toggle-active');
       });
 
+      // Disable editing for aggregate view
+      const isAggregateView = currentSessionId === 'ALL';
+
       toggleButton.addEventListener('click', () => {
+        if (isAggregateView) return;
         toggleHandStatus(handIndex);
       });
 
       deleteButton.addEventListener('click', () => {
+        if (isAggregateView) return;
         deleteHand(handIndex);
       });
 
       notesTextarea.addEventListener('input', () => {
+        if (isAggregateView) return;
         saveNotes(handIndex, notesTextarea.value);
       });
+
+      // Disable textarea for aggregate view
+      if (isAggregateView) {
+        notesTextarea.disabled = true;
+        toggleButton.style.opacity = '0.5';
+        toggleButton.style.cursor = 'not-allowed';
+        deleteButton.style.opacity = '0.5';
+        deleteButton.style.cursor = 'not-allowed';
+      }
 
       listContainer.appendChild(listItem);
     });
@@ -497,6 +552,9 @@ nav_id: session
 
   function handleInteractionStart(e) {
     if (!getCurrentSession()) return;
+
+    // Disable interaction for aggregate view
+    if (currentSessionId === 'ALL') return;
 
     if (e.target.classList.contains('cell')) {
       isMouseDown = true;
@@ -640,6 +698,9 @@ nav_id: session
   }
 
   function undo() {
+    // Disable undo for aggregate view
+    if (currentSessionId === 'ALL') return;
+
     PokerTracker.DataStore.undoLastHand(currentSessionId);
     updateSessionStats();
     render();
@@ -720,10 +781,14 @@ nav_id: session
       return;
     }
 
+    // Special handling for aggregate view
+    const isAggregateView = currentSessionId === 'ALL';
+
     // Debug: Check all available sessions
     const allSessions = PokerTracker.DataStore.getSessions();
     console.log('All available sessions:', allSessions);
     console.log('Looking for session ID:', currentSessionId);
+    console.log('Is aggregate view:', isAggregateView);
 
     const session = getCurrentSession();
     console.log('Found session:', session);
@@ -737,6 +802,30 @@ nav_id: session
     buildGrid();
     updateSessionStats();
     syncToggleState();
+
+    // Hide settings button and disable undo for aggregate view
+    if (isAggregateView) {
+      const settingsButton = document.querySelector('.live-stats-toggle');
+      if (settingsButton) {
+        settingsButton.style.display = 'none';
+      }
+
+      const undoButton = document.getElementById('undo');
+      if (undoButton) {
+        undoButton.disabled = true;
+        undoButton.style.opacity = '0.5';
+        undoButton.style.cursor = 'not-allowed';
+      }
+
+      // Update note text for read-only view
+      const gridNote = document.getElementById('gridNote');
+      if (gridNote) {
+        gridNote.textContent = 'Viewing aggregate data from all sessions (read-only).';
+      }
+
+      // Add visual indicator to grid
+      grid.classList.add('aggregate-view');
+    }
 
     // Setup interaction handlers
     grid.addEventListener('mousedown', handleInteractionStart);

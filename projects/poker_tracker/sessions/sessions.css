@@ -173,7 +173,7 @@
 /* Sessions Summary */
 .sessions-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
   width: 100%;
   max-width: 1000px;
@@ -190,6 +190,40 @@
   gap: 0.25rem;
   align-items: center;
   text-align: center;
+}
+
+.summary-card-action {
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.summary-card-action .summary-label,
+.summary-card-action .summary-subvalue {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.summary-card-action .summary-value {
+  color: white;
+}
+
+.summary-card-action:hover {
+  background: var(--primary-dark, #2563eb);
+  border-color: var(--primary-dark, #2563eb);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.summary-card-action:active {
+  transform: translateY(0);
+  background: var(--primary);
+}
+
+.summary-card-action .summary-value {
+  font-size: 1.5rem;
 }
 
 .summary-label {
@@ -307,8 +341,57 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+/* Tablet: Keep 4 columns but adjust spacing */
+@media (max-width: 900px) {
+  .sessions-summary {
+    gap: 0.5rem;
+  }
+
+  .summary-card {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .summary-label {
+    font-size: 0.65rem;
+  }
+
+  .summary-value {
+    font-size: 1rem;
+  }
+
+  .summary-subvalue {
+    font-size: 0.65rem;
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  /* Sessions summary - Keep all 4 in a row on mobile */
+  .sessions-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .summary-card {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .summary-label {
+    font-size: 0.6rem;
+  }
+
+  .summary-value {
+    font-size: 0.95rem;
+  }
+
+  .summary-subvalue {
+    font-size: 0.6rem;
+  }
+
+  .summary-card-action .summary-value {
+    font-size: 1.3rem;
+  }
+
   /* Mobile Action Menu */
   .action-menu-btn {
     padding: 1rem;
