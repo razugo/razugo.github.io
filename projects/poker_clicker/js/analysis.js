@@ -100,7 +100,7 @@ export class AnalysisManager {
           x: {
             title: {
               display: true,
-              text: 'Hand Strength (0=strongest, 100=weakest)'
+              text: 'Hand Strength'
             }
           }
         },

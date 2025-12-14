@@ -154,6 +154,7 @@
   max-width: 960px;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
 }
 
 .session-analysis-card .card-header {
@@ -239,7 +240,7 @@
 
 .session-analysis-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
@@ -498,10 +499,30 @@
     padding: 0.25rem;
   }
 
+  .session-analysis-card {
+    margin-top: 1.5rem;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .session-analysis-card .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .session-analysis-mode {
+    align-self: stretch;
+    text-align: center;
+    font-size: 0.65rem;
+    padding: 0.3rem 0.6rem;
+  }
+
   .session-analysis-chart {
     height: 200px;
     padding: 0.5rem;
-    margin: 0 -0.5rem;
+    margin: 0;
+    overflow-x: auto;
   }
 
   .session-analysis-stats {
@@ -511,10 +532,12 @@
 
   .analysis-stat-card {
     padding: 0.75rem;
+    min-width: 0;
   }
 
   .analysis-stat-value {
     font-size: 1.25rem;
+    word-break: break-word;
   }
 
   .analysis-stat-label {
@@ -606,6 +629,67 @@
 
   .hand-group-hand-position {
     font-size: 0.6rem;
+  }
+}
+
+/* Extra small screens - additional responsive adjustments */
+@media (max-width: 480px) {
+  .session-analysis-card {
+    margin-top: 1rem;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .session-analysis-card .card-title {
+    font-size: 1.1rem;
+  }
+
+  .session-analysis-card .card-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .session-analysis-chart {
+    height: 180px;
+    padding: 0.4rem;
+  }
+
+  .session-analysis-stats {
+    gap: 0.5rem;
+  }
+
+  .analysis-stat-card {
+    padding: 0.6rem;
+  }
+
+  .analysis-stat-value {
+    font-size: 1.1rem;
+  }
+
+  .hand-groups-carousel {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .hand-group-hands {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    padding: 0.6rem;
+  }
+
+  .hand-group-hand {
+    padding: 0.4rem 0.3rem;
+  }
+
+  .hand-group-hand-code {
+    font-size: 0.8rem;
+  }
+
+  .hand-group-hand-strength {
+    font-size: 0.6rem;
+  }
+
+  .hand-group-hand-position {
+    font-size: 0.55rem;
   }
 }
 

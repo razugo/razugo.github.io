@@ -238,6 +238,7 @@
             borderWidth: 1.5,
             fill: false,
             tension: 0,
+            showLine: false,
             pointRadius: 3,
             pointBackgroundColor: pointColors,
             pointBorderColor: '#fff',
@@ -273,7 +274,8 @@
             fill: false,
             pointRadius: 0,
             tension: 0,
-            yAxisID: 'y'
+            yAxisID: 'y',
+            hidden: false
           }
         ]
       },
@@ -324,7 +326,7 @@
             position: 'left',
             title: {
               display: true,
-              text: 'Hand Strength (0 = strongest)',
+              text: 'Hand Strength',
               color: colors.axis,
               font: { size: 13 }
             },
@@ -343,7 +345,10 @@
             labels: {
               usePointStyle: true,
               boxWidth: 8,
-              color: colors.axis
+              color: colors.axis,
+              filter: function(legendItem, chartData) {
+                return legendItem.text !== 'Expected Average';
+              }
             }
           },
           tooltip: {
@@ -394,11 +399,7 @@
     const colors = getThemeColors();
 
     // Create labels for x-axis (batch numbers)
-    const labels = groupedAvg.map((_, i) => {
-      const startHand = i * 8 + 1;
-      const endHand = Math.min((i + 1) * 8, strengths.length);
-      return `${startHand}-${endHand}`;
-    });
+    const labels = groupedAvg.map((_, i) => `${i + 1}`);
 
     // Create expected line data (flat line at expected mean)
     const expectedLine = new Array(groupedAvg.length).fill(expectedMean);
@@ -436,7 +437,8 @@
             fill: false,
             pointRadius: 0,
             tension: 0,
-            yAxisID: 'y'
+            yAxisID: 'y',
+            hidden: false
           },
           {
             label: 'Hands Played %',
@@ -501,7 +503,7 @@
             position: 'left',
             title: {
               display: true,
-              text: 'Hand Strength (0 = strongest)',
+              text: 'Hand Strength',
               color: colors.axis,
               font: { size: 13 }
             },
@@ -540,7 +542,10 @@
             labels: {
               usePointStyle: true,
               boxWidth: 8,
-              color: colors.axis
+              color: colors.axis,
+              filter: function(legendItem) {
+                return legendItem.text !== 'Expected Average';
+              }
             }
           },
           tooltip: {
