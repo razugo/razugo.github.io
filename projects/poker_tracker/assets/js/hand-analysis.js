@@ -8,7 +8,9 @@
 
   const state = {
     histogramChart: null,
-    expectedStats: calculateExpectedValues()
+    expectedStats: calculateExpectedValues(),
+    currentCarouselIndex: 0,
+    handGroups: []
   };
 
   function calculateExpectedValues() {
@@ -117,8 +119,8 @@
   }
 
   function buildGroupedAverage(strengths) {
-    // Build grouped 10-hand averages (batches, not rolling)
-    const groupSize = 10;
+    // Build grouped 8-hand averages (batches, not rolling)
+    const groupSize = 8;
     const groupedAvg = [];
 
     for (let i = 0; i < strengths.length; i += groupSize) {
@@ -131,8 +133,8 @@
   }
 
   function buildGroupedPlayedPercentage(handHistory) {
-    // Build grouped 10-hand played percentage (batches, not rolling)
-    const groupSize = 10;
+    // Build grouped 8-hand played percentage (batches, not rolling)
+    const groupSize = 8;
     const groupedPercentage = [];
 
     for (let i = 0; i < handHistory.length; i += groupSize) {
@@ -143,6 +145,40 @@
     }
 
     return groupedPercentage;
+  }
+
+  function buildHandGroups(handHistory, strengths) {
+    // Build detailed hand groups with individual hand data
+    const groupSize = 8;
+    const groups = [];
+
+    for (let i = 0; i < handHistory.length; i += groupSize) {
+      const groupHands = handHistory.slice(i, i + groupSize);
+      const groupStrengths = strengths.slice(i, i + groupSize);
+
+      const playedCount = groupHands.filter(hand => hand && hand.played).length;
+      const playedPercentage = (playedCount / groupHands.length) * 100;
+      const avgStrength = groupStrengths.reduce((sum, val) => sum + val, 0) / groupStrengths.length;
+
+      const hands = groupHands.map((hand, idx) => ({
+        key: hand?.key || '',
+        played: hand?.played || false,
+        strength: groupStrengths[idx] || 0,
+        position: hand?.position || (i + idx + 1)
+      }));
+
+      groups.push({
+        startHand: i + 1,
+        endHand: i + groupHands.length,
+        hands: hands,
+        avgStrength: avgStrength,
+        playedCount: playedCount,
+        playedPercentage: playedPercentage,
+        totalHands: groupHands.length
+      });
+    }
+
+    return groups;
   }
 
   function renderHistogram(canvas, strengths, handHistory) {
@@ -167,8 +203,8 @@
 
     // Create labels for x-axis (batch numbers)
     const labels = groupedAvg.map((_, i) => {
-      const startHand = i * 10 + 1;
-      const endHand = Math.min((i + 1) * 10, strengths.length);
+      const startHand = i * 8 + 1;
+      const endHand = Math.min((i + 1) * 8, strengths.length);
       return `${startHand}-${endHand}`;
     });
 
@@ -181,7 +217,7 @@
         labels,
         datasets: [
           {
-            label: '10-Hand Avg',
+            label: '8-Hand Avg',
             data: groupedAvg,
             borderColor: colors.primary,
             borderWidth: 2.5,
@@ -195,7 +231,9 @@
             pointHoverBackgroundColor: colors.primary,
             pointHoverBorderColor: '#fff',
             pointHoverBorderWidth: 2,
-            yAxisID: 'y'
+            yAxisID: 'y',
+            pointStyle: 'circle',
+            pointHitRadius: 10
           },
           {
             label: 'Expected Average',
@@ -230,6 +268,21 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        onClick: (event, activeElements) => {
+          if (activeElements.length > 0) {
+            const clickedIndex = activeElements[0].index;
+            // Jump to the corresponding carousel card
+            if (clickedIndex >= 0 && clickedIndex < state.handGroups.length) {
+              state.currentCarouselIndex = clickedIndex;
+              renderCarousel();
+              // Smooth scroll to carousel
+              const carousel = document.getElementById('handGroupsCarousel');
+              if (carousel) {
+                carousel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          }
+        },
         interaction: {
           intersect: false,
           mode: 'index'
@@ -238,7 +291,7 @@
           x: {
             title: {
               display: true,
-              text: 'Hand Range (batches of 10)',
+              text: 'Hand Range (batches of 8)',
               color: colors.axis,
               font: { size: 13 }
             },
@@ -321,6 +374,102 @@
     });
   }
 
+  function renderCarousel() {
+    const carouselTrack = document.getElementById('carouselTrack');
+    const carouselIndicator = document.getElementById('carouselIndicator');
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+
+    if (!carouselTrack || state.handGroups.length === 0) {
+      return;
+    }
+
+    // Clear existing cards
+    carouselTrack.innerHTML = '';
+
+    // Build cards for each group
+    state.handGroups.forEach((group, index) => {
+      const card = document.createElement('div');
+      card.className = 'hand-group-card';
+
+      const header = `
+        <div class="hand-group-header">
+          <div class="hand-group-title">Hands ${group.startHand}-${group.endHand}</div>
+          <div class="hand-group-stats">
+            <div class="hand-group-stat">
+              <span class="hand-group-stat-label">Avg Strength</span>
+              <span class="hand-group-stat-value">${group.avgStrength.toFixed(1)}</span>
+            </div>
+            <div class="hand-group-stat">
+              <span class="hand-group-stat-label">Played</span>
+              <span class="hand-group-stat-value">${group.playedPercentage.toFixed(0)}%</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const handsGrid = document.createElement('div');
+      handsGrid.className = 'hand-group-hands';
+
+      group.hands.forEach(hand => {
+        const handCard = document.createElement('div');
+        handCard.className = `hand-group-hand${hand.played ? ' played' : ''}`;
+        handCard.innerHTML = `
+          <div class="hand-group-hand-code">${hand.key}</div>
+          <div class="hand-group-hand-strength">Str: ${hand.strength.toFixed(1)}</div>
+          <div class="hand-group-hand-position">#${hand.position}</div>
+        `;
+        handsGrid.appendChild(handCard);
+      });
+
+      card.innerHTML = header;
+      card.appendChild(handsGrid);
+      carouselTrack.appendChild(card);
+    });
+
+    // Update indicator and buttons
+    if (carouselIndicator) {
+      carouselIndicator.textContent = `${state.currentCarouselIndex + 1} / ${state.handGroups.length}`;
+    }
+
+    if (prevBtn) {
+      prevBtn.disabled = state.currentCarouselIndex === 0;
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = state.currentCarouselIndex >= state.handGroups.length - 1;
+    }
+
+    // Update transform
+    // Calculate offset accounting for card width + gap
+    // Each card: calc(100% - 1rem) width, plus 1rem gap = 100% total per card
+    const offset = -state.currentCarouselIndex * 100;
+    carouselTrack.style.transform = `translateX(${offset}%)`;
+  }
+
+  function initCarousel() {
+    const prevBtn = document.getElementById('carouselPrev');
+    const nextBtn = document.getElementById('carouselNext');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        if (state.currentCarouselIndex > 0) {
+          state.currentCarouselIndex--;
+          renderCarousel();
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        if (state.currentCarouselIndex < state.handGroups.length - 1) {
+          state.currentCarouselIndex++;
+          renderCarousel();
+        }
+      });
+    }
+  }
+
   function showEmpty(elements, message) {
     if (!elements) {
       return;
@@ -329,6 +478,14 @@
     if (state.histogramChart) {
       state.histogramChart.destroy();
       state.histogramChart = null;
+    }
+
+    // Clear carousel
+    state.handGroups = [];
+    state.currentCarouselIndex = 0;
+    const carouselTrack = document.getElementById('carouselTrack');
+    if (carouselTrack) {
+      carouselTrack.innerHTML = '';
     }
 
     if (elements.card) {
@@ -431,12 +588,21 @@
       const stats = computeStats(strengths);
       const classification = classifyLuck(stats.zScore);
 
+      // Build hand groups and render carousel
+      state.handGroups = buildHandGroups(filtered, strengths);
+      state.currentCarouselIndex = 0;
+
       updateUI(elements, stats, classification, usePlayedOnly);
       renderHistogram(elements.chartCanvas, strengths, filtered);
+      renderCarousel();
     },
 
     clear(elements, message) {
       showEmpty(elements, message || 'Track some hands to unlock hand analysis.');
+    },
+
+    init() {
+      initCarousel();
     }
   };
 })(window);

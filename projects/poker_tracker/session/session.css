@@ -151,6 +151,9 @@
 /* Session Hand Analysis */
 .session-analysis-card {
   margin-top: 2rem;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .session-analysis-card .card-header {
@@ -279,6 +282,191 @@
   color: var(--text-primary);
 }
 
+/* Hand Groups Carousel */
+.carousel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.carousel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.carousel-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.carousel-btn:hover:not(:disabled) {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.carousel-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-indicator {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  min-width: 50px;
+  text-align: center;
+}
+
+.carousel-container {
+  overflow: hidden;
+  position: relative;
+  border-radius: var(--radius);
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.3s ease-out;
+  gap: 0;
+}
+
+.hand-group-card {
+  flex: 0 0 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+  margin-right: 0;
+}
+
+.hand-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.hand-group-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.hand-group-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+
+.hand-group-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.hand-group-stat-label {
+  color: var(--text-secondary);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.hand-group-stat-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.hand-group-hands {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.625rem;
+  padding: 0.875rem;
+}
+
+.hand-group-hand {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: all 0.2s;
+}
+
+.hand-group-hand:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.hand-group-hand.played {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: var(--success);
+}
+
+.hand-group-hand.played:hover {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.hand-group-hand-code {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.hand-group-hand.played .hand-group-hand-code {
+  color: var(--success);
+}
+
+.hand-group-hand-strength {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 500;
+}
+
+.hand-group-hand-position {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  text-align: center;
+  opacity: 0.7;
+}
+
 /* Mobile live session adjustments */
 @media (max-width: 768px) {
   .live-stats-bar {
@@ -339,6 +527,85 @@
 
   .session-analysis-footer {
     font-size: 0.8rem;
+  }
+
+  .hand-groups-carousel {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .carousel-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .carousel-title {
+    font-size: 0.75rem;
+  }
+
+  .carousel-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 1.1rem;
+  }
+
+  .carousel-indicator {
+    font-size: 0.7rem;
+    min-width: 45px;
+  }
+
+  .hand-group-card {
+    flex: 0 0 100%;
+  }
+
+  .hand-group-header {
+    padding: 0.625rem 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .hand-group-title {
+    font-size: 0.75rem;
+    flex-basis: 100%;
+  }
+
+  .hand-group-stats {
+    gap: 0.75rem;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .hand-group-stat {
+    align-items: flex-start;
+  }
+
+  .hand-group-stat-label {
+    font-size: 0.6rem;
+  }
+
+  .hand-group-stat-value {
+    font-size: 0.8rem;
+  }
+
+  .hand-group-hands {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
+    padding: 0.75rem;
+  }
+
+  .hand-group-hand {
+    padding: 0.5rem 0.375rem;
+  }
+
+  .hand-group-hand-code {
+    font-size: 0.875rem;
+  }
+
+  .hand-group-hand-strength {
+    font-size: 0.65rem;
+  }
+
+  .hand-group-hand-position {
+    font-size: 0.6rem;
   }
 }
 

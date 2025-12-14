@@ -103,9 +103,6 @@ nav_id: session
       <div class="card-content">
         <div class="session-analysis-empty" id="handAnalysisEmpty">Track some hands in this session to unlock hand analysis.</div>
         <div class="session-analysis-body is-hidden" id="handAnalysisBody">
-          <div class="session-analysis-chart">
-            <canvas id="handAnalysisChart"></canvas>
-          </div>
           <div class="session-analysis-stats">
             <div class="analysis-stat-card">
               <span class="analysis-stat-label">Result</span>
@@ -122,6 +119,24 @@ nav_id: session
             <div class="analysis-stat-card">
               <span class="analysis-stat-label">Std Dev</span>
               <span class="analysis-stat-value" id="handAnalysisStd">-</span>
+            </div>
+          </div>
+          <div class="session-analysis-chart">
+            <canvas id="handAnalysisChart"></canvas>
+          </div>
+          <div class="hand-groups-carousel" id="handGroupsCarousel">
+            <div class="carousel-header">
+              <h3 class="carousel-title">Hand Groups</h3>
+              <div class="carousel-controls">
+                <button class="carousel-btn carousel-prev" id="carouselPrev" aria-label="Previous group">‹</button>
+                <span class="carousel-indicator" id="carouselIndicator">1 / 1</span>
+                <button class="carousel-btn carousel-next" id="carouselNext" aria-label="Next group">›</button>
+              </div>
+            </div>
+            <div class="carousel-container">
+              <div class="carousel-track" id="carouselTrack">
+                <!-- Hand group cards will be inserted here -->
+              </div>
             </div>
           </div>
           <div class="session-analysis-footer">
@@ -802,6 +817,11 @@ nav_id: session
     buildGrid();
     updateSessionStats();
     syncToggleState();
+
+    // Initialize hand analysis carousel
+    if (window.PokerTracker && PokerTracker.HandAnalysis && PokerTracker.HandAnalysis.init) {
+      PokerTracker.HandAnalysis.init();
+    }
 
     // Hide settings button and disable undo for aggregate view
     if (isAggregateView) {
