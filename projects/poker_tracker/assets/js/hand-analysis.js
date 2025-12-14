@@ -7,6 +7,7 @@
   const handStrengths = (window.PokerTracker.Constants && window.PokerTracker.Constants.handStrengths) || {};
 
   const state = {
+    individualHandsChart: null,
     histogramChart: null,
     expectedStats: calculateExpectedValues(),
     currentCarouselIndex: 0,
@@ -179,6 +180,197 @@
     }
 
     return groups;
+  }
+
+  function calculateMovingAverage(data, windowSize) {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+      const start = Math.max(0, i - windowSize + 1);
+      const window = data.slice(start, i + 1);
+      const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
+      result.push(avg);
+    }
+    return result;
+  }
+
+  function renderIndividualHandsChart(canvas, strengths, handHistory) {
+    if (!canvas) {
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    if (state.individualHandsChart) {
+      state.individualHandsChart.destroy();
+      state.individualHandsChart = null;
+    }
+
+    const { expectedMean } = state.expectedStats;
+    const colors = getThemeColors();
+
+    // Create labels for x-axis (hand numbers)
+    const labels = strengths.map((_, i) => i + 1);
+
+    // Create expected line data (flat line at expected mean)
+    const expectedLine = new Array(strengths.length).fill(expectedMean);
+
+    // Calculate 8-hand moving average
+    const movingAvgWindow = 8;
+    const movingAverage = calculateMovingAverage(strengths, movingAvgWindow);
+
+    // Determine point colors based on whether hand was played
+    const pointColors = handHistory.map(hand => {
+      return hand && hand.played ? colors.success : colors.primary;
+    });
+
+    state.individualHandsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Hand Strength',
+            data: strengths,
+            borderColor: colors.primary,
+            borderWidth: 1.5,
+            fill: false,
+            tension: 0,
+            pointRadius: 3,
+            pointBackgroundColor: pointColors,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 1,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: pointColors,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2,
+            yAxisID: 'y',
+            pointStyle: 'circle',
+            pointHitRadius: 8
+          },
+          {
+            label: `${movingAvgWindow}-Hand MA`,
+            data: movingAverage,
+            borderColor: colors.trend,
+            borderWidth: 2.5,
+            fill: false,
+            tension: 0.2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: colors.trend,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Expected Average',
+            data: expectedLine,
+            borderColor: colors.expected,
+            borderWidth: 2,
+            borderDash: [6, 4],
+            fill: false,
+            pointRadius: 0,
+            tension: 0,
+            yAxisID: 'y'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: (_event, activeElements) => {
+          if (activeElements.length > 0) {
+            const clickedIndex = activeElements[0].index;
+            // Calculate which group this hand belongs to (8 hands per group)
+            const groupIndex = Math.floor(clickedIndex / 8);
+            // Jump to the corresponding carousel card
+            if (groupIndex >= 0 && groupIndex < state.handGroups.length) {
+              state.currentCarouselIndex = groupIndex;
+              renderCarousel();
+              // Smooth scroll to carousel
+              const carousel = document.getElementById('handGroupsCarousel');
+              if (carousel) {
+                carousel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Hand Number',
+              color: colors.axis,
+              font: { size: 13 }
+            },
+            ticks: {
+              color: colors.axis,
+              maxTicksLimit: 10
+            },
+            grid: {
+              color: colors.grid
+            }
+          },
+          y: {
+            reverse: true,
+            min: 0,
+            max: 100,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Hand Strength (0 = strongest)',
+              color: colors.axis,
+              font: { size: 13 }
+            },
+            ticks: {
+              color: colors.axis
+            },
+            grid: {
+              color: colors.grid
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 8,
+              color: colors.axis
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.94)',
+            borderColor: 'rgba(30, 64, 175, 0.5)',
+            borderWidth: 1,
+            padding: 10,
+            titleColor: '#e2e8f0',
+            bodyColor: '#e2e8f0',
+            callbacks: {
+              title: function(context) {
+                const handNum = context[0].label;
+                const handIndex = parseInt(handNum) - 1;
+                const hand = handHistory[handIndex];
+                const handKey = hand?.key || 'Unknown';
+                const played = hand?.played ? ' (Played)' : '';
+                return `Hand #${handNum}: ${handKey}${played}`;
+              },
+              label: function(context) {
+                const value = context.parsed.y.toFixed(1);
+                return `${context.dataset.label}: ${value}`;
+              }
+            }
+          }
+        }
+      }
+    });
   }
 
   function renderHistogram(canvas, strengths, handHistory) {
@@ -475,6 +667,11 @@
       return;
     }
 
+    if (state.individualHandsChart) {
+      state.individualHandsChart.destroy();
+      state.individualHandsChart = null;
+    }
+
     if (state.histogramChart) {
       state.histogramChart.destroy();
       state.histogramChart = null;
@@ -593,6 +790,7 @@
       state.currentCarouselIndex = 0;
 
       updateUI(elements, stats, classification, usePlayedOnly);
+      renderIndividualHandsChart(elements.individualHandsCanvas, strengths, filtered);
       renderHistogram(elements.chartCanvas, strengths, filtered);
       renderCarousel();
     },
