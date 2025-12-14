@@ -116,34 +116,19 @@
     return { mean, stdDev, zScore, sample };
   }
 
-  function buildHistogram(strengths) {
-    const bins = 20;
-    const binWidth = 5;
-    const actual = new Array(bins).fill(0);
+  function buildRollingAverage(strengths) {
+    // Build rolling 10-hand average for time series
+    const windowSize = 10;
+    const rollingAvg = [];
 
-    strengths.forEach(strength => {
-      const index = Math.min(Math.floor(strength / binWidth), bins - 1);
-      actual[index]++;
-    });
-
-    const expected = new Array(bins).fill(strengths.length / bins);
-    const trend = new Array(bins).fill(0);
-
-    for (let i = 0; i < bins; i++) {
-      const left = i > 0 ? actual[i - 1] : actual[i];
-      const current = actual[i];
-      const right = i < bins - 1 ? actual[i + 1] : actual[i];
-      trend[i] = (left + current + right) / 3;
+    for (let i = 0; i < strengths.length; i++) {
+      const windowStart = Math.max(0, i - windowSize + 1);
+      const window = strengths.slice(windowStart, i + 1);
+      const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
+      rollingAvg.push(avg);
     }
 
-    const labels = [];
-    for (let i = 0; i < bins; i++) {
-      const start = i * binWidth;
-      const end = (i + 1) * binWidth;
-      labels.push(`${start}-${end}`);
-    }
-
-    return { labels, actual, expected, trend };
+    return rollingAvg;
   }
 
   function renderHistogram(canvas, strengths) {
@@ -161,35 +146,41 @@
       state.histogramChart = null;
     }
 
-    const { labels, actual, expected, trend } = buildHistogram(strengths);
+    const rollingAvg = buildRollingAverage(strengths);
+    const { expectedMean } = state.expectedStats;
     const colors = getThemeColors();
 
+    // Create labels for x-axis (hand numbers)
+    const labels = strengths.map((_, i) => i + 1);
+
+    // Create expected line data (flat line at expected mean)
+    const expectedLine = new Array(strengths.length).fill(expectedMean);
+
+    // Create bottom boundary line at 100 for fill
+    const bottomLine = new Array(strengths.length).fill(100);
+
     state.histogramChart = new Chart(ctx, {
-      type: 'bar',
+      type: 'line',
       data: {
         labels,
         datasets: [
           {
-            label: 'Your Hands',
-            data: actual,
+            label: 'Rolling 10-Hand Avg',
+            data: rollingAvg,
+            borderColor: colors.primary,
             backgroundColor: colors.primaryFill,
-            borderColor: colors.primary,
-            borderWidth: 1,
-            maxBarThickness: 18
+            borderWidth: 2.5,
+            fill: '-1',
+            tension: 0.3,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            pointHoverBackgroundColor: colors.primary,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2
           },
           {
-            label: 'Trend',
-            data: trend,
-            type: 'line',
-            borderColor: colors.primary,
-            borderWidth: 2,
-            fill: false,
-            tension: 0.35,
-            pointRadius: 0
-          },
-          {
-            label: 'Expected',
-            data: expected,
+            label: 'Expected Average',
+            data: expectedLine,
             type: 'line',
             borderColor: colors.expected,
             borderWidth: 2,
@@ -203,26 +194,37 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
         scales: {
           x: {
             title: {
               display: true,
-              text: 'Hand Strength (0 strongest → 100 weakest)',
+              text: 'Hand Number (chronological)',
               color: colors.axis,
               font: { size: 13 }
             },
             ticks: {
-              color: colors.axis
+              color: colors.axis,
+              maxTicksLimit: 10
             },
             grid: {
               color: colors.grid
             }
           },
           y: {
-            beginAtZero: true,
+            reverse: true,
+            min: 0,
+            max: 100,
+            title: {
+              display: true,
+              text: 'Hand Strength (0 = strongest)',
+              color: colors.axis,
+              font: { size: 13 }
+            },
             ticks: {
-              precision: 0,
               color: colors.axis
             },
             grid: {
@@ -246,7 +248,16 @@
             borderWidth: 1,
             padding: 10,
             titleColor: '#e2e8f0',
-            bodyColor: '#e2e8f0'
+            bodyColor: '#e2e8f0',
+            callbacks: {
+              title: function(context) {
+                return `Hand #${context[0].label}`;
+              },
+              label: function(context) {
+                const value = context.parsed.y.toFixed(1);
+                return `${context.dataset.label}: ${value}`;
+              }
+            }
           }
         }
       }
