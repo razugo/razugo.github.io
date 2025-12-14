@@ -404,33 +404,40 @@
     // Create expected line data (flat line at expected mean)
     const expectedLine = new Array(groupedAvg.length).fill(expectedMean);
 
+    // Calculate the two portions for each bar
+    // Bars grow upward from bottom (y=100) to top (y=0)
+    // Played portion: (played% / 100) * avgStrength
+    // Not played portion: ((100 - played%) / 100) * avgStrength
+    const playedPortions = groupedAvg.map((avg, i) => (groupedPlayedPct[i] / 100) * avg);
+    const notPlayedPortions = groupedAvg.map((avg, i) => ((100 - groupedPlayedPct[i]) / 100) * avg);
+
     state.histogramChart = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels,
         datasets: [
           {
-            label: '8-Hand Avg',
-            data: groupedAvg,
-            borderColor: colors.primary,
-            borderWidth: 2.5,
-            fill: false,
-            tension: 0.3,
-            pointRadius: 4,
-            pointBackgroundColor: colors.primary,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: colors.primary,
-            pointHoverBorderColor: '#fff',
-            pointHoverBorderWidth: 2,
+            label: 'Played Hands',
+            data: playedPortions,
+            backgroundColor: 'rgba(34, 197, 94, 0.8)', // Green with opacity
+            borderColor: colors.success,
+            borderWidth: 1,
             yAxisID: 'y',
-            pointStyle: 'circle',
-            pointHitRadius: 10
+            stack: 'stack0'
+          },
+          {
+            label: 'Not Played',
+            data: notPlayedPortions,
+            backgroundColor: 'rgba(37, 99, 235, 0.5)', // Blue with opacity
+            borderColor: colors.primary,
+            borderWidth: 1,
+            yAxisID: 'y',
+            stack: 'stack0'
           },
           {
             label: 'Expected Average',
             data: expectedLine,
+            type: 'line',
             borderColor: colors.expected,
             borderWidth: 2,
             borderDash: [6, 4],
@@ -439,23 +446,6 @@
             tension: 0,
             yAxisID: 'y',
             hidden: false
-          },
-          {
-            label: 'Hands Played %',
-            data: groupedPlayedPct,
-            borderColor: colors.success,
-            borderWidth: 2.5,
-            fill: false,
-            tension: 0.3,
-            pointRadius: 4,
-            pointBackgroundColor: colors.success,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: colors.success,
-            pointHoverBorderColor: '#fff',
-            pointHoverBorderWidth: 2,
-            yAxisID: 'y1'
           }
         ]
       },
@@ -494,7 +484,8 @@
             },
             grid: {
               color: colors.grid
-            }
+            },
+            stacked: true
           },
           y: {
             reverse: true,
@@ -512,27 +503,8 @@
             },
             grid: {
               color: colors.grid
-            }
-          },
-          y1: {
-            min: 0,
-            max: 100,
-            position: 'right',
-            title: {
-              display: true,
-              text: 'Played %',
-              color: colors.success,
-              font: { size: 13 }
             },
-            ticks: {
-              color: colors.success,
-              callback: function(value) {
-                return value + '%';
-              }
-            },
-            grid: {
-              drawOnChartArea: false
-            }
+            stacked: true
           }
         },
         plugins: {
@@ -540,8 +512,8 @@
             display: true,
             position: 'top',
             labels: {
-              usePointStyle: true,
-              boxWidth: 8,
+              usePointStyle: false,
+              boxWidth: 15,
               color: colors.axis,
               filter: function(legendItem) {
                 return legendItem.text !== 'Expected Average';
@@ -557,12 +529,29 @@
             bodyColor: '#e2e8f0',
             callbacks: {
               title: function(context) {
-                return `Hands ${context[0].label}`;
+                const batchNum = context[0].label;
+                const batchIndex = parseInt(batchNum) - 1;
+                const avgStrength = groupedAvg[batchIndex];
+                const playedPct = groupedPlayedPct[batchIndex];
+                return `Batch ${batchNum}: Avg ${avgStrength.toFixed(1)} | ${playedPct.toFixed(0)}% Played`;
               },
               label: function(context) {
-                const value = context.parsed.y.toFixed(1);
-                const suffix = context.dataset.yAxisID === 'y1' ? '%' : '';
-                return `${context.dataset.label}: ${value}${suffix}`;
+                if (context.dataset.type === 'line') {
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
+                }
+                const batchIndex = context.dataIndex;
+                const playedPct = groupedPlayedPct[batchIndex];
+
+                if (context.dataset.label === 'Played Hands') {
+                  return `Played: ${playedPct.toFixed(0)}% of batch`;
+                } else {
+                  return `Not Played: ${(100 - playedPct).toFixed(0)}% of batch`;
+                }
+              },
+              footer: function(context) {
+                const batchIndex = context[0].dataIndex;
+                const avgStrength = groupedAvg[batchIndex];
+                return `Total batch strength: ${avgStrength.toFixed(1)}`;
               }
             }
           }
