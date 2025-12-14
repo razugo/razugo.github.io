@@ -246,7 +246,6 @@ nav_id: session
     }
     const filters = currentSessionId === 'ALL' ? getFiltersFromURL() : {};
     const data = PokerTracker.DataStore.getSessionData(currentSessionId, filters);
-    console.log('getSessionData result:', data);
     return data;
   }
 
@@ -256,7 +255,6 @@ nav_id: session
       return;
     }
 
-    console.log('updateSessionStats: Getting session data for ID:', currentSessionId);
     const sessionData = getSessionData();
 
     if (!sessionData) {
@@ -538,27 +536,35 @@ nav_id: session
         notesButton.classList.toggle('toggle-active');
       });
 
-      // Disable editing for aggregate view
+      // Disable editing for aggregate view or locked sessions
       const isAggregateView = currentSessionId === 'ALL';
+      const session = getCurrentSession();
+      const isLocked = session && session.isLocked;
 
       toggleButton.addEventListener('click', () => {
-        if (isAggregateView) return;
+        if (isAggregateView || isLocked) return;
         toggleHandStatus(handIndex);
       });
 
       deleteButton.addEventListener('click', () => {
-        if (isAggregateView) return;
+        if (isAggregateView || isLocked) return;
         deleteHand(handIndex);
       });
 
       notesTextarea.addEventListener('input', () => {
-        if (isAggregateView) return;
+        // Notes are always editable, even when locked
         saveNotes(handIndex, notesTextarea.value);
       });
 
-      // Disable textarea for aggregate view
+      // Disable toggle/delete buttons for aggregate view or locked sessions
       if (isAggregateView) {
         notesTextarea.disabled = true;
+        toggleButton.style.opacity = '0.5';
+        toggleButton.style.cursor = 'not-allowed';
+        deleteButton.style.opacity = '0.5';
+        deleteButton.style.cursor = 'not-allowed';
+      } else if (isLocked) {
+        // For locked sessions, only disable toggle and delete buttons, not notes
         toggleButton.style.opacity = '0.5';
         toggleButton.style.cursor = 'not-allowed';
         deleteButton.style.opacity = '0.5';
@@ -574,6 +580,10 @@ nav_id: session
 
     // Disable interaction for aggregate view
     if (currentSessionId === 'ALL') return;
+
+    // Disable interaction for locked sessions
+    const session = getCurrentSession();
+    if (session && session.isLocked) return;
 
     if (e.target.classList.contains('cell')) {
       isMouseDown = true;
@@ -717,8 +727,11 @@ nav_id: session
   }
 
   function undo() {
-    // Disable undo for aggregate view
+    // Disable undo for aggregate view or locked sessions
     if (currentSessionId === 'ALL') return;
+
+    const session = getCurrentSession();
+    if (session && session.isLocked) return;
 
     PokerTracker.DataStore.undoLastHand(currentSessionId);
     updateSessionStats();
@@ -792,7 +805,6 @@ nav_id: session
   // Event Listeners and Initialization
   document.addEventListener('DOMContentLoaded', function() {
     currentSessionId = getSessionIdFromURL();
-    console.log('Session ID from URL:', currentSessionId);
 
     if (!currentSessionId) {
       console.error('No session ID provided');
@@ -805,12 +817,8 @@ nav_id: session
 
     // Debug: Check all available sessions
     const allSessions = PokerTracker.DataStore.getSessions();
-    console.log('All available sessions:', allSessions);
-    console.log('Looking for session ID:', currentSessionId);
-    console.log('Is aggregate view:', isAggregateView);
 
     const session = getCurrentSession();
-    console.log('Found session:', session);
 
     if (!session) {
       console.error(`Session not found for ID: ${currentSessionId}`);
@@ -849,6 +857,23 @@ nav_id: session
 
       // Add visual indicator to grid
       grid.classList.add('aggregate-view');
+    } else if (session.isLocked) {
+      // Disable undo for locked sessions
+      const undoButton = document.getElementById('undo');
+      if (undoButton) {
+        undoButton.disabled = true;
+        undoButton.style.opacity = '0.5';
+        undoButton.style.cursor = 'not-allowed';
+      }
+
+      // Update note text for locked view
+      const gridNote = document.getElementById('gridNote');
+      if (gridNote) {
+        gridNote.textContent = 'Session is locked to prevent accidental edits. Unlock in Session Settings to edit.';
+      }
+
+      // Add visual indicator to grid
+      grid.classList.add('locked-view');
     }
 
     // Setup interaction handlers
@@ -908,6 +933,58 @@ nav_id: session
     switchView('grid');
   });
 
+  // Update UI based on locked state
+  function updateLockedState() {
+    const session = getCurrentSession();
+    if (!session) return;
+
+    const isLocked = session.isLocked;
+    const undoButton = document.getElementById('undo');
+    const gridNote = document.getElementById('gridNote');
+    const grid = document.getElementById('grid');
+
+    if (isLocked) {
+      // Disable undo button
+      if (undoButton) {
+        undoButton.disabled = true;
+        undoButton.style.opacity = '0.5';
+        undoButton.style.cursor = 'not-allowed';
+      }
+
+      // Update grid note
+      if (gridNote) {
+        gridNote.textContent = 'Session is locked to prevent accidental edits. Unlock in Session Settings to edit.';
+      }
+
+      // Add visual indicator
+      if (grid) {
+        grid.classList.add('locked-view');
+      }
+    } else {
+      // Enable undo button
+      if (undoButton) {
+        undoButton.disabled = false;
+        undoButton.style.opacity = '1';
+        undoButton.style.cursor = 'pointer';
+      }
+
+      // Reset grid note
+      if (gridNote) {
+        gridNote.textContent = 'Quick tap: dealt (folded). Long press (>600ms): dealt AND played.';
+      }
+
+      // Remove visual indicator
+      if (grid) {
+        grid.classList.remove('locked-view');
+      }
+    }
+
+    // Re-render list view to update button states
+    if (currentView === 'list') {
+      renderList();
+    }
+  }
+
   // Keep these legacy function names for compatibility
   function undoLastHand() {
     undo();
@@ -955,6 +1032,8 @@ nav_id: session
         }
 
         PokerTracker.DataStore.endActiveSession(session.id, { durationHours: finalDuration });
+        // Auto-lock the session when ending it
+        PokerTracker.DataStore.updateSession(session.id, { isLocked: true });
         updateSessionStats();
 
         // Update nav link globally

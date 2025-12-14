@@ -62,6 +62,13 @@
               <label for="modalSessionNotes">Session Notes</label>
               <textarea id="modalSessionNotes" class="form-input" placeholder="Session notes..." style="min-height: 60px; resize: vertical;"></textarea>
             </div>
+            <div class="form-group">
+              <label class="toggle-container">
+                <input type="checkbox" id="modalLockedToggle" class="toggle-input">
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Lock Session (prevent accidental hand edits)</span>
+              </label>
+            </div>
           </div>
           <div class="modal-footer session-modal-footer">
             <button class="btn btn-danger" data-action="end-session" id="modalEndSessionBtn">End Session</button>
@@ -301,6 +308,7 @@
       const notesInput = document.getElementById('modalSessionNotes');
       const startTimeInput = document.getElementById('modalStartTimeInput');
       const endTimeInput = document.getElementById('modalEndTimeInput');
+      const lockedToggle = document.getElementById('modalLockedToggle');
 
       // Handle location dropdown/input
       if (locationSelect && locationInput) {
@@ -328,6 +336,7 @@
       if (buyInInput) buyInInput.value = session.buyIn || '';
       if (cashOutInput) cashOutInput.value = session.cashOut || '';
       if (notesInput) notesInput.value = session.notes || '';
+      if (lockedToggle) lockedToggle.checked = session.isLocked || false;
 
       if (startTimeInput) {
         startTimeInput.value = this.formatDateTimeForInput(session.startTime);
@@ -511,6 +520,11 @@
           id: 'modalSessionNotes',
           event: 'input',
           getUpdates: element => ({ notes: element.value })
+        },
+        {
+          id: 'modalLockedToggle',
+          event: 'change',
+          getUpdates: element => ({ isLocked: element.checked })
         }
       ];
 
@@ -584,6 +598,9 @@
       if (typeof window.updateLiveSessionNavLink === 'function') {
         window.updateLiveSessionNavLink();
       }
+      if (typeof window.updateLockedState === 'function') {
+        window.updateLockedState();
+      }
     },
 
     saveSessionSettings() {
@@ -635,7 +652,13 @@
         this.updateDateTimeDisplay('modalEndTimeInput', 'modalEndTimeDisplay');
       }
 
-      this.handleFieldUpdates({ endTime: endTimeIso });
+      // Auto-lock the session when ending it
+      const lockedToggle = document.getElementById('modalLockedToggle');
+      if (lockedToggle) {
+        lockedToggle.checked = true;
+      }
+
+      this.handleFieldUpdates({ endTime: endTimeIso, isLocked: true });
 
       PT.DataStore.endActiveSession(this.currentSessionId, { endTime: endTimeIso });
       this.closeSessionSettingsModal();

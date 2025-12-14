@@ -31,6 +31,7 @@ class PokerSession {
 
     // Additional Data
     this.notes = this._validateString(data.notes, '');
+    this.isLocked = this._validateBoolean(data.isLocked, false);
 
     // Auto-compute sessionDate from startTime if missing
     if (!this.sessionDate && this.startTime) {
@@ -124,6 +125,10 @@ class PokerSession {
     return Array.isArray(value) ? value : defaultValue;
   }
 
+  _validateBoolean(value, defaultValue = false) {
+    return typeof value === 'boolean' ? value : defaultValue;
+  }
+
   // Update Methods
   updateFinancials({ buyIn, cashOut }) {
     if (buyIn !== undefined) this.buyIn = this._validateNumber(buyIn, 0);
@@ -207,7 +212,8 @@ class PokerSession {
       total: this.total,
       totalPlayed: this.totalPlayed,
       vpip: this.vpip,
-      notes: this.notes
+      notes: this.notes,
+      isLocked: this.isLocked
     };
   }
 
