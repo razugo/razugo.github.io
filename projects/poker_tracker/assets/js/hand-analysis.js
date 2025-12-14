@@ -116,22 +116,36 @@
     return { mean, stdDev, zScore, sample };
   }
 
-  function buildRollingAverage(strengths) {
-    // Build rolling 10-hand average for time series
-    const windowSize = 10;
-    const rollingAvg = [];
+  function buildGroupedAverage(strengths) {
+    // Build grouped 10-hand averages (batches, not rolling)
+    const groupSize = 10;
+    const groupedAvg = [];
 
-    for (let i = 0; i < strengths.length; i++) {
-      const windowStart = Math.max(0, i - windowSize + 1);
-      const window = strengths.slice(windowStart, i + 1);
-      const avg = window.reduce((sum, val) => sum + val, 0) / window.length;
-      rollingAvg.push(avg);
+    for (let i = 0; i < strengths.length; i += groupSize) {
+      const group = strengths.slice(i, i + groupSize);
+      const avg = group.reduce((sum, val) => sum + val, 0) / group.length;
+      groupedAvg.push(avg);
     }
 
-    return rollingAvg;
+    return groupedAvg;
   }
 
-  function renderHistogram(canvas, strengths) {
+  function buildGroupedPlayedPercentage(handHistory) {
+    // Build grouped 10-hand played percentage (batches, not rolling)
+    const groupSize = 10;
+    const groupedPercentage = [];
+
+    for (let i = 0; i < handHistory.length; i += groupSize) {
+      const group = handHistory.slice(i, i + groupSize);
+      const playedCount = group.filter(hand => hand && hand.played).length;
+      const percentage = (playedCount / group.length) * 100;
+      groupedPercentage.push(percentage);
+    }
+
+    return groupedPercentage;
+  }
+
+  function renderHistogram(canvas, strengths, handHistory) {
     if (!canvas) {
       return;
     }
@@ -146,18 +160,20 @@
       state.histogramChart = null;
     }
 
-    const rollingAvg = buildRollingAverage(strengths);
+    const groupedAvg = buildGroupedAverage(strengths);
+    const groupedPlayedPct = buildGroupedPlayedPercentage(handHistory || []);
     const { expectedMean } = state.expectedStats;
     const colors = getThemeColors();
 
-    // Create labels for x-axis (hand numbers)
-    const labels = strengths.map((_, i) => i + 1);
+    // Create labels for x-axis (batch numbers)
+    const labels = groupedAvg.map((_, i) => {
+      const startHand = i * 10 + 1;
+      const endHand = Math.min((i + 1) * 10, strengths.length);
+      return `${startHand}-${endHand}`;
+    });
 
     // Create expected line data (flat line at expected mean)
-    const expectedLine = new Array(strengths.length).fill(expectedMean);
-
-    // Create bottom boundary line at 100 for fill
-    const bottomLine = new Array(strengths.length).fill(100);
+    const expectedLine = new Array(groupedAvg.length).fill(expectedMean);
 
     state.histogramChart = new Chart(ctx, {
       type: 'line',
@@ -165,29 +181,49 @@
         labels,
         datasets: [
           {
-            label: 'Rolling 10-Hand Avg',
-            data: rollingAvg,
+            label: '10-Hand Avg',
+            data: groupedAvg,
             borderColor: colors.primary,
-            backgroundColor: colors.primaryFill,
             borderWidth: 2.5,
-            fill: '-1',
+            fill: false,
             tension: 0.3,
-            pointRadius: 0,
-            pointHoverRadius: 4,
+            pointRadius: 4,
+            pointBackgroundColor: colors.primary,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 6,
             pointHoverBackgroundColor: colors.primary,
             pointHoverBorderColor: '#fff',
-            pointHoverBorderWidth: 2
+            pointHoverBorderWidth: 2,
+            yAxisID: 'y'
           },
           {
             label: 'Expected Average',
             data: expectedLine,
-            type: 'line',
             borderColor: colors.expected,
             borderWidth: 2,
             borderDash: [6, 4],
             fill: false,
             pointRadius: 0,
-            tension: 0
+            tension: 0,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Hands Played %',
+            data: groupedPlayedPct,
+            borderColor: colors.success,
+            borderWidth: 2.5,
+            fill: false,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: colors.success,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: colors.success,
+            pointHoverBorderColor: '#fff',
+            pointHoverBorderWidth: 2,
+            yAxisID: 'y1'
           }
         ]
       },
@@ -202,13 +238,12 @@
           x: {
             title: {
               display: true,
-              text: 'Hand Number (chronological)',
+              text: 'Hand Range (batches of 10)',
               color: colors.axis,
               font: { size: 13 }
             },
             ticks: {
-              color: colors.axis,
-              maxTicksLimit: 10
+              color: colors.axis
             },
             grid: {
               color: colors.grid
@@ -218,6 +253,7 @@
             reverse: true,
             min: 0,
             max: 100,
+            position: 'left',
             title: {
               display: true,
               text: 'Hand Strength (0 = strongest)',
@@ -229,6 +265,26 @@
             },
             grid: {
               color: colors.grid
+            }
+          },
+          y1: {
+            min: 0,
+            max: 100,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Played %',
+              color: colors.success,
+              font: { size: 13 }
+            },
+            ticks: {
+              color: colors.success,
+              callback: function(value) {
+                return value + '%';
+              }
+            },
+            grid: {
+              drawOnChartArea: false
             }
           }
         },
@@ -251,11 +307,12 @@
             bodyColor: '#e2e8f0',
             callbacks: {
               title: function(context) {
-                return `Hand #${context[0].label}`;
+                return `Hands ${context[0].label}`;
               },
               label: function(context) {
                 const value = context.parsed.y.toFixed(1);
-                return `${context.dataset.label}: ${value}`;
+                const suffix = context.dataset.yAxisID === 'y1' ? '%' : '';
+                return `${context.dataset.label}: ${value}${suffix}`;
               }
             }
           }
@@ -375,7 +432,7 @@
       const classification = classifyLuck(stats.zScore);
 
       updateUI(elements, stats, classification, usePlayedOnly);
-      renderHistogram(elements.chartCanvas, strengths);
+      renderHistogram(elements.chartCanvas, strengths, filtered);
     },
 
     clear(elements, message) {
