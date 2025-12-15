@@ -291,11 +291,6 @@
             if (groupIndex >= 0 && groupIndex < state.handGroups.length) {
               state.currentCarouselIndex = groupIndex;
               renderCarousel();
-              // Smooth scroll to carousel
-              const carousel = document.getElementById('handGroupsCarousel');
-              if (carousel) {
-                carousel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }
             }
           }
         },
@@ -459,11 +454,6 @@
             if (clickedIndex >= 0 && clickedIndex < state.handGroups.length) {
               state.currentCarouselIndex = clickedIndex;
               renderCarousel();
-              // Smooth scroll to carousel
-              const carousel = document.getElementById('handGroupsCarousel');
-              if (carousel) {
-                carousel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }
             }
           }
         },

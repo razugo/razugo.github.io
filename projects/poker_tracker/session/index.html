@@ -153,6 +153,13 @@ nav_id: session
 
   <!-- List Container -->
   <div id="list-container">
+    <div id="list-filter-controls">
+      <label class="toggle-container">
+        <input type="checkbox" id="toggleListPlayed" class="toggle-input">
+        <span class="toggle-slider"></span>
+        <span class="toggle-label">Show Played Only</span>
+      </label>
+    </div>
     <!-- List items will be dynamically generated -->
   </div>
 </div>
@@ -169,6 +176,7 @@ nav_id: session
   let currentView = 'grid';
   let showCounts = false;
   let showPlayed = false;
+  let showListPlayedOnly = false;
 
   function syncToggleState() {
     const countsToggle = document.getElementById('toggleCounts');
@@ -494,14 +502,23 @@ nav_id: session
 
   function renderList() {
     const sessionData = getSessionData();
-    listContainer.innerHTML = '';
+
+    // Clear only the hand items, not the filter controls
+    const listItems = listContainer.querySelectorAll('.list-item');
+    listItems.forEach(item => item.remove());
 
     if (!sessionData) return;
 
-    const sortedHands = [...sessionData.handHistory].reverse();
+    let sortedHands = [...sessionData.handHistory].reverse();
+
+    // Filter to show only played hands if toggle is on
+    if (showListPlayedOnly) {
+      sortedHands = sortedHands.filter(hand => hand.played);
+    }
 
     sortedHands.forEach((hand, index) => {
-      const handIndex = sessionData.handHistory.length - 1 - index;
+      // Find the original index in the full handHistory array
+      const handIndex = sessionData.handHistory.findIndex(h => h.id === hand.id);
       const listItem = document.createElement('div');
       listItem.className = 'list-item';
       listItem.dataset.handIndex = handIndex;
@@ -753,6 +770,12 @@ nav_id: session
     render();
   }
 
+  function toggleListPlayedFilter() {
+    const checkbox = document.getElementById('toggleListPlayed');
+    showListPlayedOnly = checkbox.checked;
+    renderList();
+  }
+
   function switchView(view) {
     currentView = view;
 
@@ -892,6 +915,7 @@ nav_id: session
     // Control button handlers
     document.getElementById('toggleCounts').addEventListener('change', toggleCounts);
     document.getElementById('togglePlayed').addEventListener('change', togglePlayedFilter);
+    document.getElementById('toggleListPlayed').addEventListener('change', toggleListPlayedFilter);
     document.getElementById('undo').addEventListener('click', undo);
 
     // Session input handlers

@@ -1112,6 +1112,23 @@
   display: flex;
 }
 
+/* List Filter Controls */
+#list-filter-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+#list-filter-controls .toggle-container {
+  margin: 0 auto;
+}
+
 /* List Items */
 .list-item {
   display: flex;
