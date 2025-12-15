@@ -346,6 +346,12 @@
   overflow: hidden;
   position: relative;
   border-radius: var(--radius);
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+}
+
+.carousel-container:active {
+  cursor: grabbing;
 }
 
 .carousel-track {

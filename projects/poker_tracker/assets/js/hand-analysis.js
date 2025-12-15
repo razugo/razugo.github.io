@@ -11,7 +11,11 @@
     histogramChart: null,
     expectedStats: calculateExpectedValues(),
     currentCarouselIndex: 0,
-    handGroups: []
+    handGroups: [],
+    // Touch swipe state
+    touchStartX: 0,
+    touchEndX: 0,
+    isDragging: false
   };
 
   function calculateExpectedValues() {
@@ -623,9 +627,48 @@
     carouselTrack.style.transform = `translateX(${offset}%)`;
   }
 
+  function handleTouchStart(e) {
+    state.touchStartX = e.touches[0].clientX;
+    state.isDragging = true;
+  }
+
+  function handleTouchMove(e) {
+    if (!state.isDragging) return;
+    state.touchEndX = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd() {
+    if (!state.isDragging) return;
+    state.isDragging = false;
+
+    const swipeThreshold = 50; // Minimum swipe distance in pixels
+    const swipeDistance = state.touchStartX - state.touchEndX;
+
+    if (Math.abs(swipeDistance) > swipeThreshold) {
+      if (swipeDistance > 0) {
+        // Swiped left - go to next
+        if (state.currentCarouselIndex < state.handGroups.length - 1) {
+          state.currentCarouselIndex++;
+          renderCarousel();
+        }
+      } else {
+        // Swiped right - go to previous
+        if (state.currentCarouselIndex > 0) {
+          state.currentCarouselIndex--;
+          renderCarousel();
+        }
+      }
+    }
+
+    // Reset touch positions
+    state.touchStartX = 0;
+    state.touchEndX = 0;
+  }
+
   function initCarousel() {
     const prevBtn = document.getElementById('carouselPrev');
     const nextBtn = document.getElementById('carouselNext');
+    const carouselContainer = document.querySelector('.carousel-container');
 
     if (prevBtn) {
       prevBtn.addEventListener('click', () => {
@@ -643,6 +686,13 @@
           renderCarousel();
         }
       });
+    }
+
+    // Add touch event listeners for swipe functionality
+    if (carouselContainer) {
+      carouselContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+      carouselContainer.addEventListener('touchmove', handleTouchMove, { passive: true });
+      carouselContainer.addEventListener('touchend', handleTouchEnd, { passive: true });
     }
   }
 
