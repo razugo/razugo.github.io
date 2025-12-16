@@ -9,6 +9,7 @@
   const state = {
     individualHandsChart: null,
     histogramChart: null,
+    aggregateStrengthChart: null,
     expectedStats: calculateExpectedValues(),
     currentCarouselIndex: 0,
     handGroups: [],
@@ -377,6 +378,187 @@
     });
   }
 
+  function renderAggregateStrengthChart(canvas, strengths, handHistory) {
+    if (!canvas) {
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    if (state.aggregateStrengthChart) {
+      state.aggregateStrengthChart.destroy();
+      state.aggregateStrengthChart = null;
+    }
+
+    const colors = getThemeColors();
+
+    // Create 20 strength groups: 0-4, 5-9, 10-14, ..., 95-99
+    const playedGroups = Array(20).fill(0);
+    const notPlayedGroups = Array(20).fill(0);
+
+    strengths.forEach((strength, index) => {
+      const groupIndex = Math.min(19, Math.floor(strength / 5));
+      const hand = handHistory[index];
+
+      if (hand && hand.played) {
+        playedGroups[groupIndex]++;
+      } else {
+        notPlayedGroups[groupIndex]++;
+      }
+    });
+
+    // Calculate expected amount (total hands / 20)
+    const expectedAmount = strengths.length / 20;
+
+    // Create labels for x-axis
+    const labels = playedGroups.map((_, i) => `${i * 5}-${i * 5 + 4}`);
+
+    // Create expected line data (flat line at expected amount)
+    // Add null values at start and end to extend the line edge-to-edge
+    const expectedLine = new Array(playedGroups.length).fill(expectedAmount);
+
+    state.aggregateStrengthChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Played Hands',
+            data: playedGroups,
+            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            borderColor: colors.success,
+            borderWidth: 1,
+            yAxisID: 'y',
+            stack: 'stack0'
+          },
+          {
+            label: 'Not Played',
+            data: notPlayedGroups,
+            backgroundColor: 'rgba(37, 99, 235, 0.5)',
+            borderColor: colors.primary,
+            borderWidth: 1,
+            yAxisID: 'y',
+            stack: 'stack0'
+          },
+          {
+            label: 'Expected Amount',
+            data: expectedLine,
+            type: 'line',
+            borderColor: colors.expected,
+            borderWidth: 2,
+            borderDash: [6, 4],
+            fill: false,
+            pointRadius: 0,
+            tension: 0,
+            yAxisID: 'y',
+            hidden: false,
+            spanGaps: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Hand Strength Group',
+              color: colors.axis,
+              font: { size: 13 }
+            },
+            ticks: {
+              color: colors.axis
+            },
+            grid: {
+              color: colors.grid
+            },
+            stacked: true
+          },
+          y: {
+            beginAtZero: true,
+            position: 'left',
+            title: {
+              display: true,
+              text: 'Number of Hands',
+              color: colors.axis,
+              font: { size: 13 }
+            },
+            ticks: {
+              color: colors.axis,
+              precision: 0
+            },
+            grid: {
+              color: colors.grid
+            },
+            stacked: true
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: false,
+              boxWidth: 15,
+              color: colors.axis,
+              filter: function(legendItem) {
+                return legendItem.text !== 'Expected Amount';
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.94)',
+            borderColor: 'rgba(30, 64, 175, 0.5)',
+            borderWidth: 1,
+            padding: 10,
+            titleColor: '#e2e8f0',
+            bodyColor: '#e2e8f0',
+            callbacks: {
+              title: function(context) {
+                const groupLabel = context[0].label;
+                const groupIndex = context[0].dataIndex;
+                const totalInGroup = playedGroups[groupIndex] + notPlayedGroups[groupIndex];
+                const playedCount = playedGroups[groupIndex];
+                const playedPct = totalInGroup > 0 ? ((playedCount / totalInGroup) * 100).toFixed(0) : '0';
+                return `Strength ${groupLabel}: ${totalInGroup} hands | ${playedPct}% Played`;
+              },
+              label: function(context) {
+                if (context.dataset.type === 'line') {
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
+                }
+                const groupIndex = context.dataIndex;
+                const totalInGroup = playedGroups[groupIndex] + notPlayedGroups[groupIndex];
+                const count = context.parsed.y;
+                const pct = totalInGroup > 0 ? ((count / totalInGroup) * 100).toFixed(0) : '0';
+
+                if (context.dataset.label === 'Played Hands') {
+                  return `Played: ${count} (${pct}% of group)`;
+                } else {
+                  return `Not Played: ${count} (${pct}% of group)`;
+                }
+              },
+              footer: function(context) {
+                const groupIndex = context[0].dataIndex;
+                const totalInGroup = playedGroups[groupIndex] + notPlayedGroups[groupIndex];
+                const totalHands = strengths.length;
+                const percentage = totalHands > 0 ? ((totalInGroup / totalHands) * 100).toFixed(1) : '0.0';
+                return `${percentage}% of all hands`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
   function renderHistogram(canvas, strengths, handHistory) {
     if (!canvas) {
       return;
@@ -711,6 +893,11 @@
       state.histogramChart = null;
     }
 
+    if (state.aggregateStrengthChart) {
+      state.aggregateStrengthChart.destroy();
+      state.aggregateStrengthChart = null;
+    }
+
     // Clear carousel
     state.handGroups = [];
     state.currentCarouselIndex = 0;
@@ -824,6 +1011,7 @@
       state.currentCarouselIndex = 0;
 
       updateUI(elements, stats, classification, usePlayedOnly);
+      renderAggregateStrengthChart(elements.aggregateStrengthCanvas, strengths, filtered);
       renderIndividualHandsChart(elements.individualHandsCanvas, strengths, filtered);
       renderHistogram(elements.chartCanvas, strengths, filtered);
       renderCarousel();

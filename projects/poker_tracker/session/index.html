@@ -122,6 +122,9 @@ nav_id: session
             </div>
           </div>
           <div class="session-analysis-chart">
+            <canvas id="aggregateStrengthChart"></canvas>
+          </div>
+          <div class="session-analysis-chart">
             <canvas id="individualHandsChart"></canvas>
           </div>
           <div class="session-analysis-chart">
@@ -208,6 +211,7 @@ nav_id: session
     stdDev: document.getElementById('handAnalysisStd'),
     sample: document.getElementById('handAnalysisSample'),
     description: document.getElementById('handAnalysisDescription'),
+    aggregateStrengthCanvas: document.getElementById('aggregateStrengthChart'),
     individualHandsCanvas: document.getElementById('individualHandsChart'),
     chartCanvas: document.getElementById('handAnalysisChart')
   };
