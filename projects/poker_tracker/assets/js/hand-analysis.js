@@ -319,7 +319,7 @@
             }
           },
           y: {
-            reverse: true,
+            reverse: false,
             min: 0,
             max: 100,
             position: 'left',
@@ -482,7 +482,7 @@
             stacked: true
           },
           y: {
-            reverse: true,
+            reverse: false,
             min: 0,
             max: 100,
             position: 'left',

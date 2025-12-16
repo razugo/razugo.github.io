@@ -227,8 +227,8 @@ nav_id: tools
 
   const handStrengths = (window.PokerTracker?.Constants?.handStrengths) || {};
 
-  function isHandInRange(percentile, range) {
-    return typeof percentile === 'number' && percentile <= range;
+  function isHandInRange(strength, range) {
+    return typeof strength === 'number' && strength >= (100 - range);
   }
 
   function generateStrengthGrid() {
@@ -263,9 +263,9 @@ nav_id: tools
   }
 
   function updateCellDisplay(cell, handCode) {
-    const percentileValue = handStrengths.hasOwnProperty(handCode) ? handStrengths[handCode] : null;
-    const isNumber = typeof percentileValue === 'number' && !Number.isNaN(percentileValue);
-    const inRange = isNumber && isHandInRange(percentileValue, currentRange);
+    const strengthValue = handStrengths.hasOwnProperty(handCode) ? handStrengths[handCode] : null;
+    const isNumber = typeof strengthValue === 'number' && !Number.isNaN(strengthValue);
+    const inRange = isNumber && isHandInRange(strengthValue, currentRange);
 
     // Reset classes
     cell.className = cell.dataset.baseClass;
@@ -277,7 +277,7 @@ nav_id: tools
     if (currentDisplay === 'strength') {
       cell.textContent = handCode;
     } else if (currentDisplay === 'percentiles') {
-      cell.textContent = isNumber ? `${percentileValue}%` : '—';
+      cell.textContent = isNumber ? `${strengthValue}` : '—';
     }
   }
 
