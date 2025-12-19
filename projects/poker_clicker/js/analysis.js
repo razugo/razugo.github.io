@@ -141,11 +141,11 @@ export class AnalysisManager {
     const zScore = (mean - expectedMean) / (expectedStdDev / Math.sqrt(handsToAnalyze.length));
 
     let category, categoryClass, interpretation;
-    if (zScore < -1.5) {
+    if (zScore > 1.5) {
       category = "High Roll 🚀";
       categoryClass = "high-roll";
       interpretation = "You're getting significantly better than expected hands!";
-    } else if (zScore > 1.5) {
+    } else if (zScore < -1.5) {
       category = "Low Roll 😩";
       categoryClass = "low-roll";
       interpretation = "You're experiencing significantly worse than expected luck with your dealt hands.";
