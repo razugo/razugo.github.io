@@ -83,7 +83,7 @@
       };
     }
 
-    if (zScore <= -1.5) {
+    if (zScore > 1.5) {
       return {
         label: 'High Roll 🚀',
         className: 'high-roll',
@@ -91,7 +91,7 @@
       };
     }
 
-    if (zScore >= 1.5) {
+    if (zScore < -1.5) {
       return {
         label: 'Low Roll 😩',
         className: 'low-roll',
