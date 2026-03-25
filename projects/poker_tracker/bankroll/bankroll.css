@@ -140,7 +140,7 @@
 /* Session Filters - Matching sessions page styling */
 .session-filters {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.75rem 1rem;
   margin-bottom: 1.5rem;
   align-items: end;
@@ -280,6 +280,55 @@
   align-items: center;
 }
 
+.player-profit-card .card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.player-profit-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.player-profit-option {
+  position: relative;
+}
+
+.player-profit-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.player-profit-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.player-profit-pill:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  color: var(--primary);
+}
+
+.player-profit-radio:checked + .player-profit-pill {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: var(--primary-dark);
+}
+
 /* Chart Toggle Button */
 .chart-toggle {
   display: flex;
@@ -316,6 +365,20 @@
 .toggle-option:hover {
   background: var(--border);
   color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .player-profit-selector {
+    gap: 0.5rem;
+  }
+
+  .player-profit-pill {
+    width: 100%;
+  }
+
+  .player-profit-option {
+    flex: 1 1 calc(50% - 0.25rem);
+  }
 }
 
 .toggle-option.active {
@@ -399,7 +462,7 @@
   }
 
   .session-filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .session-filters .filter-group {

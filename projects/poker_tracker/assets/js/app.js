@@ -450,6 +450,241 @@ PokerTracker.Dropdowns = (function() {
   };
 })();
 
+PokerTracker.LastSessionsSelector = (function() {
+  const instances = new Map();
+  let globalListenersBound = false;
+
+  function getElement(target) {
+    if (!target) return null;
+    if (typeof target === 'string') {
+      return document.getElementById(target);
+    }
+    return target;
+  }
+
+  function normalizeLimit(value) {
+    if (window.PokerTracker?.DataStore?.normalizeLastSessionsLimit) {
+      return PokerTracker.DataStore.normalizeLastSessionsLimit(value);
+    }
+
+    if (value === null || typeof value === 'undefined' || value === '' || value === 'all') {
+      return null;
+    }
+
+    const parsed = typeof value === 'number' ? value : parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    return Math.floor(parsed);
+  }
+
+  function getKey(element) {
+    return element?.id || element?.dataset?.selectorKey || null;
+  }
+
+  function formatLabel(limit) {
+    return limit ? `Last ${limit} sessions` : 'All sessions';
+  }
+
+  function buildMarkup(instance) {
+    const selectedLimit = instance.selectedLimit;
+    const presetButtons = instance.presets.map(preset => `
+      <button
+        type="button"
+        class="last-sessions-option${selectedLimit === preset ? ' is-active' : ''}"
+        data-action="select-limit"
+        data-value="${preset}"
+      >
+        Last ${preset}
+      </button>
+    `).join('');
+
+    return `
+      <div class="last-sessions-selector${instance.isOpen ? ' is-open' : ''}">
+        <button type="button" class="last-sessions-trigger" data-action="toggle">
+          <span class="last-sessions-trigger-label">${formatLabel(selectedLimit)}</span>
+          <span class="last-sessions-trigger-icon" aria-hidden="true">${instance.isOpen ? '▴' : '▾'}</span>
+        </button>
+        <div class="last-sessions-dropdown${instance.isOpen ? '' : ' is-hidden'}">
+          <div class="last-sessions-custom-row">
+            <input
+              type="number"
+              class="last-sessions-custom-input"
+              data-role="custom-input"
+              min="1"
+              step="1"
+              placeholder="Custom count"
+              value="${selectedLimit ? selectedLimit : ''}"
+            >
+            <button type="button" class="last-sessions-apply-btn" data-action="apply-custom">Apply</button>
+          </div>
+          <div class="last-sessions-options">
+            <button
+              type="button"
+              class="last-sessions-option${selectedLimit === null ? ' is-active' : ''}"
+              data-action="select-all"
+            >
+              All
+            </button>
+            ${presetButtons}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function closeAllExcept(exceptionKey = null) {
+    instances.forEach((instance, key) => {
+      if (key === exceptionKey || !instance.isOpen) return;
+      instance.isOpen = false;
+      render(instance);
+    });
+  }
+
+  function setSelectedLimit(instance, nextLimit, notify = true) {
+    instance.selectedLimit = normalizeLimit(nextLimit);
+    instance.isOpen = false;
+    render(instance);
+
+    if (notify && typeof instance.onChange === 'function') {
+      instance.onChange(instance.selectedLimit);
+    }
+  }
+
+  function bindEvents(instance) {
+    const trigger = instance.element.querySelector('[data-action="toggle"]');
+    const applyButton = instance.element.querySelector('[data-action="apply-custom"]');
+    const customInput = instance.element.querySelector('[data-role="custom-input"]');
+
+    if (trigger) {
+      trigger.addEventListener('click', event => {
+        event.preventDefault();
+        instance.isOpen = !instance.isOpen;
+        if (instance.isOpen) {
+          closeAllExcept(instance.key);
+        }
+        render(instance);
+      });
+    }
+
+    instance.element.querySelectorAll('[data-action="select-limit"]').forEach(button => {
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        setSelectedLimit(instance, button.dataset.value);
+      });
+    });
+
+    const allButton = instance.element.querySelector('[data-action="select-all"]');
+    if (allButton) {
+      allButton.addEventListener('click', event => {
+        event.preventDefault();
+        setSelectedLimit(instance, null);
+      });
+    }
+
+    if (applyButton && customInput) {
+      const applyCustomValue = event => {
+        if (event) {
+          event.preventDefault();
+        }
+
+        const normalized = normalizeLimit(customInput.value);
+        if (!normalized) {
+          customInput.focus();
+          customInput.select();
+          return;
+        }
+
+        setSelectedLimit(instance, normalized);
+      };
+
+      applyButton.addEventListener('click', applyCustomValue);
+      customInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          applyCustomValue(event);
+        }
+      });
+    }
+  }
+
+  function render(instance) {
+    instance.element.innerHTML = buildMarkup(instance);
+    bindEvents(instance);
+  }
+
+  function ensureGlobalListeners() {
+    if (globalListenersBound) return;
+
+    document.addEventListener('click', event => {
+      const container = event.target.closest('.last-sessions-selector');
+      if (container) return;
+      closeAllExcept();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeAllExcept();
+      }
+    });
+
+    globalListenersBound = true;
+  }
+
+  function init(target, config = {}) {
+    const element = getElement(target);
+    if (!element) return null;
+
+    const key = getKey(element);
+    if (!key) return null;
+
+    const instance = {
+      key,
+      element,
+      presets: Array.isArray(config.presets) && config.presets.length ? config.presets.slice() : [5, 10, 15, 20],
+      selectedLimit: normalizeLimit(config.value),
+      onChange: typeof config.onChange === 'function' ? config.onChange : null,
+      isOpen: false
+    };
+
+    instances.set(key, instance);
+    ensureGlobalListeners();
+    render(instance);
+    return instance;
+  }
+
+  function get(target) {
+    const element = getElement(target);
+    const key = getKey(element);
+    if (!key) return null;
+    return instances.get(key) || null;
+  }
+
+  function setValue(target, value, triggerChange = true) {
+    const instance = get(target);
+    if (!instance) return;
+    instance.selectedLimit = normalizeLimit(value);
+    instance.isOpen = false;
+    render(instance);
+
+    if (triggerChange && typeof instance.onChange === 'function') {
+      instance.onChange(instance.selectedLimit);
+    }
+  }
+
+  function getValue(target) {
+    const instance = get(target);
+    return instance ? instance.selectedLimit : null;
+  }
+
+  return {
+    init,
+    get,
+    getValue,
+    setValue
+  };
+})();
+
 // Initialize any shared functionality
 document.addEventListener('DOMContentLoaded', function() {
   console.log('PokerTracker app initialized');

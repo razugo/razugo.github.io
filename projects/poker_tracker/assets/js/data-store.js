@@ -32,6 +32,7 @@ class PokerSession {
     // Additional Data
     this.notes = this._validateString(data.notes, '');
     this.isLocked = this._validateBoolean(data.isLocked, false);
+    this.playerProfits = this._validatePlayerProfits(data.playerProfits, []);
 
     // Auto-compute sessionDate from startTime if missing
     if (!this.sessionDate && this.startTime) {
@@ -129,6 +130,35 @@ class PokerSession {
     return typeof value === 'boolean' ? value : defaultValue;
   }
 
+  _sanitizePlayerName(value) {
+    if (value === null || value === undefined) return null;
+    const str = String(value).trim().replace(/\s+/g, ' ');
+    return str === '' ? null : str;
+  }
+
+  _normalizePlayerProfit(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const name = this._sanitizePlayerName(entry.name);
+    const rawAmount = entry.amount ?? entry.profit ?? entry.value;
+    const amount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount);
+
+    if (!name || !Number.isFinite(amount)) return null;
+
+    return {
+      name,
+      amount: Math.round(amount * 100) / 100
+    };
+  }
+
+  _validatePlayerProfits(value, defaultValue = []) {
+    if (!Array.isArray(value)) return defaultValue;
+
+    return value
+      .map(entry => this._normalizePlayerProfit(entry))
+      .filter(Boolean);
+  }
+
   // Update Methods
   updateFinancials({ buyIn, cashOut }) {
     if (buyIn !== undefined) this.buyIn = this._validateNumber(buyIn, 0);
@@ -194,6 +224,11 @@ class PokerSession {
     return this;
   }
 
+  updatePlayerProfits(playerProfits) {
+    this.playerProfits = this._validatePlayerProfits(playerProfits, []);
+    return this;
+  }
+
   // Serialization
   toJSON() {
     return {
@@ -213,7 +248,8 @@ class PokerSession {
       totalPlayed: this.totalPlayed,
       vpip: this.vpip,
       notes: this.notes,
-      isLocked: this.isLocked
+      isLocked: this.isLocked,
+      playerProfits: this.playerProfits
     };
   }
 
@@ -438,9 +474,13 @@ PokerTracker.DataStore = {
         session.updateNotes(updates.notes);
       }
 
+      if (updates.playerProfits !== undefined) {
+        session.updatePlayerProfits(updates.playerProfits);
+      }
+
       // Handle direct property updates for any remaining fields
       Object.keys(updates).forEach(key => {
-        if (!['buyIn', 'cashOut', 'location', 'smallBlind', 'bigBlind', 'startTime', 'endTime', 'sessionDate', 'notes'].includes(key)) {
+        if (!['buyIn', 'cashOut', 'location', 'smallBlind', 'bigBlind', 'startTime', 'endTime', 'sessionDate', 'notes', 'playerProfits'].includes(key)) {
           session[key] = updates[key];
         }
       });
@@ -531,6 +571,30 @@ PokerTracker.DataStore = {
     if (!sortSource) return 0;
     const value = new Date(sortSource).getTime();
     return Number.isNaN(value) ? 0 : value;
+  },
+
+  normalizeLastSessionsLimit: function(value) {
+    if (value === null || typeof value === 'undefined' || value === '' || value === 'all') {
+      return null;
+    }
+
+    const parsed = typeof value === 'number' ? value : parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    return Math.floor(parsed);
+  },
+
+  limitSessionsByRecency: function(sessions, limit) {
+    const normalizedLimit = this.normalizeLastSessionsLimit(limit);
+    if (!normalizedLimit) {
+      return Array.isArray(sessions) ? sessions.slice() : [];
+    }
+
+    return (Array.isArray(sessions) ? sessions.slice() : [])
+      .sort((a, b) => this.getSessionSortValue(b) - this.getSessionSortValue(a))
+      .slice(0, normalizedLimit);
   },
 
   getActiveSession: function() {
@@ -695,6 +759,8 @@ PokerTracker.DataStore = {
       });
     }
 
+    sessions = this.limitSessionsByRecency(sessions, filters.lastSessions);
+
     const aggregateCounts = {};
     const aggregatePlayedCounts = {};
     const aggregateHandHistory = [];
@@ -791,6 +857,8 @@ PokerTracker.DataStore = {
         return true;
       });
     }
+
+    sessions = this.limitSessionsByRecency(sessions, filters.lastSessions);
 
     let totalBuyIn = 0;
     let totalCashOut = 0;

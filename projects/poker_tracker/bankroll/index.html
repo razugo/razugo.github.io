@@ -59,6 +59,10 @@ nav_id: bankroll
             <option value="">All stakes</option>
           </select>
         </div>
+        <div class="filter-group">
+          <label>LAST X</label>
+          <div id="lastSessionsSelector"></div>
+        </div>
         <button id="clearButton" class="filter-btn">Clear</button>
       </div>
 
@@ -141,7 +145,24 @@ nav_id: bankroll
               </div>
             </div>
           </div>
+        </div>
 
+        <div class="card chart-card player-profit-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Player P/L Tracker</h2>
+              <p class="card-subtitle">Aggregate cumulative results for Me or any tracked player across the filtered sessions. Uses the Date/Session toggle above.</p>
+            </div>
+          </div>
+          <div class="card-content">
+            <div id="playerProfitSelector" class="player-profit-selector" role="group" aria-label="Player profit and loss selection"></div>
+            <div class="chart-container">
+              <canvas id="playerProfitOverTimeChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-grid charts-grid-single">
           <div class="card chart-card">
             <div class="card-header">
               <h3 class="card-title">Profit by Day of Week</h3>
@@ -159,9 +180,11 @@ nav_id: bankroll
 
 <script>
   let bankrollOverTimeChart = null;
+  let playerProfitChart = null;
   let profitByRoomChart = null;
   let hourlyByStakeChart = null;
   let profitByDayChart = null;
+  let lastSessionsSelector = null;
 
   const currentFilters = {
     dateFrom: '',
@@ -173,6 +196,7 @@ nav_id: bankroll
   let chartAxisMode = 'session'; // 'date' or 'session'
   let profitByRoomMode = 'money'; // 'money' or 'bb'
   let hourlyByStakeMode = 'money'; // 'money' or 'bb'
+  let selectedPlayerProfitTargets = ['me'];
 
   document.addEventListener('DOMContentLoaded', function() {
     populateFilterOptions();
@@ -230,6 +254,7 @@ nav_id: bankroll
           }
         }
       });
+
     } else {
       // Fallback to native change listeners
       document.getElementById('locationFilter').addEventListener('change', (e) => {
@@ -241,10 +266,30 @@ nav_id: bankroll
         currentFilters.stakes = e.target.value;
         updateDashboard();
       });
+
+    }
+
+    if (PokerTracker?.LastSessionsSelector) {
+      lastSessionsSelector = PokerTracker.LastSessionsSelector.init('lastSessionsSelector', {
+        onChange: () => updateDashboard()
+      });
     }
 
     document.getElementById('clearButton').addEventListener('click', () => {
       clearFilters();
+    });
+
+    document.getElementById('playerProfitSelector').addEventListener('change', (e) => {
+      const target = e.target;
+      if (!target || target.name !== 'playerProfitTarget') return;
+
+      const checkedTargets = Array.from(document.querySelectorAll('#playerProfitSelector input[name="playerProfitTarget"]:checked'))
+        .map(input => input.value)
+        .filter(Boolean);
+
+      selectedPlayerProfitTargets = checkedTargets.length ? checkedTargets : ['me'];
+      updatePlayerProfitSelector(getFilteredSessions());
+      updatePlayerProfitChart(getFilteredSessions());
     });
 
     // Chart axis toggle event listener
@@ -263,6 +308,7 @@ nav_id: bankroll
         // Update chart
         const filteredSessions = getFilteredSessions();
         updateBankrollOverTimeChart(filteredSessions);
+        updatePlayerProfitChart(filteredSessions);
       }
     });
 
@@ -324,9 +370,98 @@ nav_id: bankroll
     });
   }
 
+  function getLastSessionsLimit() {
+    return PokerTracker?.LastSessionsSelector
+      ? PokerTracker.LastSessionsSelector.getValue('lastSessionsSelector')
+      : null;
+  }
+
+  function getSessionProfit(session) {
+    return (session.cashOut || 0) - (session.buyIn || 0);
+  }
+
+  function normalizePlayerName(name) {
+    return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  function getPlayerProfitEntries(session) {
+    return Array.isArray(session?.playerProfits) ? session.playerProfits : [];
+  }
+
+  function getSessionPlayerProfit(session, normalizedName) {
+    if (!normalizedName) return 0;
+
+    return getPlayerProfitEntries(session).reduce((sum, entry) => {
+      if (normalizePlayerName(entry.name) !== normalizedName) {
+        return sum;
+      }
+
+      const amount = typeof entry.amount === 'number' ? entry.amount : parseFloat(entry.amount);
+      return Number.isFinite(amount) ? sum + amount : sum;
+    }, 0);
+  }
+
+  function getPlayerOptions(sessions) {
+    const players = new Map();
+
+    sessions.forEach(session => {
+      getPlayerProfitEntries(session).forEach(entry => {
+        const normalizedName = normalizePlayerName(entry.name);
+        if (!normalizedName || normalizedName === 'me' || players.has(normalizedName)) return;
+        players.set(normalizedName, String(entry.name).trim().replace(/\s+/g, ' '));
+      });
+    });
+
+    const options = [{ value: 'me', label: 'Me' }];
+    Array.from(players.entries())
+      .sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: 'base' }))
+      .forEach(([value, label]) => {
+        options.push({ value, label });
+      });
+
+    return options;
+  }
+
+  function updatePlayerProfitSelector(sessions) {
+    const selector = document.getElementById('playerProfitSelector');
+    if (!selector) return;
+
+    const options = getPlayerOptions(sessions);
+    const optionValues = new Set(options.map(option => option.value));
+    selectedPlayerProfitTargets = selectedPlayerProfitTargets.filter(value => optionValues.has(value));
+    if (!selectedPlayerProfitTargets.length) {
+      selectedPlayerProfitTargets = ['me'];
+    }
+
+    const selectedTargetSet = new Set(selectedPlayerProfitTargets);
+
+    selector.innerHTML = '';
+
+    options.forEach(option => {
+      const label = document.createElement('label');
+      label.className = 'player-profit-option';
+
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.className = 'player-profit-radio';
+      input.name = 'playerProfitTarget';
+      input.value = option.value;
+      input.checked = selectedTargetSet.has(option.value);
+
+      const pill = document.createElement('span');
+      pill.className = 'player-profit-pill';
+      pill.textContent = option.label;
+
+      label.appendChild(input);
+      label.appendChild(pill);
+      selector.appendChild(label);
+    });
+  }
+
   function updateDashboard() {
     const filteredSessions = getFilteredSessions();
     updateKPIs(filteredSessions);
+    updatePlayerProfitSelector(filteredSessions);
     updateCharts(filteredSessions);
   }
 
@@ -345,6 +480,10 @@ nav_id: bankroll
     if (PokerTracker?.Dropdowns) {
       PokerTracker.Dropdowns.setValue('locationFilter', '');
       PokerTracker.Dropdowns.setValue('stakesFilter', '');
+    }
+
+    if (PokerTracker?.LastSessionsSelector) {
+      PokerTracker.LastSessionsSelector.setValue('lastSessionsSelector', null, false);
     }
 
     updateDashboard();
@@ -424,7 +563,7 @@ nav_id: bankroll
     }
 
 
-    return sessions;
+    return PokerTracker.DataStore.limitSessionsByRecency(sessions, getLastSessionsLimit());
   }
 
   function updateKPIs(sessions) {
@@ -467,8 +606,7 @@ nav_id: bankroll
 
     // Calculate total profit from all sessions
     const totalProfit = sessions.reduce((sum, session) => {
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
-      return sum + profit;
+      return sum + getSessionProfit(session);
     }, 0);
 
     // Calculate total hours from startTime/endTime
@@ -519,8 +657,7 @@ nav_id: bankroll
 
     // Calculate win rate (percentage of winning sessions)
     const winningSessions = sessions.filter(session => {
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
-      return profit > 0;
+      return getSessionProfit(session) > 0;
     }).length;
 
     const winRate = Math.round((winningSessions / totalSessions) * 100);
@@ -538,6 +675,7 @@ nav_id: bankroll
 
   function updateCharts(sessions) {
     updateBankrollOverTimeChart(sessions);
+    updatePlayerProfitChart(sessions);
     updateProfitByRoomChart(sessions);
     updateHourlyByStakeChart(sessions);
     updateProfitByDayChart(sessions);
@@ -559,8 +697,7 @@ nav_id: bankroll
     let cumulative = 0;
 
     sortedSessions.forEach((session, index) => {
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
-      cumulative += profit;
+      cumulative += getSessionProfit(session);
 
       if (chartAxisMode === 'session') {
         // Use session index for session mode
@@ -647,6 +784,128 @@ nav_id: bankroll
     bankrollOverTimeChart = new Chart(canvas, chartConfig);
   }
 
+  function updatePlayerProfitChart(sessions) {
+    const canvas = document.getElementById('playerProfitOverTimeChart');
+    if (!canvas) return;
+
+    if (playerProfitChart) {
+      playerProfitChart.destroy();
+    }
+
+    const sortedSessions = sessions.slice().sort((a, b) =>
+      PokerTracker.DataStore.getSessionSortValue(a) - PokerTracker.DataStore.getSessionSortValue(b)
+    );
+
+    const availableOptions = getPlayerOptions(sessions);
+    const selectedOptions = availableOptions.filter(option => selectedPlayerProfitTargets.includes(option.value));
+    const chartColors = [
+      { border: '#1d4ed8', background: 'rgba(37, 99, 235, 0.12)' },
+      { border: '#0f766e', background: 'rgba(15, 118, 110, 0.12)' },
+      { border: '#b45309', background: 'rgba(180, 83, 9, 0.12)' },
+      { border: '#be123c', background: 'rgba(190, 18, 60, 0.12)' },
+      { border: '#6d28d9', background: 'rgba(109, 40, 217, 0.12)' },
+      { border: '#15803d', background: 'rgba(21, 128, 61, 0.12)' }
+    ];
+
+    const datasets = selectedOptions.map((option, datasetIndex) => {
+      const chartData = [];
+      let cumulative = 0;
+
+      sortedSessions.forEach((session, index) => {
+        const sessionProfit = option.value === 'me'
+          ? getSessionProfit(session)
+          : getSessionPlayerProfit(session, option.value);
+
+        cumulative += sessionProfit;
+
+        if (chartAxisMode === 'session') {
+          chartData.push({
+            x: index + 1,
+            y: cumulative
+          });
+          return;
+        }
+
+        const sessionDate = PokerTracker.DataStore.getSessionDate(session);
+        if (sessionDate) {
+          chartData.push({
+            x: sessionDate,
+            y: cumulative
+          });
+        }
+      });
+
+      const colors = chartColors[datasetIndex % chartColors.length];
+
+      return {
+        label: `${option.label} Cumulative P/L`,
+        data: chartData,
+        borderColor: colors.border,
+        backgroundColor: colors.background,
+        fill: false,
+        tension: 0.12
+      };
+    });
+
+    const chartConfig = {
+      type: 'line',
+      data: {
+        datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {},
+          y: {
+            ticks: {
+              callback: function(value) {
+                return PokerTracker.Utils.formatCurrency(value);
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: datasets.length > 1
+          }
+        }
+      }
+    };
+
+    if (chartAxisMode === 'session') {
+      chartConfig.options.scales.x = {
+        type: 'linear',
+        title: {
+          display: true,
+          text: 'Session Number'
+        },
+        ticks: {
+          stepSize: 1,
+          callback: function(value) {
+            return Number.isInteger(value) ? value : '';
+          }
+        }
+      };
+    } else {
+      chartConfig.options.scales.x = {
+        type: 'time',
+        time: {
+          unit: 'day',
+          displayFormats: {
+            day: 'MMM dd'
+          }
+        },
+        title: {
+          display: true,
+          text: 'Date'
+        }
+      };
+    }
+
+    playerProfitChart = new Chart(canvas, chartConfig);
+  }
+
   function updateProfitByRoomChart(sessions) {
     const canvas = document.getElementById('profitByRoomChart');
     if (!canvas) return;
@@ -661,7 +920,7 @@ nav_id: bankroll
 
     sessions.forEach(session => {
       const room = session.location || 'Unknown';
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      const profit = getSessionProfit(session);
       roomData[room] = (roomData[room] || 0) + profit;
 
       // Calculate weighted BB data for each room
@@ -754,7 +1013,7 @@ nav_id: bankroll
       if (!session.smallBlind || !session.bigBlind) return;
 
       const stake = `${session.smallBlind}/${session.bigBlind}`;
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      const profit = getSessionProfit(session);
       let hours = 0;
 
       if (session.startTime && session.endTime) {
@@ -861,7 +1120,7 @@ nav_id: bankroll
 
       const date = new Date(sessionDate);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-      const profit = (session.cashOut || 0) - (session.buyIn || 0);
+      const profit = getSessionProfit(session);
 
       dayData[dayName] += profit;
     });

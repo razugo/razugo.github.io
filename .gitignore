@@ -5,3 +5,4 @@ _site
 vendor
 */.playwright-mcp
 */.claude
+.DS_Store

@@ -186,6 +186,31 @@ nav_id: tools
           return Math.round(numeric * 100) / 100;
         };
 
+        const normalizePlayerProfits = value => {
+          if (!Array.isArray(value)) return [];
+
+          return value
+            .map(entry => {
+              if (!entry || typeof entry !== 'object') return null;
+
+              const name = typeof entry.name === 'string'
+                ? entry.name.trim().replace(/\s+/g, ' ')
+                : '';
+              const rawAmount = entry.amount ?? entry.profit ?? entry.value;
+              const amount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount);
+
+              if (!name || !Number.isFinite(amount)) {
+                return null;
+              }
+
+              return {
+                name,
+                amount: Math.round(amount * 100) / 100
+              };
+            })
+            .filter(Boolean);
+        };
+
         const parseDateString = value => {
           if (!value || typeof value !== 'string') return null;
           const parsed = new Date(value);
@@ -316,7 +341,8 @@ nav_id: tools
             total: totalHands,
             totalPlayed: totalPlayed,
             vpip: Math.max(0, Math.min(100, Math.round((vpipValue || 0) * 10) / 10)),
-            notes: raw.notes || ''
+            notes: raw.notes || '',
+            playerProfits: normalizePlayerProfits(raw.playerProfits)
           };
 
           // Create PokerSession instance which will validate and normalize the data

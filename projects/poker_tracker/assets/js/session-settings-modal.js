@@ -62,6 +62,19 @@
               <label for="modalSessionNotes">Session Notes</label>
               <textarea id="modalSessionNotes" class="form-input" placeholder="Session notes..." style="min-height: 60px; resize: vertical;"></textarea>
             </div>
+            <details class="session-collapsible-section" id="modalPlayerProfitSection">
+              <summary class="session-collapsible-summary">
+                <div class="session-collapsible-copy">
+                  <span class="session-collapsible-title">P/L Tracker</span>
+                  <span class="session-collapsible-subtitle" id="modalPlayerProfitSummaryMeta">Track wins and losses for other players</span>
+                </div>
+              </summary>
+              <div class="session-collapsible-content">
+                <p class="session-collapsible-description">Enter the other players in this session and their result for the night.</p>
+                <div id="modalPlayerProfitRows" class="player-profit-rows"></div>
+                <button type="button" class="btn btn-outline btn-sm player-profit-add-btn" id="modalAddPlayerProfitBtn">Add player</button>
+              </div>
+            </details>
             <div class="form-group">
               <label class="toggle-container">
                 <input type="checkbox" id="modalLockedToggle" class="toggle-input">
@@ -337,6 +350,7 @@
       if (cashOutInput) cashOutInput.value = session.cashOut || '';
       if (notesInput) notesInput.value = session.notes || '';
       if (lockedToggle) lockedToggle.checked = session.isLocked || false;
+      this.renderPlayerProfits(session.playerProfits || []);
 
       if (startTimeInput) {
         startTimeInput.value = this.formatDateTimeForInput(session.startTime);
@@ -365,6 +379,113 @@
       const parsed = parseFloat(value);
       if (!Number.isFinite(parsed) || parsed <= 0) return null;
       return Math.round(parsed * 100) / 100;
+    },
+
+    parseProfitLossInput(value) {
+      if (value === '' || value === null || typeof value === 'undefined') return null;
+      const parsed = parseFloat(value);
+      if (!Number.isFinite(parsed)) return null;
+      return Math.round(parsed * 100) / 100;
+    },
+
+    sanitizePlayerName(value) {
+      if (value === null || value === undefined) return '';
+      return String(value).trim().replace(/\s+/g, ' ');
+    },
+
+    createPlayerProfitRow(entry = {}) {
+      const row = document.createElement('div');
+      row.className = 'player-profit-row';
+      row.innerHTML = `
+        <input type="text" class="form-input player-profit-name-input" placeholder="Player name" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+        <input type="number" class="form-input player-profit-amount-input" placeholder="+/-0.00" step="0.01">
+        <button type="button" class="player-profit-remove-btn" aria-label="Remove player">&times;</button>
+      `;
+
+      const nameInput = row.querySelector('.player-profit-name-input');
+      const amountInput = row.querySelector('.player-profit-amount-input');
+
+      if (nameInput) {
+        nameInput.value = this.sanitizePlayerName(entry.name);
+      }
+
+      if (amountInput && entry.amount !== null && typeof entry.amount !== 'undefined' && entry.amount !== '') {
+        amountInput.value = Number(entry.amount);
+      }
+
+      if (amountInput) {
+        this.enforceCurrencyPrecision(amountInput);
+      }
+
+      return row;
+    },
+
+    updatePlayerProfitSummary(playerProfits = []) {
+      const summary = document.getElementById('modalPlayerProfitSummaryMeta');
+      if (!summary) return;
+
+      if (!playerProfits.length) {
+        summary.textContent = 'Track wins and losses for other players';
+        return;
+      }
+
+      summary.textContent = playerProfits.length === 1
+        ? '1 player tracked'
+        : `${playerProfits.length} players tracked`;
+    },
+
+    renderPlayerProfits(playerProfits = []) {
+      const rowsContainer = document.getElementById('modalPlayerProfitRows');
+      if (!rowsContainer) return;
+
+      rowsContainer.innerHTML = '';
+
+      if (!Array.isArray(playerProfits) || playerProfits.length === 0) {
+        rowsContainer.appendChild(this.createPlayerProfitRow());
+        this.updatePlayerProfitSummary([]);
+        return;
+      }
+
+      playerProfits.forEach(entry => {
+        rowsContainer.appendChild(this.createPlayerProfitRow(entry));
+      });
+
+      this.updatePlayerProfitSummary(playerProfits);
+    },
+
+    addPlayerProfitRow(entry = {}, shouldFocus = false) {
+      const rowsContainer = document.getElementById('modalPlayerProfitRows');
+      if (!rowsContainer) return;
+
+      const row = this.createPlayerProfitRow(entry);
+      rowsContainer.appendChild(row);
+
+      if (shouldFocus) {
+        const nameInput = row.querySelector('.player-profit-name-input');
+        if (nameInput) nameInput.focus();
+      }
+    },
+
+    collectPlayerProfitsFromInputs() {
+      const rows = document.querySelectorAll('#modalPlayerProfitRows .player-profit-row');
+      const playerProfits = [];
+
+      rows.forEach(row => {
+        const name = this.sanitizePlayerName(row.querySelector('.player-profit-name-input')?.value);
+        const amount = this.parseProfitLossInput(row.querySelector('.player-profit-amount-input')?.value);
+
+        if (!name || amount === null) return;
+
+        playerProfits.push({ name, amount });
+      });
+
+      return playerProfits;
+    },
+
+    syncPlayerProfitsFromInputs() {
+      const playerProfits = this.collectPlayerProfitsFromInputs();
+      this.updatePlayerProfitSummary(playerProfits);
+      this.handleFieldUpdates({ playerProfits });
     },
 
     formatDateTimeForInput(value) {
@@ -479,6 +600,39 @@
 
       }
 
+      const playerProfitRows = document.getElementById('modalPlayerProfitRows');
+      if (playerProfitRows) {
+        playerProfitRows.addEventListener('input', event => {
+          const target = event.target;
+          if (target && (target.classList.contains('player-profit-name-input') || target.classList.contains('player-profit-amount-input'))) {
+            this.syncPlayerProfitsFromInputs();
+          }
+        });
+
+        playerProfitRows.addEventListener('click', event => {
+          const removeButton = event.target.closest('.player-profit-remove-btn');
+          if (!removeButton) return;
+
+          const row = removeButton.closest('.player-profit-row');
+          if (row) {
+            row.remove();
+          }
+
+          if (playerProfitRows.children.length === 0) {
+            this.addPlayerProfitRow();
+          }
+
+          this.syncPlayerProfitsFromInputs();
+        });
+      }
+
+      const addPlayerProfitButton = document.getElementById('modalAddPlayerProfitBtn');
+      if (addPlayerProfitButton) {
+        addPlayerProfitButton.addEventListener('click', () => {
+          this.addPlayerProfitRow({}, true);
+        });
+      }
+
       const fieldConfigs = [
         {
           id: 'modalSmallBlindInput',
@@ -554,6 +708,10 @@
       Object.keys(updates).forEach(key => {
         const incoming = updates[key];
         const existing = session[key];
+
+        if (Array.isArray(incoming) && Array.isArray(existing) && JSON.stringify(incoming) === JSON.stringify(existing)) {
+          return;
+        }
 
         const bothNumbers = typeof incoming === 'number' && typeof existing === 'number';
         if (bothNumbers && incoming === existing) return;
@@ -632,7 +790,8 @@
         cashOut: this.parseNumericInput(document.getElementById('modalCashOutInput')?.value),
         startTime: this.normalizeDateTimeInput(document.getElementById('modalStartTimeInput')?.value),
         endTime: this.normalizeDateTimeInput(document.getElementById('modalEndTimeInput')?.value),
-        notes: document.getElementById('modalSessionNotes')?.value || ''
+        notes: document.getElementById('modalSessionNotes')?.value || '',
+        playerProfits: this.collectPlayerProfitsFromInputs()
       };
 
       this.handleFieldUpdates(updates);

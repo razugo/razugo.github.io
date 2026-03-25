@@ -235,12 +235,14 @@ nav_id: session
     const location = urlParams.get('location');
     const stakes = urlParams.get('stakes');
     const profit = urlParams.get('profit');
+    const lastSessions = urlParams.get('lastSessions');
 
     if (dateFrom) filters.dateFrom = dateFrom;
     if (dateTo) filters.dateTo = dateTo;
     if (location) filters.location = location;
     if (stakes) filters.stakes = stakes;
     if (profit) filters.profit = profit;
+    if (lastSessions) filters.lastSessions = lastSessions;
 
     return filters;
   }

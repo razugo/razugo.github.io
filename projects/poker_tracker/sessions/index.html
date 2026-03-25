@@ -72,6 +72,10 @@ nav_id: sessions
         <option value="negative">Losing</option>
       </select>
     </div>
+    <div class="filter-field">
+      <label class="filter-label">Last X Sessions</label>
+      <div id="lastSessionsSelector"></div>
+    </div>
   <div class="filter-field filter-button">
     <button type="button" class="btn btn-primary session-filter-clear" id="sessionFilterClearBtn" aria-label="Clear session filters">Clear</button>
   </div>
@@ -115,6 +119,8 @@ nav_id: sessions
 </div>
 
 <script>
+  let lastSessionsSelector = null;
+
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize custom date pickers for filters
     if (window.PokerTracker && window.PokerTracker.DateTimePicker) {
@@ -170,6 +176,13 @@ nav_id: sessions
         events: {
           afterChange: () => applyFilters()
         }
+      });
+
+    }
+
+    if (PokerTracker?.LastSessionsSelector) {
+      lastSessionsSelector = PokerTracker.LastSessionsSelector.init('lastSessionsSelector', {
+        onChange: () => applyFilters()
       });
     }
 
@@ -519,6 +532,12 @@ nav_id: sessions
     });
   }
 
+  function getLastSessionsLimit() {
+    return PokerTracker?.LastSessionsSelector
+      ? PokerTracker.LastSessionsSelector.getValue('lastSessionsSelector')
+      : null;
+  }
+
   function getFilteredSessions() {
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
@@ -528,7 +547,7 @@ nav_id: sessions
 
     const sessions = PokerTracker.DataStore.getSessions();
 
-    return sessions.filter(session => {
+    const filteredSessions = sessions.filter(session => {
       const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
       if (dateFrom && (!sessionDate || sessionDate < dateFrom)) {
@@ -562,6 +581,8 @@ nav_id: sessions
 
       return true;
     });
+
+    return PokerTracker.DataStore.limitSessionsByRecency(filteredSessions, getLastSessionsLimit());
   }
 
   function applyFilters() {
@@ -581,6 +602,10 @@ nav_id: sessions
       PokerTracker.Dropdowns.setValue('locationFilter', '');
       PokerTracker.Dropdowns.setValue('stakesFilter', '');
       PokerTracker.Dropdowns.setValue('profitFilter', '');
+    }
+
+    if (PokerTracker?.LastSessionsSelector) {
+      PokerTracker.LastSessionsSelector.setValue('lastSessionsSelector', null, false);
     }
 
     applyFilters();
@@ -603,12 +628,14 @@ nav_id: sessions
     const location = document.getElementById('locationFilter')?.value;
     const stakes = document.getElementById('stakesFilter')?.value;
     const profit = document.getElementById('profitFilter')?.value;
+    const lastSessions = getLastSessionsLimit();
 
     if (dateFrom) params.append('dateFrom', dateFrom);
     if (dateTo) params.append('dateTo', dateTo);
     if (location) params.append('location', location);
     if (stakes) params.append('stakes', stakes);
     if (profit) params.append('profit', profit);
+    if (lastSessions) params.append('lastSessions', String(lastSessions));
 
     window.location.href = `${sessionRoute}?${params.toString()}`;
   }

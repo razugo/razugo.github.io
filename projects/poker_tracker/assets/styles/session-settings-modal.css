@@ -25,7 +25,7 @@
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   width: 100%;
-  max-width: 500px;
+  max-width: 620px;
   animation: modalAppear 0.2s ease-out;
 }
 
@@ -175,6 +175,104 @@
   color: var(--text-secondary);
 }
 
+.session-collapsible-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.session-collapsible-section[open] {
+  background: var(--surface);
+}
+
+.session-collapsible-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.session-collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+
+.session-collapsible-summary::after {
+  content: '+';
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.session-collapsible-section[open] .session-collapsible-summary::after {
+  content: '-';
+}
+
+.session-collapsible-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.session-collapsible-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.session-collapsible-subtitle,
+.session-collapsible-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.session-collapsible-content {
+  padding: 0 1.1rem 1.1rem;
+  border-top: 1px solid var(--border);
+}
+
+.session-collapsible-description {
+  margin: 0.9rem 0 1rem;
+}
+
+.player-profit-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.player-profit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.player-profit-remove-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.player-profit-remove-btn:hover {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--danger);
+}
+
+.player-profit-add-btn {
+  margin-top: 1rem;
+}
+
 @media (max-width: 768px) {
   .modal-content {
     margin: 0.5rem;
@@ -213,6 +311,14 @@
   .session-form-grid {
     grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
+  }
+
+  .player-profit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .player-profit-remove-btn {
+    width: 100%;
   }
 
   /* Session inputs mobile optimization */
