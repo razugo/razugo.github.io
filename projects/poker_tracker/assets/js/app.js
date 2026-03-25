@@ -484,7 +484,7 @@ PokerTracker.LastSessionsSelector = (function() {
   }
 
   function formatLabel(limit) {
-    return limit ? `Last ${limit} sessions` : 'All sessions';
+    return limit ? String(limit) : 'All';
   }
 
   function buildMarkup(instance) {
@@ -496,7 +496,7 @@ PokerTracker.LastSessionsSelector = (function() {
         data-action="select-limit"
         data-value="${preset}"
       >
-        Last ${preset}
+        ${preset}
       </button>
     `).join('');
 
