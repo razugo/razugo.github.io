@@ -147,6 +147,19 @@ nav_id: bankroll
           </div>
         </div>
 
+        <div class="charts-grid charts-grid-single">
+          <div class="card chart-card">
+            <div class="card-header">
+              <h3 class="card-title">Profit by Day of Week</h3>
+            </div>
+            <div class="card-content">
+              <div class="chart-container chart-container-small">
+                <canvas id="profitByDayChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="card chart-card player-profit-card">
           <div class="card-header">
             <div>
@@ -161,19 +174,7 @@ nav_id: bankroll
             </div>
           </div>
         </div>
-
-        <div class="charts-grid charts-grid-single">
-          <div class="card chart-card">
-            <div class="card-header">
-              <h3 class="card-title">Profit by Day of Week</h3>
-            </div>
-            <div class="card-content">
-              <div class="chart-container chart-container-small">
-                <canvas id="profitByDayChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   </main>
@@ -185,6 +186,7 @@ nav_id: bankroll
   let hourlyByStakeChart = null;
   let profitByDayChart = null;
   let lastSessionsSelector = null;
+  let isPlayerProfitSelectorOpen = false;
 
   const currentFilters = {
     dateFrom: '',
@@ -279,6 +281,16 @@ nav_id: bankroll
       clearFilters();
     });
 
+    document.getElementById('playerProfitSelector').addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      const trigger = e.target.closest('.player-profit-trigger');
+      if (!trigger) return;
+
+      isPlayerProfitSelectorOpen = !isPlayerProfitSelectorOpen;
+      updatePlayerProfitSelector(getFilteredSessions());
+    });
+
     document.getElementById('playerProfitSelector').addEventListener('change', (e) => {
       const target = e.target;
       if (!target || target.name !== 'playerProfitTarget') return;
@@ -290,6 +302,22 @@ nav_id: bankroll
       selectedPlayerProfitTargets = checkedTargets.length ? checkedTargets : ['me'];
       updatePlayerProfitSelector(getFilteredSessions());
       updatePlayerProfitChart(getFilteredSessions());
+    });
+
+    document.addEventListener('click', (e) => {
+      const selector = document.getElementById('playerProfitSelector');
+      if (!isPlayerProfitSelectorOpen || !selector || selector.contains(e.target)) return;
+
+      isPlayerProfitSelectorOpen = false;
+      updatePlayerProfitSelector(getFilteredSessions());
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || !isPlayerProfitSelectorOpen) return;
+
+      isPlayerProfitSelectorOpen = false;
+      updatePlayerProfitSelector(getFilteredSessions());
+      document.querySelector('#playerProfitSelector .player-profit-trigger')?.focus();
     });
 
     // Chart axis toggle event listener
@@ -422,6 +450,38 @@ nav_id: bankroll
     return options;
   }
 
+  function formatSignedCurrency(amount) {
+    const normalizedAmount = Number.isFinite(amount) ? amount : 0;
+    const formatted = PokerTracker.Utils.formatCurrency(normalizedAmount);
+    return normalizedAmount > 0 ? `+${formatted}` : formatted;
+  }
+
+  function formatPlayerProfitSelectionSummary(selectedOptions) {
+    if (!selectedOptions.length) return 'Me';
+    if (selectedOptions.length === 1) return selectedOptions[0].label;
+    if (selectedOptions.length === 2) return `${selectedOptions[0].label}, ${selectedOptions[1].label}`;
+    return `${selectedOptions.length} players selected`;
+  }
+
+  function formatSessionDateLabel(sessionDate) {
+    if (!sessionDate) return 'Date unavailable';
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) {
+      const [year, month, day] = sessionDate.split('-').map(Number);
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(new Date(year, month - 1, day));
+    }
+
+    return PokerTracker.Utils.formatDateTime(sessionDate, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
   function updatePlayerProfitSelector(sessions) {
     const selector = document.getElementById('playerProfitSelector');
     if (!selector) return;
@@ -434,28 +494,82 @@ nav_id: bankroll
     }
 
     const selectedTargetSet = new Set(selectedPlayerProfitTargets);
+    const selectedOptions = options.filter(option => selectedTargetSet.has(option.value));
 
     selector.innerHTML = '';
 
+    const dropdown = document.createElement('div');
+    dropdown.className = `player-profit-dropdown${isPlayerProfitSelectorOpen ? ' is-open' : ''}`;
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'player-profit-trigger';
+    trigger.setAttribute('aria-haspopup', 'true');
+    trigger.setAttribute('aria-expanded', isPlayerProfitSelectorOpen ? 'true' : 'false');
+
+    const triggerText = document.createElement('span');
+    triggerText.className = 'player-profit-trigger-text';
+
+    const triggerLabel = document.createElement('span');
+    triggerLabel.className = 'player-profit-trigger-label';
+    triggerLabel.textContent = 'Players';
+
+    const triggerValue = document.createElement('span');
+    triggerValue.className = 'player-profit-trigger-value';
+    triggerValue.textContent = formatPlayerProfitSelectionSummary(selectedOptions);
+
+    const triggerIcon = document.createElement('span');
+    triggerIcon.className = 'player-profit-trigger-icon';
+    triggerIcon.setAttribute('aria-hidden', 'true');
+    triggerIcon.textContent = isPlayerProfitSelectorOpen ? '▴' : '▾';
+
+    triggerText.appendChild(triggerLabel);
+    triggerText.appendChild(triggerValue);
+    trigger.appendChild(triggerText);
+    trigger.appendChild(triggerIcon);
+    dropdown.appendChild(trigger);
+
+    const panel = document.createElement('div');
+    panel.className = 'player-profit-dropdown-panel';
+    panel.hidden = !isPlayerProfitSelectorOpen;
+
+    const panelHeader = document.createElement('p');
+    panelHeader.className = 'player-profit-dropdown-header';
+    panelHeader.textContent = 'Select one or more players';
+    panel.appendChild(panelHeader);
+
+    const optionsList = document.createElement('div');
+    optionsList.className = 'player-profit-options';
+
     options.forEach(option => {
       const label = document.createElement('label');
-      label.className = 'player-profit-option';
+      label.className = `player-profit-option${selectedTargetSet.has(option.value) ? ' is-selected' : ''}`;
 
       const input = document.createElement('input');
       input.type = 'checkbox';
-      input.className = 'player-profit-radio';
+      input.className = 'player-profit-checkbox';
       input.name = 'playerProfitTarget';
       input.value = option.value;
       input.checked = selectedTargetSet.has(option.value);
 
-      const pill = document.createElement('span');
-      pill.className = 'player-profit-pill';
-      pill.textContent = option.label;
+      const indicator = document.createElement('span');
+      indicator.className = 'player-profit-option-indicator';
+      indicator.setAttribute('aria-hidden', 'true');
+      indicator.textContent = input.checked ? '✓' : '';
+
+      const optionLabel = document.createElement('span');
+      optionLabel.className = 'player-profit-option-label';
+      optionLabel.textContent = option.label;
 
       label.appendChild(input);
-      label.appendChild(pill);
-      selector.appendChild(label);
+      label.appendChild(indicator);
+      label.appendChild(optionLabel);
+      optionsList.appendChild(label);
     });
+
+    panel.appendChild(optionsList);
+    dropdown.appendChild(panel);
+    selector.appendChild(dropdown);
   }
 
   function updateDashboard() {
@@ -815,22 +929,28 @@ nav_id: bankroll
         const sessionProfit = option.value === 'me'
           ? getSessionProfit(session)
           : getSessionPlayerProfit(session, option.value);
+        const sessionDate = PokerTracker.DataStore.getSessionDate(session);
 
         cumulative += sessionProfit;
 
         if (chartAxisMode === 'session') {
           chartData.push({
             x: index + 1,
-            y: cumulative
+            y: cumulative,
+            playerLabel: option.label,
+            sessionProfit,
+            axisLabel: `Session ${index + 1}`
           });
           return;
         }
 
-        const sessionDate = PokerTracker.DataStore.getSessionDate(session);
         if (sessionDate) {
           chartData.push({
             x: sessionDate,
-            y: cumulative
+            y: cumulative,
+            playerLabel: option.label,
+            sessionProfit,
+            axisLabel: formatSessionDateLabel(sessionDate)
           });
         }
       });
@@ -838,12 +958,15 @@ nav_id: bankroll
       const colors = chartColors[datasetIndex % chartColors.length];
 
       return {
-        label: `${option.label} Cumulative P/L`,
+        label: option.label,
         data: chartData,
         borderColor: colors.border,
         backgroundColor: colors.background,
         fill: false,
-        tension: 0.12
+        tension: 0.12,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        pointHitRadius: 14
       };
     });
 
@@ -855,6 +978,10 @@ nav_id: bankroll
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+          mode: 'nearest',
+          intersect: true
+        },
         scales: {
           x: {},
           y: {
@@ -867,7 +994,24 @@ nav_id: bankroll
         },
         plugins: {
           legend: {
-            display: datasets.length > 1
+            display: false
+          },
+          tooltip: {
+            mode: 'nearest',
+            intersect: true,
+            callbacks: {
+              title: function(context) {
+                return context[0]?.raw?.axisLabel || '';
+              },
+              label: function(context) {
+                const raw = context.raw || {};
+                return [
+                  raw.playerLabel || context.dataset.label,
+                  `Cumulative P/L: ${PokerTracker.Utils.formatCurrency(context.parsed.y)}`,
+                  `Session P/L: ${formatSignedCurrency(raw.sessionProfit)}`
+                ];
+              }
+            }
           }
         }
       }
