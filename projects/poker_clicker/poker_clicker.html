@@ -1195,8 +1195,8 @@
         showModal('Create New Session', 'Create', 'Enter session name...');
         // Reset selector to current session or empty
         setTimeout(() => {
-          if (currentSessionId) {
-            sessionSelector.value = currentSessionId;
+          if (sessionManager.currentSessionId) {
+            sessionSelector.value = sessionManager.currentSessionId;
           } else {
             updateSessionSelector();
           }
@@ -1283,7 +1283,7 @@
             return;
           }
           const currentSession = sessionManager.getAllSessions()[sessionManager.currentSessionId];
-          sessionsToExport = { [currentSessionId]: currentSession };
+          sessionsToExport = { [sessionManager.currentSessionId]: currentSession };
           const sessionName = currentSession.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
           fileName = `poker-tracker-session-${sessionName}-${new Date().toISOString().split('T')[0]}.json`;
         }
