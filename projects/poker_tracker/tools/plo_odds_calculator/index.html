@@ -60,9 +60,9 @@ nav_id: tools
           <thead>
             <tr>
               <th class="cards-col">Cards</th>
-              <th class="pct-col">Win %</th>
-              <th class="pct-col">Scoop %</th>
-              <th class="pct-col">Tie %</th>
+              <th class="pct-col" title="Average share of the pot you win across all runouts">Equity %</th>
+              <th class="pct-col" title="How often you win the entire pot outright">Scoop %</th>
+              <th class="pct-col" title="How often you win only part of the pot (e.g. one board in double-board)">Split %</th>
               <th class="actions-col"></th>
             </tr>
           </thead>
@@ -113,8 +113,10 @@ nav_id: tools
 
     <p class="plo-note">
       PLO equity is Monte&nbsp;Carlo estimated (evaluating all 60 two-card / three-card combinations per hand).
-      In double board, each board is worth half the pot; <strong>Win&nbsp;%</strong> is total pot-share equity,
-      <strong>Scoop&nbsp;%</strong> is winning the entire pot, and <strong>Tie&nbsp;%</strong> is taking a partial share.
+      <strong>Equity&nbsp;%</strong> is your average share of the pot across all runouts &mdash; in double board,
+      each board is worth half the pot, so winning just one board is worth ~50%.
+      <strong>Scoop&nbsp;%</strong> is how often you take the whole pot outright, and
+      <strong>Split&nbsp;%</strong> is how often you only get a partial share (one board, or a chopped board).
     </p>
 
     <!-- Results announcer for screen readers -->
