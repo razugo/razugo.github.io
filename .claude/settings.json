@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//private/tmp/**)",
+      "Bash(npm install *)",
+      "Bash(cat)",
+      "Bash(node plotest.js)"
+    ]
+  }
+}
