@@ -2,11 +2,14 @@
 layout: default
 ---
 
-<img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="Russell Wakugawa" class="photo">
-
-# {{ site.title }}
-
-<span class="muted">{{ site.email }}</span>
+<div class="intro">
+  <img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="Russell Wakugawa">
+  <div>
+    <h1>{{ site.title }}</h1>
+    <p>Backend engineer</p>
+    <p><a href="mailto:{{ site.email }}">{{ site.email }}</a></p>
+  </div>
+</div>
 
 ## about
 
