@@ -1,17 +1,14 @@
 ---
-# Feel free to add content and custom Front Matter to this file.
-# To modify the layout, see https://jekyllrb.com/docs/themes/#overriding-theme-defaults
-
-layout: home
+layout: default
 ---
 
-<div class="home-title">
-  <h1 class="home-name">{{ site.title }}</h1>
-  <hr class="home-divider">
-  <p class="home-email">{{ site.email }}</p>
-</div>
+<img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="Russell Wakugawa" class="photo">
 
-## About Me
+# {{ site.title }}
+
+<span class="muted">{{ site.email }}</span>
+
+## about
 
 I am a Backend Software Engineer at [Atomic Invest](https://www.atomicvest.com/) working on automated trading, money movement and other ledgering workflows. Our goal is to provide wealth building to individuals and companies through many investment vehicles like equities, treasuries and high yield cash accounts.
 

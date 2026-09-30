@@ -1,72 +1,70 @@
 ---
 ---
 
-@import "minima";
-
-.site-header {
-  background-color: #f0f0f0;
-  border-bottom: 1px solid #e8e8e8;
-  position: relative;
+:root {
+  --bg: #fff;
+  --fg: #222;
+  --muted: #666;
+  --rule: #ccc;
+  --link: #0000ee;
+  --visited: #551a8b;
 }
 
-.site-footer {
-  background-color: #f0f0f0;
-  border-top: 1px solid #e8e8e8;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111;
+    --fg: #ddd;
+    --muted: #999;
+    --rule: #444;
+    --link: #8ab4f8;
+    --visited: #c58af9;
+  }
 }
 
-.profile-image-header {
-  display: block;
+html {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+body {
+  max-width: 40em;
   margin: 0 auto;
-  position: absolute;
-  bottom: -50px; /* half of the image height to make it overlap */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 3px solid white;
-  z-index: 10;
+  padding: 2em 1em;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.5;
 }
 
-.footer-icons {
-  text-align: center;
-  padding: 20px 0;
+a { color: var(--link); }
+a:visited { color: var(--visited); }
+
+h1, h2 {
+  font-weight: normal;
+  line-height: 1.2;
 }
 
-.footer-icons a {
-  margin: 0 10px;
-  color: #828282;
-  font-size: 24px; /* Adjust icon size */
-}
+h1 { font-size: 1.8em; margin: 1em 0 0.25em; }
+h2 { font-size: 1.2em; margin: 1.5em 0 0.5em; }
 
-.site-header .wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.home-title {
-  text-align: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-
-.home-name {
-  font-size: 2.5em;
-  margin-bottom: 10px;
-}
-
-.home-email {
-  font-size: 1.2em;
-}
-
-.home-divider {
-  width: 50px;
-  margin: 0 auto 10px;
+hr {
   border: 0;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--rule);
+  margin: 2em 0 1em;
 }
 
-.site-nav {
-  margin-left: auto;
+.muted,
+footer {
+  color: var(--muted);
 }
+
+footer { font-size: 0.85em; }
+
+.photo {
+  float: right;
+  width: 96px;
+  height: 96px;
+  margin: 0 0 1em 1em;
+}
+
+ul { padding-left: 1.25em; }
+li { margin-bottom: 0.5em; }
